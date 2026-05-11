@@ -7,6 +7,9 @@ import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { fetchCompetitionByRef } from '@/lib/api/client';
+import { translationKeyForWinRule } from '@/lib/competition/win-rule-i18n';
+import { useAuth } from '@/lib/auth/auth-context';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 function formatRange(starts: string, ends: string) {
   try {
@@ -20,6 +23,8 @@ function formatRange(starts: string, ends: string) {
 
 export default function CompetitionDetailScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const { t } = useLocale();
   const { competitionId } = useLocalSearchParams<{ competitionId: string }>();
   const ref = (typeof competitionId === 'string' ? competitionId : competitionId?.[0] ?? '').trim();
 
@@ -34,27 +39,27 @@ export default function CompetitionDetailScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Eyebrow>Competition</Eyebrow>
+        <Eyebrow>{t('competitionEyebrow')}</Eyebrow>
         {c ? <Title>{c.title}</Title> : <Title>…</Title>}
         {c ? <Muted>{formatRange(c.starts_at, c.ends_at)}</Muted> : null}
       </View>
 
       {q.isLoading ? (
         <Card>
-          <Body>Loading…</Body>
+          <Body>{t('commonLoading')}</Body>
         </Card>
       ) : null}
 
       {q.error ? (
         <Card>
-          <Body>Could not load this competition.</Body>
+          <Body>{t('competitionLoadError')}</Body>
           <Muted>{q.error.message}</Muted>
         </Card>
       ) : null}
 
       {!q.isLoading && !q.error && !c ? (
         <Card>
-          <Body>Competition not found or you do not have access (private competitions require the web app and sign-in).</Body>
+          <Body>{t('competitionNotFound')}</Body>
         </Card>
       ) : null}
 
@@ -62,37 +67,45 @@ export default function CompetitionDetailScreen() {
         <>
           <Card>
             <Body style={styles.rule}>
-              Rule: {c.win_rule.replace(/_/g, ' ')}
-              {c.target_score != null && c.win_rule === 'closest_to_target' ? ` · target ${c.target_score}` : ''}
+              {t('competitionRulePrefix')} {t(translationKeyForWinRule(c.win_rule))}
+              {c.target_score != null && c.win_rule === 'closest_to_target'
+                ? t('competitionTargetSegment').replace('{score}', String(c.target_score))
+                : ''}
             </Body>
             <Muted>
-              Visibility: {c.visibility ?? '—'} · Max participants: {c.max_participants} · Glasses / person:{' '}
-              {c.glasses_per_person}
+              {t('competitionMetaLine')
+                .replace('{visibility}', c.visibility ?? '—')
+                .replace('{max}', String(c.max_participants))
+                .replace('{glasses}', String(c.glasses_per_person))}
             </Muted>
             {(c.location_name || c.location_address) && (
               <Body style={styles.mt}>
                  {[c.location_name, c.location_address].filter(Boolean).join(' · ')}
               </Body>
             )}
-            <Muted style={styles.mt}>
-              Native app shows core metadata only. Joining, invites, in-competition leaderboards, and editing match the
-              web app competition page only (not built natively yet).
-            </Muted>
+            <Muted style={styles.mt}>{t('competitionWebHint')}</Muted>
           </Card>
+          {user?.id === c.created_by ? (
+            <AppButton
+              label={t('competitionEditCTA')}
+              variant="secondary"
+              onPress={() => router.push(`/competition/${encodeURIComponent(ref)}/edit`)}
+            />
+          ) : null}
           {c.linked_bar_key ? (
             <Card>
-              <Body>Linked pub</Body>
+              <Body>{t('competitionLinkedPub')}</Body>
               <Pressable
                 onPress={() => router.push(`/pub/${encodeURIComponent(c.linked_bar_key!)}`)}
                 accessibilityRole="button">
-                <Body style={styles.link}>Open pub →</Body>
+                <Body style={styles.link}>{t('competitionOpenPub')}</Body>
               </Pressable>
             </Card>
           ) : null}
         </>
       ) : null}
 
-      <AppButton label="Back to competitions list" variant="secondary" onPress={() => router.back()} />
+      <AppButton label={t('competitionBackToList')} variant="secondary" onPress={() => router.back()} />
     </Screen>
   );
 }

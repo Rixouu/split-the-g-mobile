@@ -1,3 +1,10 @@
+export interface PourRankContext {
+  allTimeRank: number;
+  weeklyRank: number;
+  totalSplits: number;
+  weeklyTotalSplits: number;
+}
+
 export interface PourScore {
   id: string;
   slug: string | null;
@@ -16,6 +23,10 @@ export interface PourScore {
   google_place_id?: string | null;
   pour_rating?: number | null;
   pint_price?: number | null;
+  session_id?: string | null;
+  submitter_user_id?: string | null;
+  email?: string | null;
+  email_opted_out?: boolean | null;
 }
 
 export interface CompetitionSummary {

@@ -7,9 +7,11 @@ import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { absoluteWebUrl, fetchPubByBarKey } from '@/lib/api/client';
+import { useLocale } from '@/lib/i18n/locale-context';
 
 export default function PubDetailScreen() {
   const router = useRouter();
+  const { t } = useLocale();
   const { barKey: rawKey } = useLocalSearchParams<{ barKey: string }>();
   const barKey =
     decodeURIComponent(
@@ -39,27 +41,27 @@ export default function PubDetailScreen() {
   return (
     <Screen>
       <View style={styles.header}>
-        <Eyebrow>Pub</Eyebrow>
-        {pub ? <Title>{pub.display_name || 'Pub'}</Title> : <Title>…</Title>}
+        <Eyebrow>{t('pubEyebrow')}</Eyebrow>
+        {pub ? <Title>{pub.display_name || t('pubTitleFallback')}</Title> : <Title>…</Title>}
         {pub?.sample_address ? <Muted>{pub.sample_address}</Muted> : null}
       </View>
 
       {q.isLoading ? (
         <Card>
-          <Body>Loading…</Body>
+          <Body>{t('commonLoading')}</Body>
         </Card>
       ) : null}
 
       {q.error ? (
         <Card>
-          <Body>Could not load this pub.</Body>
+          <Body>{t('pubLoadError')}</Body>
           <Muted>{q.error.message}</Muted>
         </Card>
       ) : null}
 
       {!q.isLoading && !q.error && !pub ? (
         <Card>
-          <Body>No stats row for this venue key. It may still exist on the web directory.</Body>
+          <Body>{t('pubNotFoundHint')}</Body>
         </Card>
       ) : null}
 
@@ -74,7 +76,7 @@ export default function PubDetailScreen() {
             spend stats, and admin/import tools (`pubs.$barKey`).
           </Muted>
           {pub.google_place_id ? (
-            <AppButton label="Open in Google Maps" variant="secondary" onPress={openInMaps} />
+            <AppButton label={t('pourOpenInMaps')} variant="secondary" onPress={openInMaps} />
           ) : null}
           <AppButton label="View full page on the web" variant="secondary" onPress={openWebDetail} />
         </Card>
@@ -95,7 +97,7 @@ export default function PubDetailScreen() {
         />
       </Card>
 
-      <AppButton label="Back" variant="secondary" onPress={() => router.back()} />
+      <AppButton label={t('actionBack')} variant="secondary" onPress={() => router.back()} />
     </Screen>
   );
 }

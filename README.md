@@ -155,12 +155,16 @@ npm run generate-assets  # re-gen app icon / splash / favicon from assets/images
 
 ### Supabase redirect URLs (return to app after Google)
 
-If **`redirectTo`** is not allowlisted, Supabase sends users to the **Site URL** in Safari (logged in on the website, not the app). In **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**, add every variant you need:
+If **`redirectTo`** is not allowlisted **exactly**, Supabase sends users to the **Site URL** (e.g. `https://split-the-g.app/`) — you stay **in the browser**, signed in on the website, not the app.
 
-- `splittheg://auth/callback` (standalone / dev client)
-- `exp://127.0.0.1:8081/--/auth/callback` and `exp://<your-LAN-IP>:8081/--/auth/callback` (Expo Go — IP varies)
+The app builds `redirectTo` in **`lib/auth/oauth-redirect.ts`**:
 
-In **`__DEV__`**, the first sign-in attempt logs the exact `redirectTo` to the Metro console (see `lib/auth/auth-context.tsx`). Copy that string into Supabase if OAuth does not return to the app.
+- **`npx expo run:android` / `run:ios` (dev client), EAS builds, standalone:** `splittheg://auth/callback` — add this **once** under **Authentication → URL Configuration → Redirect URLs**.
+- **Expo Go only:** `exp://HOST:8081/--/auth/callback` (host changes per machine). In **`__DEV__`**, Metro logs the exact URL; copy it into Supabase. **Android emulator** often needs **`exp://10.0.2.2:8081/--/auth/callback`** in addition to your LAN IP.
+
+Optional: set **`EXPO_PUBLIC_AUTH_REDIRECT_URL`** (see **`.env.example`**) to force a single redirect during debugging.
+
+In **`__DEV__`**, sign-in logs the resolved `redirectTo` (see **`lib/auth/auth-context.tsx`**).
 
 **Google Cloud:** keep the OAuth client’s redirect URI as Supabase’s `https://<project-ref>.supabase.co/auth/v1/callback`. You usually do **not** add `splittheg://` there when using Supabase-hosted Google sign-in.
 

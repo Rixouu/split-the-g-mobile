@@ -1,17 +1,26 @@
-import { useLocalSearchParams } from 'expo-router';
-import { Image, Linking, Share, StyleSheet, View } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { RefreshControl } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import { PourClaimCard } from '@/components/pour-detail/pour-claim-card';
+import { PourCtaStrip } from '@/components/pour-detail/pour-cta-strip';
+import { PourGallery } from '@/components/pour-detail/pour-gallery';
+import { PourHero } from '@/components/pour-detail/pour-hero';
+import { PourRankStrip } from '@/components/pour-detail/pour-rank-strip';
+import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
+import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Eyebrow, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
-import { absoluteWebUrl, fetchScoreByRef } from '@/lib/api/client';
-
-function formatScore(value: number | null): string {
-  if (typeof value !== 'number') return '--';
-  return `${Math.round(value)}%`;
-}
+import { absoluteWebUrl } from '@/lib/api/client';
+import { useAuth } from '@/lib/auth/auth-context';
+import { canUnclaimPour, fetchLeaderboardDisplayNameForUser } from '@/lib/auth/leaderboard-display-name';
+import { useLocale } from '@/lib/i18n/locale-context';
+import { buildPourShareMessage, translate } from '@/lib/i18n/translations';
+import { getIsPourOwner } from '@/lib/pour/ownership';
+import { getPourSessionId } from '@/lib/pour/session';
+import { supabase } from '@/lib/supabase/client';
 
 function formatWhen(iso: string | null | undefined): string {
   if (!iso) return '';
@@ -22,124 +31,169 @@ function formatWhen(iso: string | null | undefined): string {
   }
 }
 
+const COMPETITION_UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export default function PourDetailScreen() {
-  const { pourRef: rawRef } = useLocalSearchParams<{ pourRef: string }>();
-  const pourRef = (typeof rawRef === 'string' ? rawRef : rawRef?.[0] ?? '').trim();
+  const router = useRouter();
+  const { t, locale } = useLocale();
+  const { user, isLoading: authLoading } = useAuth();
+  const raw = useLocalSearchParams<{ pourRef: string | string[]; competition?: string | string[] }>();
+  const pourRef = (typeof raw.pourRef === 'string' ? raw.pourRef : raw.pourRef?.[0] ?? '').trim();
+  const competitionRaw = raw.competition;
+  const competitionId = (
+    typeof competitionRaw === 'string' ? competitionRaw : competitionRaw?.[0] ?? ''
+  ).trim();
+  const competitionValid = COMPETITION_UUID_RE.test(competitionId);
+  const competitionParam = competitionValid ? competitionId : null;
 
-  const score = useQuery({
-    queryKey: ['score', pourRef],
-    queryFn: () => fetchScoreByRef(pourRef),
-    enabled: Boolean(pourRef),
-  });
+  const query = usePourDetail(pourRef);
+  const refetchPour = query.refetch;
 
-  const sharePath = score.data ? `/pour/${score.data.slug || score.data.id}` : `/pour/${pourRef}`;
+  const d = query.data?.score;
+  const rank = query.data?.rank;
+  const pubPageBarKey = query.data?.pubPageBarKey ?? null;
 
-  async function shareResult() {
-    const url = absoluteWebUrl(sharePath);
-    await Share.share({
-      message: `Split The G result: ${url}`,
-      url,
+  const [pourSessionId, setPourSessionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getPourSessionId().then(setPourSessionId);
+  }, []);
+
+  const isOwner = Boolean(d && getIsPourOwner(d, pourSessionId, user?.id ?? null));
+
+  const jwtSyncDoneRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    jwtSyncDoneRef.current = null;
+  }, [pourRef]);
+
+  useEffect(() => {
+    if (authLoading || !user?.email || !d?.email?.trim()) return;
+    if (!canUnclaimPour(user.email, d.email)) return;
+    const key = `${d.id}:${user.id}`;
+    if (jwtSyncDoneRef.current === key) return;
+
+    void (async () => {
+      try {
+        const name = await fetchLeaderboardDisplayNameForUser(user);
+        const { error } = await supabase.rpc('sync_scores_username_for_jwt', { p_username: name });
+        if (!error) {
+          jwtSyncDoneRef.current = key;
+          void refetchPour();
+        }
+      } catch {
+        /* best-effort */
+      }
+    })();
+  }, [authLoading, user, d?.id, d?.email, pourRef, refetchPour]);
+
+  const sharePath = d ? `/pour/${d.slug || d.id}` : `/pour/${pourRef}`;
+  const webUrl = absoluteWebUrl(sharePath);
+
+  const shareMessage = useMemo(() => {
+    if (!d || d.split_score == null || !rank) {
+      return `${translate(locale, 'pourShareHookMid')}\n\n${webUrl}`;
+    }
+    return buildPourShareMessage(locale, {
+      shareUrl: webUrl,
+      splitScore: Number(d.split_score),
+      allTimeRank: rank.allTimeRank,
+      totalSplits: rank.totalSplits,
+      weeklyRank: rank.weeklyRank,
+      weeklyTotalSplits: rank.weeklyTotalSplits,
     });
-  }
+  }, [d, rank, locale, webUrl]);
 
-  async function openPlaceInMaps(placeId: string) {
-    const url = `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(placeId)}`;
-    const can = await Linking.canOpenURL(url);
-    if (can) void Linking.openURL(url);
-  }
+  const closeupFirst = d?.g_closeup_image_url?.trim() || d?.split_image_url || null;
 
-  const d = score.data;
+  const onRefresh = useCallback(() => {
+    void query.refetch();
+  }, [query]);
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Eyebrow>Pour result</Eyebrow>
-        <Title>{formatScore(d?.split_score ?? null)}</Title>
-        <Muted>{d?.username || 'Split The G drinker'}</Muted>
-        {d?.created_at ? <Muted>{formatWhen(d.created_at)}</Muted> : null}
-      </View>
+    <Screen
+      refreshControl={
+        <RefreshControl
+          refreshing={query.isRefetching}
+          onRefresh={onRefresh}
+          tintColor={brandColors.gold}
+        />
+      }>
+      <Eyebrow>{t('pourResultsEyebrow')}</Eyebrow>
 
-      {score.isLoading ? (
+      {query.isLoading ? (
         <Card>
-          <Body>Loading pour…</Body>
+          <Body>{t('commonLoading')}</Body>
         </Card>
       ) : null}
 
-      {score.error ? (
+      {query.error ? (
         <Card>
-          <Body>Could not load this pour</Body>
-          <Muted>{score.error.message}</Muted>
+          <Body>{t('pourLoadError')}</Body>
+          <Muted>{query.error.message}</Muted>
+        </Card>
+      ) : null}
+
+      {competitionValid ? (
+        <Card>
+          <Muted>{t('pourCompBanner')}</Muted>
+          <AppButton
+            label={t('pourOpenCompetition')}
+            variant="secondary"
+            onPress={() => router.push(`/competition/${encodeURIComponent(competitionId)}`)}
+          />
         </Card>
       ) : null}
 
       {d ? (
         <>
-          <Card>
-            {d.pint_image_url ? (
-              <Image source={{ uri: d.pint_image_url }} style={styles.imageMain} />
-            ) : null}
-            {d.split_image_url ? (
-              <Image source={{ uri: d.split_image_url }} style={styles.imageSecondary} />
-            ) : null}
-            {d.g_closeup_image_url ? (
-              <Image source={{ uri: d.g_closeup_image_url }} style={styles.imageSecondary} />
-            ) : null}
-            <Body>{[d.city, d.region, d.country].filter(Boolean).join(', ')}</Body>
-            {(d.bar_name || d.bar_address) && (
-              <Body style={styles.mt}>
-                {[d.bar_name, d.bar_address].filter(Boolean).join(' · ')}
-              </Body>
-            )}
-            {typeof d.pour_rating === 'number' ? (
-              <Body style={styles.mt}>Pour rating (1–5): {d.pour_rating.toFixed(1)}</Body>
-            ) : null}
-            {typeof d.pint_price === 'number' ? (
-              <Body style={styles.mt}>Pint price recorded: {d.pint_price}</Body>
-            ) : null}
-            <Muted style={styles.mt}>{absoluteWebUrl(sharePath)}</Muted>
-            <AppButton label="Share result" onPress={shareResult} />
-            {d.google_place_id ? (
-              <AppButton
-                label="Open place in Google Maps"
-                variant="secondary"
-                onPress={() => openPlaceInMaps(d.google_place_id!)}
-              />
-            ) : null}
-          </Card>
-          <Card>
-            <Body>Web-only on this pour</Body>
-            <Muted>
-              The web `score` route adds all-time / weekly rank, attaching a competition from the URL, Places autocomplete
-              to set or fix the venue, editable pour rating and price, share panels, and post-OAuth return flows. None of
-              that is wired in native UI yet—this screen is read-only plus share / maps.
-            </Muted>
-          </Card>
+          <PourHero username={d.username} splitScore={d.split_score} />
+          {rank ? <PourRankStrip rank={rank} /> : null}
+          <PourGallery
+            pintUrl={d.pint_image_url}
+            splitUrl={d.split_image_url}
+            closeupUrl={closeupFirst}
+          />
+
+          {isOwner ? (
+            <>
+              <PourClaimCard pourRef={pourRef} score={d} competitionId={competitionParam} />
+              <PourVenueEditor pourRef={pourRef} score={d} competitionId={competitionParam} />
+              {d.created_at ? (
+                <Card>
+                  <Muted>{formatWhen(d.created_at)}</Muted>
+                </Card>
+              ) : null}
+            </>
+          ) : (
+            <Card>
+              <Body>{[d.city, d.region, d.country].filter(Boolean).join(', ')}</Body>
+              {(d.bar_name || d.bar_address) && (
+                <Body style={{ marginTop: 10 }}>
+                  {[d.bar_name, d.bar_address].filter(Boolean).join(' · ')}
+                </Body>
+              )}
+              {typeof d.pour_rating === 'number' ? (
+                <Body style={{ marginTop: 10 }}>
+                  Pour rating (1–5): {d.pour_rating.toFixed(1)}
+                </Body>
+              ) : null}
+              {typeof d.pint_price === 'number' ? (
+                <Body style={{ marginTop: 10 }}>Pint price recorded: {d.pint_price}</Body>
+              ) : null}
+              {d.created_at ? <Muted style={{ marginTop: 10 }}>{formatWhen(d.created_at)}</Muted> : null}
+            </Card>
+          )}
+
+          <PourCtaStrip
+            shareMessage={shareMessage}
+            webUrl={webUrl}
+            pubPageBarKey={pubPageBarKey}
+            googlePlaceId={d.google_place_id?.trim() || null}
+          />
         </>
       ) : null}
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  header: {
-    gap: 10,
-    paddingTop: 16,
-  },
-  imageMain: {
-    width: '100%',
-    height: 360,
-    borderRadius: 24,
-    backgroundColor: brandColors.panelMuted,
-    marginBottom: 12,
-  },
-  imageSecondary: {
-    width: '100%',
-    height: 220,
-    borderRadius: 18,
-    backgroundColor: brandColors.panelMuted,
-    marginBottom: 12,
-  },
-  mt: {
-    marginTop: 10,
-  },
-});

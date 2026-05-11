@@ -1,34 +1,33 @@
-import { Image, StyleSheet, View } from 'react-native';
 import { Link } from 'expo-router';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
+import { formatSplitScore } from '@/lib/pour/format-split-score';
 
 import { Body, Muted } from './typography';
 
 interface ScoreCardProps {
   score: PourScore;
+  /** When set (e.g. leaderboard), shown instead of `pint_image_url`. */
+  previewImageUrl?: string | null;
 }
 
-function formatScore(value: number | null): string {
-  if (typeof value !== 'number') return '--';
-  return `${Math.round(value)}%`;
-}
-
-export function ScoreCard({ score }: ScoreCardProps) {
+export function ScoreCard({ score, previewImageUrl }: ScoreCardProps) {
   const pourRef = score.slug || score.id;
+  const uri = previewImageUrl?.trim() || score.pint_image_url?.trim() || null;
 
   return (
     <Link href={`/pour/${pourRef}`} asChild>
       <View style={styles.card}>
-        {score.pint_image_url ? (
-          <Image source={{ uri: score.pint_image_url }} style={styles.image} />
+        {uri ? (
+          <Image source={{ uri }} style={styles.image} />
         ) : (
           <View style={[styles.image, styles.imageFallback]} />
         )}
         <View style={styles.content}>
-          <Body style={styles.score}>{formatScore(score.split_score)}</Body>
+          <Body style={styles.score}>{formatSplitScore(score.split_score)}</Body>
           <Muted numberOfLines={1}>{score.username || 'Split The G drinker'}</Muted>
           <Muted numberOfLines={1}>
             {[score.city, score.country].filter(Boolean).join(', ') || absoluteWebUrl(`/pour/${pourRef}`)}

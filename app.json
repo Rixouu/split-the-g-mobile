@@ -41,7 +41,13 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Split The G uses your location once to confirm you are at the selected venue when saving details."
+        }
+      ]
     ],
     "extra": {
       "siteUrl": "https://split-the-g.vercel.app",

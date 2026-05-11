@@ -1,4 +1,3 @@
-import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
@@ -10,7 +9,8 @@ import {
   type PropsWithChildren,
 } from 'react';
 
-import { appConfig, hasSupabaseConfig } from '@/lib/config';
+import { getOAuthRedirectTo } from '@/lib/auth/oauth-redirect';
+import { hasSupabaseConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase/client';
 
 import type { Session, User } from '@supabase/supabase-js';
@@ -56,11 +56,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const signInWithGoogle = useCallback(async () => {
     if (!hasSupabaseConfig()) throw new Error('Supabase is not configured.');
 
-    const redirectTo = Linking.createURL('auth/callback');
+    const redirectTo = getOAuthRedirectTo();
     if (__DEV__) {
       // eslint-disable-next-line no-console -- Dev-only: Supabase must allowlist this exact redirect URL
       console.warn(
-        '[SplitTheG Auth] OAuth redirectTo — add to Supabase Dashboard → Authentication → URL Configuration → Redirect URLs:',
+        '[SplitTheG Auth] OAuth redirectTo (must match Supabase Redirect URLs exactly or login falls back to Site URL in the browser):',
         redirectTo,
       );
     }
@@ -76,25 +76,29 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!data.url) throw new Error('Supabase did not return an OAuth URL.');
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (result.type !== 'success') return;
+    try {
+      if (result.type !== 'success') return;
 
-    const parsed = new URL(result.url);
-    const code = parsed.searchParams.get('code');
-    if (code) {
-      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-      if (exchangeError) throw exchangeError;
-      return;
-    }
+      const parsed = new URL(result.url);
+      const code = parsed.searchParams.get('code');
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) throw exchangeError;
+        return;
+      }
 
-    const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
-    const accessToken = fragment.get('access_token');
-    const refreshToken = fragment.get('refresh_token');
-    if (accessToken && refreshToken) {
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-      if (sessionError) throw sessionError;
+      const fragment = new URLSearchParams(parsed.hash.replace(/^#/, ''));
+      const accessToken = fragment.get('access_token');
+      const refreshToken = fragment.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) throw sessionError;
+      }
+    } finally {
+      await WebBrowser.dismissBrowser().catch(() => undefined);
     }
   }, []);
 

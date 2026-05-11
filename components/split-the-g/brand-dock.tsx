@@ -4,17 +4,21 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
- * Mirrors split-the-g `AppNavigation` mobile dock: row 1 is **text-only** labels
- * (Feed | Wall · FAB · Pubs | Me); the **pour** asset is only on the center FAB,
- * as a single-color silhouette like `nav-mask-icons.css` mask + currentColor.
+ * Mirrors split-the-g `AppNavigation.tsx` mobile dock:
+ * - FAB: `h-[3.85rem] w-[3.85rem]`, `top-0`, `-translate-y-[38%]` (center sits just below panel top edge, ~62% of circle above).
+ * - Center gap: `w-[4.5rem]` between Wall and Pubs.
+ * Row 1: Feed | Wall · FAB · Pubs | Me (pour glyph only on FAB, like `nav-mask-icons.css`).
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-const ROW1_PAD_TOP = 10;
-const FAB_SIZE = 60;
-const FAB_OFFSET = -22;
+/** Web `h-[3.85rem] w-[3.85rem]` at default 16px root ≈ 61.6 — round for RN layout. */
+const FAB_SIZE = 62;
+/** Web `-translate-y-[38%]` of FAB height — overlap above panel top. */
+const FAB_OVERLAP_UP = FAB_SIZE * 0.38;
+/** Web spacer `<li className="w-[4.5rem] shrink-0" />` between dock halves. */
+const DOCK_CENTER_GAP = 72;
 /** Web: `MobileNavIcon` pour uses `h-8 w-8` (32 CSS px). */
 const POUR_FAB_GLYPH = 32;
 
@@ -58,19 +62,7 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
         },
       ]}
       accessibilityRole="tablist">
-      <View style={styles.panelOuter}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('navPour')}
-          onPress={() => go('index')}
-          style={({ pressed }) => [
-            styles.fab,
-            current === 'index' && styles.fabActiveRing,
-            pressed && styles.fabPressed,
-          ]}>
-          <PourNavIcon width={POUR_FAB_GLYPH} height={POUR_FAB_GLYPH} accessibilityElementsHidden />
-        </Pressable>
-
+      <View style={styles.dockWrap}>
         <View style={styles.panel}>
           <View style={styles.row1}>
             <Pressable
@@ -104,6 +96,18 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
             </Pressable>
           </View>
         </View>
+
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('navPour')}
+          onPress={() => go('index')}
+          style={({ pressed }) => [
+            styles.fab,
+            current === 'index' && styles.fabActiveRing,
+            pressed && styles.fabPressed,
+          ]}>
+          <PourNavIcon width={POUR_FAB_GLYPH} height={POUR_FAB_GLYPH} accessibilityElementsHidden />
+        </Pressable>
       </View>
     </View>
   );
@@ -116,19 +120,20 @@ const styles = StyleSheet.create({
     right: 12,
     bottom: 0,
     alignItems: 'center',
+    overflow: 'visible',
   },
-  panelOuter: {
+  dockWrap: {
     width: '100%',
     maxWidth: 440,
     position: 'relative',
-    paddingTop: ROW1_PAD_TOP + Math.abs(FAB_OFFSET),
+    overflow: 'visible',
   },
   panel: {
     borderRadius: 16,
     borderWidth: 1,
     borderColor: brandColors.border,
     backgroundColor: brandColors.dockBackground,
-    paddingTop: 10,
+    paddingTop: 12,
     paddingHorizontal: 4,
     paddingBottom: 8,
     shadowColor: '#000',
@@ -152,7 +157,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   row1Spacer: {
-    width: FAB_SIZE * 0.72,
+    width: DOCK_CENTER_GAP,
   },
   dockLabel: {
     fontSize: 9,
@@ -175,7 +180,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     marginLeft: -FAB_SIZE / 2,
-    top: FAB_OFFSET,
+    /** Match web `top-0` + `-translate-y-[38%]`: anchor to panel top, shift up by 38% of FAB height. */
+    top: -FAB_OVERLAP_UP,
     zIndex: 10,
     width: FAB_SIZE,
     height: FAB_SIZE,
@@ -184,12 +190,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(11, 11, 11, 0.35)',
+    borderColor: 'rgba(11, 11, 11, 0.3)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.45,
     shadowRadius: 14,
-    elevation: 12,
+    elevation: 14,
   },
   fabActiveRing: {
     borderWidth: 2,

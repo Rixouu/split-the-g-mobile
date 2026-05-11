@@ -42,8 +42,12 @@ export default function RootLayout() {
           <Stack.Screen name="pour/[pourRef]" options={{ title: 'Pour result' }} />
           <Stack.Screen name="competition/create" options={{ title: 'Create competition' }} />
           <Stack.Screen name="competition/[competitionId]" options={{ title: 'Competition' }} />
+          <Stack.Screen name="competition/[competitionId]/edit" options={{ title: 'Edit competition' }} />
           <Stack.Screen name="pub/[barKey]" options={{ title: 'Pub' }} />
           <Stack.Screen name="leaderboard/index" options={{ title: 'Leaderboard' }} />
+          <Stack.Screen name="leaderboard/country-stats" options={{ title: 'Countries' }} />
+          <Stack.Screen name="score/[splitId]" options={{ title: 'Pour' }} />
+          <Stack.Screen name="faq" options={{ title: 'FAQ' }} />
           <Stack.Screen
             name="language"
             options={{
