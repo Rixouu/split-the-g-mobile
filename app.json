@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Split The G",
-    "slug": "split-the-g-mobile",
+    "slug": "split-the-g",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
