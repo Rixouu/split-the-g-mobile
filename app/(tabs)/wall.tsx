@@ -10,11 +10,11 @@ import { fetchRecentScores } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-export default function FeedScreen() {
+export default function WallScreen() {
   const { t } = useLocale();
   const scores = useQuery({
-    queryKey: ['scores', 'recent'],
-    queryFn: () => fetchRecentScores(25),
+    queryKey: ['scores', 'wall'],
+    queryFn: () => fetchRecentScores(50),
   });
 
   const renderItem: ListRenderItem<PourScore> = ({ item }) => <ScoreCard score={item} />;
@@ -29,19 +29,19 @@ export default function FeedScreen() {
         renderItem={renderItem}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Eyebrow>{t('feedEyebrow')}</Eyebrow>
-            <Title>{t('feedTitle')}</Title>
-            <Muted>{t('feedSubtitle')}</Muted>
+            <Eyebrow>{t('wallEyebrow')}</Eyebrow>
+            <Title>{t('wallTitle')}</Title>
+            <Muted>{t('wallSubtitle')}</Muted>
           </View>
         }
         ListEmptyComponent={
           scores.isLoading ? (
             <Card>
-              <Body>Loading pours...</Body>
+              <Body>Loading wall…</Body>
             </Card>
           ) : scores.error ? (
             <Card>
-              <Body>Feed unavailable</Body>
+              <Body>Wall unavailable</Body>
               <Muted>{scores.error.message}</Muted>
             </Card>
           ) : (
@@ -67,7 +67,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: brandColors.black,
   },
-  list: { flex: 1 },
+  list: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: 20,
     paddingTop: 12,

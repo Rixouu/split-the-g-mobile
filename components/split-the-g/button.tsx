@@ -12,12 +12,14 @@ export function AppButton({ label, variant = 'primary', style, disabled, ...prop
     <Pressable
       {...props}
       disabled={disabled}
-      style={({ pressed }) => [
+      style={(state) => [
         styles.base,
-        styles[variant],
+        variant === 'primary' ? styles.primary : null,
+        variant === 'secondary' ? styles.secondary : null,
+        variant === 'ghost' ? styles.ghost : null,
         disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
-        typeof style === 'function' ? style({ pressed }) : style,
+        state.pressed && !disabled && styles.pressed,
+        typeof style === 'function' ? style(state) : style,
       ]}>
       <Text style={[styles.label, variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel]}>
         {label}
@@ -30,17 +32,17 @@ const styles = StyleSheet.create({
   base: {
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 50,
+    minHeight: 52,
     borderRadius: 999,
-    paddingHorizontal: 18,
+    paddingHorizontal: 20,
   },
   primary: {
     backgroundColor: brandColors.gold,
   },
   secondary: {
     borderWidth: 1,
-    borderColor: brandColors.border,
-    backgroundColor: brandColors.panelMuted,
+    borderColor: 'rgba(179, 139, 45, 0.42)',
+    backgroundColor: 'rgba(11, 11, 11, 0.55)',
   },
   ghost: {
     backgroundColor: 'transparent',
@@ -48,7 +50,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: 0.35,
   },
   primaryLabel: {
     color: brandColors.black,
@@ -57,9 +59,9 @@ const styles = StyleSheet.create({
     color: brandColors.cream,
   },
   disabled: {
-    opacity: 0.48,
+    opacity: 0.45,
   },
   pressed: {
-    opacity: 0.84,
+    opacity: 0.88,
   },
 });

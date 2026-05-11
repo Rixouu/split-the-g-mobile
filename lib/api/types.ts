@@ -11,6 +11,33 @@ export interface PourScore {
   country: string | null;
   country_code: string | null;
   created_at: string | null;
+  bar_name?: string | null;
+  bar_address?: string | null;
+  google_place_id?: string | null;
+  pour_rating?: number | null;
+  pint_price?: number | null;
+}
+
+export interface CompetitionSummary {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  visibility: string | null;
+  win_rule: string;
+  path_segment: string | null;
+  created_at?: string;
+}
+
+/** Matches web `COMPETITION_ROW_SELECT` / RLS-visible row. */
+export interface CompetitionDetail extends CompetitionSummary {
+  created_by: string;
+  max_participants: number;
+  glasses_per_person: number;
+  target_score?: number | null;
+  location_name?: string | null;
+  location_address?: string | null;
+  linked_bar_key?: string | null;
 }
 
 export interface PubSummary {

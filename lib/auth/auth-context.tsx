@@ -57,6 +57,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     if (!hasSupabaseConfig()) throw new Error('Supabase is not configured.');
 
     const redirectTo = Linking.createURL('auth/callback');
+    if (__DEV__) {
+      // eslint-disable-next-line no-console -- Dev-only: Supabase must allowlist this exact redirect URL
+      console.warn(
+        '[SplitTheG Auth] OAuth redirectTo — add to Supabase Dashboard → Authentication → URL Configuration → Redirect URLs:',
+        redirectTo,
+      );
+    }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {

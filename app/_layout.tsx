@@ -40,7 +40,19 @@ export default function RootLayout() {
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="pour/[pourRef]" options={{ title: 'Pour result' }} />
+          <Stack.Screen name="competition/create" options={{ title: 'Create competition' }} />
+          <Stack.Screen name="competition/[competitionId]" options={{ title: 'Competition' }} />
+          <Stack.Screen name="pub/[barKey]" options={{ title: 'Pub' }} />
           <Stack.Screen name="leaderboard/index" options={{ title: 'Leaderboard' }} />
+          <Stack.Screen
+            name="language"
+            options={{
+              presentation: 'modal',
+              title: 'Language',
+              headerStyle: { backgroundColor: brandColors.black },
+              headerTintColor: brandColors.cream,
+            }}
+          />
           <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Split The G' }} />
         </Stack>

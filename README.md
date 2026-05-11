@@ -143,6 +143,7 @@ npm run ios          # expo start --ios
 npm run android      # expo start --android
 npm run web          # expo start --web
 npm run lint         # expo lint
+npm run generate-assets  # re-gen app icon / splash / favicon from assets/images/icon.png
 ```
 
 ## 🌟 Implementation Notes (native)
@@ -151,6 +152,17 @@ npm run lint         # expo lint
 - **Auth:** scheme **`splittheg://`** — add **`splittheg://auth/callback`** to Supabase Auth redirect URLs.
 - **Maps:** iOS bundle **`com.rixouu.splittheg`**, Android package **`com.rixouu.splittheg`** — use an app-restricted Maps SDK key (not a browser-only HTTP referrer key).
 - **EAS:** project id lives in **`app.json`** (`expo.extra.eas.projectId`) and **`.eas/project.json`**. Build with `npx eas build --profile preview --platform ios|android`.
+
+### Supabase redirect URLs (return to app after Google)
+
+If **`redirectTo`** is not allowlisted, Supabase sends users to the **Site URL** in Safari (logged in on the website, not the app). In **Supabase Dashboard → Authentication → URL Configuration → Redirect URLs**, add every variant you need:
+
+- `splittheg://auth/callback` (standalone / dev client)
+- `exp://127.0.0.1:8081/--/auth/callback` and `exp://<your-LAN-IP>:8081/--/auth/callback` (Expo Go — IP varies)
+
+In **`__DEV__`**, the first sign-in attempt logs the exact `redirectTo` to the Metro console (see `lib/auth/auth-context.tsx`). Copy that string into Supabase if OAuth does not return to the app.
+
+**Google Cloud:** keep the OAuth client’s redirect URI as Supabase’s `https://<project-ref>.supabase.co/auth/v1/callback`. You usually do **not** add `splittheg://` there when using Supabase-hosted Google sign-in.
 
 ## 📱 Native vs Web
 

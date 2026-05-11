@@ -44,9 +44,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 14,
     borderWidth: 1,
-    borderColor: brandColors.border,
-    borderRadius: 22,
-    backgroundColor: brandColors.panel,
+    borderColor: brandColors.frame,
+    borderRadius: 14,
+    backgroundColor: 'rgba(29, 24, 15, 0.45)',
     padding: 12,
   },
   image: {
