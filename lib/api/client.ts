@@ -1,10 +1,17 @@
 import { appConfig } from '@/lib/config';
+import { competitionDetailWebPath } from '@/lib/competition/competition-web-path';
+import { normalizeEmail } from '@/lib/competition/detail-helpers';
+import { postFriendInviteEmail } from '@/lib/competition/web-invite-bridge';
 import { generateBeerUsername } from '@/lib/utils/username-generator';
 import { supabase } from '@/lib/supabase/client';
 
 import type {
+  BarLinkOption,
   CompetitionDetail,
+  CompetitionInviteRow,
   CompetitionSummary,
+  FriendPick,
+  ParticipantProfilePick,
   PourRankContext,
   PourScore,
   PubDetailPageData,
@@ -200,6 +207,11 @@ export async function unclaimPourScore(scoreId: string): Promise<void> {
 }
 
 import { fetchLeaderboardGlobal, type LeaderboardEntry } from './leaderboard';
+import {
+  COMPETITION_SCORES_SELECT,
+  COMPETITION_SCORE_LIMIT,
+  type CompetitionScoreJoin,
+} from '@/lib/competition/leaderboard';
 
 function leaderboardEntryAsPourScore(e: LeaderboardEntry): PourScore {
   return {
@@ -312,6 +324,320 @@ export async function updateCompetitionDetails(
   if (rerr) throw rerr;
   if (!data) throw new Error('Competition not found after update.');
   return data as CompetitionDetail;
+}
+
+export interface CompetitionsCatalogPayload {
+  competitions: CompetitionDetail[];
+  listError: string | null;
+  participantCounts: Record<string, number>;
+}
+
+/** Mirrors web `competitions.loader.ts` — RLS governs visibility. */
+export async function fetchCompetitionsCatalog(limit = 40): Promise<CompetitionsCatalogPayload> {
+  const { data, error } = await supabase
+    .from('competitions')
+    .select(COMPETITION_DETAIL_SELECT)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return { competitions: [], listError: error.message, participantCounts: {} };
+  }
+
+  const competitions = (data ?? []) as CompetitionDetail[];
+  const ids = competitions.map((c) => c.id);
+  const participantCounts: Record<string, number> = {};
+
+  if (ids.length > 0) {
+    const { data: parts } = await supabase
+      .from('competition_participants')
+      .select('competition_id')
+      .in('competition_id', ids);
+    for (const row of parts ?? []) {
+      const id = row.competition_id as string;
+      participantCounts[id] = (participantCounts[id] ?? 0) + 1;
+    }
+  }
+
+  return { competitions, listError: null, participantCounts };
+}
+
+export async function fetchBarLinkOptions(): Promise<BarLinkOption[]> {
+  const { data } = await supabase
+    .from('bar_pub_stats')
+    .select('bar_key, display_name')
+    .order('submission_count', { ascending: false })
+    .limit(200);
+  return (data ?? []) as BarLinkOption[];
+}
+
+export async function fetchUserJoinedOwnedCompetitions(userId: string): Promise<CompetitionDetail[]> {
+  const { data: rows } = await supabase
+    .from('competition_participants')
+    .select('competition_id')
+    .eq('user_id', userId);
+  const joinedIds = (rows ?? []).map((r) => r.competition_id as string);
+
+  const { data: owned } = await supabase.from('competitions').select('id').eq('created_by', userId);
+  const ownedIds = (owned ?? []).map((r) => r.id as string);
+
+  const idSet = new Set<string>([...joinedIds, ...ownedIds]);
+  if (idSet.size === 0) return [];
+
+  const { data: comps } = await supabase
+    .from('competitions')
+    .select(COMPETITION_DETAIL_SELECT)
+    .in('id', [...idSet]);
+  return (comps ?? []) as CompetitionDetail[];
+}
+
+export async function fillParticipantCountsForCompetitionIds(
+  competitionIds: string[],
+): Promise<Record<string, number>> {
+  if (competitionIds.length === 0) return {};
+  const { data } = await supabase
+    .from('competition_participants')
+    .select('competition_id')
+    .in('competition_id', competitionIds);
+  const next: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const id = row.competition_id as string;
+    next[id] = (next[id] ?? 0) + 1;
+  }
+  return next;
+}
+
+export async function fetchUserFriendsForInvites(userId: string): Promise<FriendPick[]> {
+  const { data } = await supabase
+    .from('user_friends')
+    .select('friend_user_id, peer_email')
+    .eq('user_id', userId);
+  return (data ?? []) as FriendPick[];
+}
+
+export async function fetchCompetitionInvitesByCompetitionIds(
+  competitionIds: string[],
+): Promise<Record<string, CompetitionInviteRow[]>> {
+  if (competitionIds.length === 0) return {};
+  const { data } = await supabase
+    .from('competition_invites')
+    .select('id, competition_id, invited_email')
+    .in('competition_id', competitionIds);
+  const next: Record<string, CompetitionInviteRow[]> = {};
+  for (const row of data ?? []) {
+    const cid = row.competition_id as string;
+    if (!next[cid]) next[cid] = [];
+    next[cid].push({ id: row.id as string, invited_email: String(row.invited_email) });
+  }
+  return next;
+}
+
+export async function fetchInvitedCompetitionTitles(
+  email: string,
+): Promise<{ competition_id: string; title: string }[]> {
+  const normalized = email.trim().toLowerCase();
+  const { data: invites } = await supabase
+    .from('competition_invites')
+    .select('competition_id')
+    .eq('invited_email', normalized);
+  if (!invites?.length) return [];
+  const ids = [...new Set(invites.map((i) => i.competition_id as string))];
+  const { data: comps } = await supabase.from('competitions').select('id, title').in('id', ids);
+  return (comps ?? []).map((c) => ({ competition_id: c.id as string, title: String(c.title) }));
+}
+
+export async function joinCompetitionAsUser(competitionId: string, userId: string): Promise<void> {
+  const { error } = await supabase.from('competition_participants').insert({
+    competition_id: competitionId,
+    user_id: userId,
+  });
+  if (error) throw error;
+}
+
+export async function leaveCompetitionAsUser(competitionId: string, userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('competition_participants')
+    .delete()
+    .eq('competition_id', competitionId)
+    .eq('user_id', userId);
+  if (error) throw error;
+}
+
+export async function deleteCompetitionById(competitionId: string): Promise<void> {
+  const { error } = await supabase.from('competitions').delete().eq('id', competitionId);
+  if (error) throw error;
+}
+
+export async function submitCompetitionInviteRow(row: {
+  competition_id: string;
+  invited_email: string;
+  invited_by: string;
+}): Promise<void> {
+  const { error } = await supabase.from('competition_invites').insert(row);
+  if (error) throw error;
+}
+
+export async function removeCompetitionInvite(inviteId: string): Promise<void> {
+  const { error } = await supabase.from('competition_invites').delete().eq('id', inviteId);
+  if (error) throw error;
+}
+
+export async function addUserToCompetitionAsParticipant(
+  competitionId: string,
+  participantUserId: string,
+): Promise<void> {
+  const { error } = await supabase.from('competition_participants').insert({
+    competition_id: competitionId,
+    user_id: participantUserId,
+  });
+  if (error) throw error;
+}
+
+export async function fetchCompetitionScoresJoined(
+  competitionId: string,
+): Promise<CompetitionScoreJoin[]> {
+  const { data } = await supabase
+    .from('competition_scores')
+    .select(COMPETITION_SCORES_SELECT)
+    .eq('competition_id', competitionId)
+    .order('created_at', { ascending: false })
+    .limit(COMPETITION_SCORE_LIMIT);
+  return (data ?? []) as CompetitionScoreJoin[];
+}
+
+export async function createCompetitionRow(payload: {
+  title: string;
+  created_by: string;
+  max_participants: number;
+  glasses_per_person: number;
+  starts_at: string;
+  ends_at: string;
+  win_rule: string;
+  target_score: number | null;
+  visibility: string;
+  location_name: string | null;
+  location_address: string | null;
+  linked_bar_key: string | null;
+}): Promise<{ id: string; path_segment: string | null }> {
+  const { data, error } = await supabase
+    .from('competitions')
+    .insert(payload)
+    .select('id, path_segment')
+    .single();
+  if (error) throw error;
+  return data as { id: string; path_segment: string | null };
+}
+
+export async function fetchCompetitionParticipantUserIds(competitionId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from('competition_participants')
+    .select('user_id')
+    .eq('competition_id', competitionId);
+  return [...new Set((data ?? []).map((r) => r.user_id as string).filter(Boolean))];
+}
+
+/** Most recent competition pour per user → email when claimed on a score (mirrors web roster hints). */
+export async function fetchParticipantEmailsFromCompetitionScores(
+  competitionId: string,
+): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from('competition_scores')
+    .select('user_id, created_at, scores(email)')
+    .eq('competition_id', competitionId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  const out: Record<string, string> = {};
+  for (const row of data ?? []) {
+    const uid = row.user_id as string | null;
+    if (!uid || out[uid]) continue;
+    const raw = row.scores as { email?: string | null } | { email?: string | null }[] | null;
+    const score = Array.isArray(raw) ? raw[0] : raw;
+    const em = score?.email?.trim();
+    if (em && em.includes('@')) out[uid] = normalizeEmail(em);
+  }
+  return out;
+}
+
+export async function sendFriendInviteToPeer(params: {
+  fromUserId: string;
+  fromEmail: string | null;
+  inviterName: string | null;
+  peerEmail: string;
+  competition: { id: string; path_segment: string | null; title: string | null } | null;
+}): Promise<void> {
+  const to = normalizeEmail(params.peerEmail);
+  if (!to.includes('@')) throw new Error('Invalid email');
+  await insertFriendRequestRow({
+    from_user_id: params.fromUserId,
+    to_email: to,
+    from_email: params.fromEmail ?? null,
+    status: 'pending',
+  });
+  const invitePath = params.competition
+    ? competitionDetailWebPath(params.competition)
+    : '/competitions';
+  try {
+    await postFriendInviteEmail({
+      inviterEmail: params.fromEmail,
+      inviterName: params.inviterName,
+      toEmail: to,
+      invitePath,
+      competitionTitle: params.competition?.title ?? null,
+    });
+  } catch {
+    // Email helper is best-effort; DB row is source of truth.
+  }
+}
+
+export async function fetchPublicProfilesMap(
+  userIds: string[],
+): Promise<Record<string, ParticipantProfilePick>> {
+  if (userIds.length === 0) return {};
+  const { data } = await supabase
+    .from('public_profiles')
+    .select('user_id, nickname, display_name, country_code')
+    .in('user_id', userIds);
+  const next: Record<string, ParticipantProfilePick> = {};
+  for (const row of data ?? []) {
+    const uid = row.user_id as string;
+    next[uid] = {
+      nickname: row.nickname as string | null,
+      display_name: row.display_name as string | null,
+      country_code: row.country_code != null ? String(row.country_code).trim() : null,
+    };
+  }
+  return next;
+}
+
+export async function fetchFriendRowsBidirectional(
+  userId: string,
+): Promise<{ user_id: string; friend_user_id: string }[]> {
+  const { data } = await supabase
+    .from('user_friends')
+    .select('user_id, friend_user_id')
+    .or(`user_id.eq.${userId},friend_user_id.eq.${userId}`);
+  return (data ?? []) as { user_id: string; friend_user_id: string }[];
+}
+
+export async function fetchPendingFriendRequestEmails(fromUserId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from('friend_requests')
+    .select('to_email')
+    .eq('from_user_id', fromUserId)
+    .eq('status', 'pending');
+  return (data ?? [])
+    .map((r) => String(r.to_email ?? '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+export async function insertFriendRequestRow(row: {
+  from_user_id: string;
+  to_email: string;
+  from_email: string | null;
+  status: string;
+}): Promise<void> {
+  const { error } = await supabase.from('friend_requests').insert(row);
+  if (error) throw error;
 }
 
 const BAR_STAT_SELECT =

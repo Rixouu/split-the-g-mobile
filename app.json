@@ -58,7 +58,8 @@
           "microphonePermission": "Split The G uses the microphone only when you record video.",
           "recordAudioAndroid": false
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "extra": {
       "siteUrl": "https://split-the-g.vercel.app",

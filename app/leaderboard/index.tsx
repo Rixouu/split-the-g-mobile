@@ -88,7 +88,7 @@ export default function LeaderboardScreen() {
         <AppButton
           label={t('lbViewSubmissions')}
           variant="primary"
-          onPress={() => router.push('/wall')}
+          onPress={() => router.push('/feed?tab=wall')}
           style={styles.primaryCta}
         />
       </View>

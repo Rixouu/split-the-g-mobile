@@ -13,10 +13,9 @@ export default function TabLayout() {
       }}>
       <Tabs.Screen name="index" options={{ title: 'Pour' }} />
       <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
-      <Tabs.Screen name="wall" options={{ title: 'Wall' }} />
+      <Tabs.Screen name="compete" options={{ title: 'Compete' }} />
       <Tabs.Screen name="pubs" options={{ title: 'Pubs' }} />
       <Tabs.Screen name="profile" options={{ title: 'Me' }} />
-      <Tabs.Screen name="compete" options={{ title: 'Compete', href: null }} />
     </Tabs>
   );
 }

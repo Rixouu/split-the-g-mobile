@@ -51,6 +51,27 @@ export interface CompetitionDetail extends CompetitionSummary {
   linked_bar_key?: string | null;
 }
 
+export interface FriendPick {
+  friend_user_id: string;
+  peer_email: string | null;
+}
+
+export interface CompetitionInviteRow {
+  id: string;
+  invited_email: string;
+}
+
+export interface BarLinkOption {
+  bar_key: string;
+  display_name: string;
+}
+
+export interface ParticipantProfilePick {
+  nickname?: string | null;
+  display_name?: string | null;
+  country_code?: string | null;
+}
+
 export interface PubSummary {
   bar_key: string;
   display_name: string;

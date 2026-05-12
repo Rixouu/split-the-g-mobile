@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { PourListRow } from '@/components/split-the-g/pour-list-row';
@@ -41,7 +34,7 @@ function chunkPairs<T>(items: T[]): T[][] {
   return rows;
 }
 
-export default function WallScreen() {
+export function WallFeedBody() {
   const { t } = useLocale();
   const scores = useQuery({
     queryKey: ['scores', 'wall'],
@@ -65,93 +58,87 @@ export default function WallScreen() {
   const empty = !scores.isLoading && !scores.error && (scores.data?.length ?? 0) === 0;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl
-            refreshing={scores.isRefetching}
-            onRefresh={() => scores.refetch()}
-            tintColor={brandColors.gold}
-          />
-        }>
-        <View style={styles.header}>
-          <Text style={styles.heroTitle}>{t('navWall')}</Text>
-          <Muted style={styles.heroSubtitle}>{t('wallSubtitle')}</Muted>
-        </View>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={scores.isRefetching}
+          onRefresh={() => scores.refetch()}
+          tintColor={brandColors.gold}
+        />
+      }>
+      <View style={styles.header}>
+        <Text style={styles.heroTitle}>{t('navWall')}</Text>
+        <Muted style={styles.heroSubtitle}>{t('wallSubtitle')}</Muted>
+      </View>
 
-        {scores.isLoading ? (
-          <Card>
-            <Body>Loading wall…</Body>
-          </Card>
-        ) : scores.error ? (
-          <Card>
-            <Body>Wall unavailable</Body>
-            <Muted>{scores.error.message}</Muted>
-          </Card>
-        ) : empty ? (
-          <Card>
-            <Body>No pours yet.</Body>
-          </Card>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>{t('wallLast24')}</Text>
-            {last24.length === 0 ? (
-              <Muted style={styles.emptyHint}>{t('wallEmptyDay')}</Muted>
-            ) : (
-              <View style={styles.gridBlock}>
-                {chunkPairs(last24).map((pair, rowIdx) => (
-                  <View key={`d-${rowIdx}`} style={styles.columnWrap}>
-                    {pair.map((item) => (
-                      <View key={item.id} style={styles.gridCell}>
-                        <PourGridCard score={item} />
-                      </View>
-                    ))}
-                    {pair.length === 1 ? <View style={styles.gridCell} /> : null}
-                  </View>
-                ))}
-              </View>
-            )}
-
-            <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallTopWeek')}</Text>
-            <View style={styles.listPanel}>
-              {weekTop.length === 0 ? (
-                <Muted style={styles.panelEmpty}>{t('wallTopWeekEmpty')}</Muted>
-              ) : (
-                weekTop.map((item) => <PourListRow key={item.id} score={item} />)
-              )}
-            </View>
-
-            <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallEarlier')}</Text>
+      {scores.isLoading ? (
+        <Card>
+          <Body>Loading wall…</Body>
+        </Card>
+      ) : scores.error ? (
+        <Card>
+          <Body>Wall unavailable</Body>
+          <Muted>{scores.error.message}</Muted>
+        </Card>
+      ) : empty ? (
+        <Card>
+          <Body>No pours yet.</Body>
+        </Card>
+      ) : (
+        <>
+          <Text style={styles.sectionTitle}>{t('wallLast24')}</Text>
+          {last24.length === 0 ? (
+            <Muted style={styles.emptyHint}>{t('wallEmptyDay')}</Muted>
+          ) : (
             <View style={styles.gridBlock}>
-              {archiveRows.length === 0 ? (
-                <Muted style={styles.emptyHint}>{t('wallArchiveEmpty')}</Muted>
-              ) : (
-                archiveRows.map((pair, rowIdx) => (
-                  <View key={`a-${rowIdx}`} style={styles.columnWrap}>
-                    {pair.map((item) => (
-                      <View key={item.id} style={styles.gridCell}>
-                        <PourGridCard score={item} />
-                      </View>
-                    ))}
-                    {pair.length === 1 ? <View style={styles.gridCell} /> : null}
-                  </View>
-                ))
-              )}
+              {chunkPairs(last24).map((pair, rowIdx) => (
+                <View key={`d-${rowIdx}`} style={styles.columnWrap}>
+                  {pair.map((item) => (
+                    <View key={item.id} style={styles.gridCell}>
+                      <PourGridCard score={item} />
+                    </View>
+                  ))}
+                  {pair.length === 1 ? <View style={styles.gridCell} /> : null}
+                </View>
+              ))}
             </View>
-          </>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+          )}
+
+          <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallTopWeek')}</Text>
+          <View style={styles.listPanel}>
+            {weekTop.length === 0 ? (
+              <Muted style={styles.panelEmpty}>{t('wallTopWeekEmpty')}</Muted>
+            ) : (
+              weekTop.map((item) => <PourListRow key={item.id} score={item} />)
+            )}
+          </View>
+
+          <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallEarlier')}</Text>
+          <View style={styles.gridBlock}>
+            {archiveRows.length === 0 ? (
+              <Muted style={styles.emptyHint}>{t('wallArchiveEmpty')}</Muted>
+            ) : (
+              archiveRows.map((pair, rowIdx) => (
+                <View key={`a-${rowIdx}`} style={styles.columnWrap}>
+                  {pair.map((item) => (
+                    <View key={item.id} style={styles.gridCell}>
+                      <PourGridCard score={item} />
+                    </View>
+                  ))}
+                  {pair.length === 1 ? <View style={styles.gridCell} /> : null}
+                </View>
+              ))
+            )}
+          </View>
+        </>
+      )}
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: brandColors.black,
-  },
   scroll: { flex: 1 },
   content: {
     paddingHorizontal: 16,

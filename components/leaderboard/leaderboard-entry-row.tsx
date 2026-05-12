@@ -24,7 +24,7 @@ export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRow
   return (
     <Link href={`/pour/${pourRef}`} asChild>
       <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-        <View style={styles.rankBadge}>
+        <View style={styles.rankColumn}>
           <Text style={styles.rankText}>#{rank}</Text>
         </View>
 
@@ -38,11 +38,10 @@ export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRow
           <View style={styles.middleRow}>
             <View style={styles.nameBlock}>
               <View style={styles.nameRow}>
-                {flag ? <Text style={styles.flag}>{flag} </Text> : null}
-                <Text style={styles.username} numberOfLines={2}>
-                  {entry.username}
-                </Text>
-                <Text style={styles.username} numberOfLines={2}>
+                {flag ? <Text style={styles.flag}>{flag}</Text> : null}
+                <Text
+                  style={[styles.username, flag ? styles.usernameBesideFlag : null]}
+                  numberOfLines={2}>
                   {entry.username}
                 </Text>
               </View>
@@ -67,26 +66,24 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
+    backgroundColor: '#121212',
     paddingVertical: 14,
     paddingHorizontal: 14,
   },
   cardPressed: {
-    borderColor: 'rgba(179, 139, 45, 0.3)',
-    backgroundColor: 'rgba(29, 24, 15, 0.5)',
+    borderColor: 'rgba(179, 139, 45, 0.35)',
+    backgroundColor: '#181818',
   },
-  rankBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 999,
-    backgroundColor: 'rgba(179, 139, 45, 0.12)',
-    alignItems: 'center',
+  rankColumn: {
+    minWidth: 36,
+    alignSelf: 'stretch',
     justifyContent: 'center',
   },
   rankText: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '800',
     color: brandColors.gold,
+    fontVariant: ['tabular-nums'],
   },
   thumb: {
     width: 64,
@@ -115,7 +112,6 @@ const styles = StyleSheet.create({
   nameRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    flexWrap: 'wrap',
   },
   flag: {
     fontSize: 17,
@@ -123,11 +119,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   username: {
+    flex: 1,
     flexShrink: 1,
     fontSize: 17,
     fontWeight: '700',
     color: brandColors.cream,
     lineHeight: 22,
+  },
+  usernameBesideFlag: {
+    marginLeft: 6,
   },
   date: {
     marginTop: 4,

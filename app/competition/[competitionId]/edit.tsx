@@ -3,6 +3,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { CompetitionDateTimeRangeField } from '@/components/competition/competition-datetime-range-field';
+import {
+  CompetitionLocationField,
+  type CompetitionLocationValue,
+} from '@/components/competition/competition-location-field';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -47,8 +52,13 @@ function buildInitialState(c: CompetitionDetail) {
     isPublic: !isPrivateCompetitionVisibility(c.visibility),
     winRule,
     targetScore: c.target_score != null ? String(c.target_score) : '2.50',
-    locationName: c.location_name?.trim() ?? '',
-    locationAddress: c.location_address?.trim() ?? '',
+    location: {
+      name: c.location_name?.trim() ?? '',
+      address: c.location_address?.trim() ?? '',
+      lat: null,
+      lng: null,
+      placeId: null,
+    } as CompetitionLocationValue,
     linkedBarKey: c.linked_bar_key?.trim() ?? '',
   };
 }
@@ -122,8 +132,8 @@ export default function CompetitionEditScreen() {
         win_rule: form.winRule,
         target_score: form.winRule === 'closest_to_target' ? validated.target : null,
         visibility: form.isPublic ? 'public' : 'private',
-        location_name: form.locationName.trim() || null,
-        location_address: form.locationAddress.trim() || null,
+        location_name: form.location.name.trim() || null,
+        location_address: form.location.address.trim() || null,
         linked_bar_key: form.linkedBarKey.trim() || null,
       });
     },
@@ -221,21 +231,17 @@ export default function CompetitionEditScreen() {
             />
           </>
         ) : null}
-        <Muted>{t('compEditFieldStart')}</Muted>
-        <TextInput
-          value={form.startsAt}
-          onChangeText={(startsAt) => setForm({ ...form, startsAt })}
-          style={styles.input}
-          placeholder={t('compEditDatetimePlaceholder')}
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        <Muted>{t('compEditFieldEnd')}</Muted>
-        <TextInput
-          value={form.endsAt}
-          onChangeText={(endsAt) => setForm({ ...form, endsAt })}
-          style={styles.input}
-          placeholder={t('compEditDatetimePlaceholder')}
-          placeholderTextColor={brandColors.tanMuted}
+        <CompetitionDateTimeRangeField
+          startsAt={form.startsAt}
+          endsAt={form.endsAt}
+          onChangeStartsAt={(startsAt) => setForm({ ...form, startsAt })}
+          onChangeEndsAt={(endsAt) => setForm({ ...form, endsAt })}
+          labelStart={t('compEditFieldStart')}
+          labelEnd={t('compEditFieldEnd')}
+          pickStartTitle={t('competitionPickStart')}
+          pickEndTitle={t('competitionPickEnd')}
+          doneLabel={t('competitionPickerDone')}
+          cancelLabel={t('competitionPickerCancel')}
         />
         <Pressable
           onPress={() => setForm({ ...form, isPublic: !form.isPublic })}
@@ -243,19 +249,12 @@ export default function CompetitionEditScreen() {
           accessibilityRole="button">
           <Body>{form.isPublic ? t('compEditPublic') : t('compEditPrivate')}</Body>
         </Pressable>
-        <Muted>{t('compEditVenueName')}</Muted>
-        <TextInput
-          value={form.locationName}
-          onChangeText={(locationName) => setForm({ ...form, locationName })}
-          style={styles.input}
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        <Muted>{t('compEditVenueAddress')}</Muted>
-        <TextInput
-          value={form.locationAddress}
-          onChangeText={(locationAddress) => setForm({ ...form, locationAddress })}
-          style={styles.input}
-          placeholderTextColor={brandColors.tanMuted}
+        <CompetitionLocationField
+          value={form.location}
+          onChange={(location) => setForm({ ...form, location })}
+          venueNameLabel={t('compEditVenueName')}
+          venueNamePlaceholder={t('compVenueNamePlaceholder')}
+          venueAddressLabel={t('compEditVenueAddress')}
         />
         <Muted>{t('compEditLinkedBarKey')}</Muted>
         <TextInput

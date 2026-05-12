@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /**
  * Mirrors split-the-g `AppNavigation.tsx` mobile dock:
  * - FAB: `h-[3.85rem] w-[3.85rem]`, `top-0`, `-translate-y-[38%]` (center sits just below panel top edge, ~62% of circle above).
- * - Center gap: `w-[4.5rem]` between Wall and Pubs.
- * Row 1: Feed | Wall · FAB · Pubs | Me (pour glyph only on FAB, like `nav-mask-icons.css`).
+ * - Center gap: `w-[4.5rem]` between Compete and Pubs.
+ * Row 1: Feed | Compete · FAB · Pubs | Me (pour glyph only on FAB, like `nav-mask-icons.css`).
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
 import { brandColors } from '@/constants/theme';
@@ -74,10 +74,10 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
             </Pressable>
             <Pressable
               accessibilityRole="tab"
-              accessibilityState={{ selected: current === 'wall' }}
-              onPress={() => go('wall')}
+              accessibilityState={{ selected: current === 'compete' }}
+              onPress={() => go('compete')}
               style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
-              <DockLabel active={current === 'wall'}>{t('navWall')}</DockLabel>
+              <DockLabel active={current === 'compete'}>{t('navCompete')}</DockLabel>
             </Pressable>
             <View style={styles.row1Spacer} />
             <Pressable

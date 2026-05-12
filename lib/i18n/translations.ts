@@ -75,6 +75,95 @@ export type TranslationKey =
   | 'competeSubtitle'
   | 'competeEmpty'
   | 'competeParticipants'
+  | 'competeCreateCta'
+  | 'competeTabOpen'
+  | 'competeTabPast'
+  | 'competeMineHeading'
+  | 'competeMineDescription'
+  | 'competeOpenPastCounts'
+  | 'competeListError'
+  | 'competeNoCompsYet'
+  | 'competeNoOpenComps'
+  | 'competeNoPastComps'
+  | 'competeInvitedTitle'
+  | 'competeInvitedHint'
+  | 'competeAdTitle'
+  | 'competeAdBody'
+  | 'competeAdCta'
+  | 'competeStatJoined'
+  | 'competeStatGlasses'
+  | 'competeStatRule'
+  | 'competeGlassesUnlimited'
+  | 'competeBadgeEnded'
+  | 'competeBadgeParticipated'
+  | 'competeBadgeIn'
+  | 'competeBadgePrivate'
+  | 'competeBadgePublic'
+  | 'competeWinner'
+  | 'competeWinnerDash'
+  | 'competeNoPoursLogged'
+  | 'competeView'
+  | 'competeEdit'
+  | 'competeJoin'
+  | 'competeLeave'
+  | 'competeFull'
+  | 'competeClosed'
+  | 'competeDelete'
+  | 'competeSignInJoin'
+  | 'competeInvitesSection'
+  | 'competeInviteEmail'
+  | 'competeInviteEmailHint'
+  | 'competeInvitePlaceholder'
+  | 'competeSendInvite'
+  | 'competeRemoveInvite'
+  | 'competeAddFriendsTitle'
+  | 'competeAddFriendsHint'
+  | 'competeAddToComp'
+  | 'competeDeleteTitle'
+  | 'competeDeleteMessage'
+  | 'competeDeleteKeep'
+  | 'competeDeleteConfirm'
+  | 'competeErrDeleteOwn'
+  | 'competeErrSignInJoin'
+  | 'competeErrFull'
+  | 'competeErrEmailInvite'
+  | 'competeErrSignInInvite'
+  | 'competeErrDeleteFailed'
+  | 'competeErrGeneric'
+  | 'competeToastDeleted'
+  | 'competeToastJoined'
+  | 'competeToastLeft'
+  | 'competeToastInviteSent'
+  | 'competeToastInviteSavedNoEmail'
+  | 'competeToastInviteRemoved'
+  | 'competeToastFriendAdded'
+  | 'competeLoadingCatalog'
+  | 'compFormErrNoName'
+  | 'compFormErrTimes'
+  | 'compFormErrEndAfterStart'
+  | 'compFormErrMaxBelowParticipants'
+  | 'compFormErrTargetRange'
+  | 'compCreateTitle'
+  | 'compCreateSubtitle'
+  | 'compCreateSubmit'
+  | 'compCreateSaving'
+  | 'compCreateSignIn'
+  | 'compCreateErrNoRow'
+  | 'compCreatePubHint'
+  | 'compCreateFieldLinkedPub'
+  | 'compCreatePickPub'
+  | 'compCreatePubNone'
+  | 'competitionPhaseBefore'
+  | 'competitionPhaseLive'
+  | 'competitionPhaseAfter'
+  | 'competitionLeaderboardTitle'
+  | 'competitionLbRowHint'
+  | 'competitionLbEmpty'
+  | 'competitionJoin'
+  | 'competitionLeave'
+  | 'competitionRosterFull'
+  | 'competitionSignInToJoin'
+  | 'competitionWebHintLess'
   | 'languageTitle'
   | 'languageSubtitle'
   | 'pourResultsEyebrow'
@@ -428,6 +517,20 @@ export type TranslationKey =
   | 'competitionLinkedPub'
   | 'competitionOpenPub'
   | 'competitionBackToList'
+  | 'competitionTabLeaderboard'
+  | 'competitionTabParticipants'
+  | 'competitionParticipantYou'
+  | 'competitionFriendStatusFriends'
+  | 'competitionFriendInvite'
+  | 'competitionFriendPending'
+  | 'competitionFriendNoEmail'
+  | 'competitionFriendSignIn'
+  | 'competitionPickerDone'
+  | 'competitionPickerCancel'
+  | 'competitionPickStart'
+  | 'competitionPickEnd'
+  | 'compVenueNamePlaceholder'
+  | 'competitionParticipantsEmpty'
   | 'compEditLoadError'
   | 'compEditNotAllowed'
   | 'compEditFieldName'
@@ -653,9 +756,100 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     wallSubtitle: 'Pour cards in chronological order — same data as web.',
     competeTitle: 'Competitions',
     competeEyebrow: 'Compete',
-    competeSubtitle: 'Public listings you can browse. Join flows stay on the full app.',
+    competeSubtitle:
+      'Open and past tabs, invites, and organizer tools — aligned with the web app. Pour from Home with a competition link to attach scores.',
     competeEmpty: 'No competitions to show yet.',
     competeParticipants: '{count} in',
+    competeCreateCta: 'New competition',
+    competeTabOpen: 'Open',
+    competeTabPast: 'Past',
+    competeMineHeading: 'Your competitions',
+    competeMineDescription:
+      'Listings summarize members, timing, and current leaders. Open one to pour, invite friends, and track standings.',
+    competeOpenPastCounts: '{open} open · {past} past',
+    competeListError: 'Could not load competitions: {detail}',
+    competeNoCompsYet: 'No competitions match your account yet.',
+    competeNoOpenComps: 'No open or upcoming competitions. Check Past for finished ones.',
+    competeNoPastComps: 'No past competitions yet.',
+    competeInvitedTitle: "You're invited",
+    competeInvitedHint: 'Open a competition from the list below to join.',
+    competeAdTitle: 'Ad space',
+    competeAdBody: 'Align your brand with community competitions. Ask about placements, formats, and rates.',
+    competeAdCta: 'Contact',
+    competeStatJoined: 'Joined',
+    competeStatGlasses: 'Glasses each',
+    competeStatRule: 'Rule',
+    competeGlassesUnlimited: 'Unlimited',
+    competeBadgeEnded: 'Ended',
+    competeBadgeParticipated: 'You participated',
+    competeBadgeIn: "You're in",
+    competeBadgePrivate: 'Private',
+    competeBadgePublic: 'Public',
+    competeWinner: 'Winner',
+    competeWinnerDash: '—',
+    competeNoPoursLogged: 'No pours logged',
+    competeView: 'View',
+    competeEdit: 'Edit',
+    competeJoin: 'Join',
+    competeLeave: 'Leave',
+    competeFull: 'Full',
+    competeClosed: 'Closed',
+    competeDelete: 'Delete',
+    competeSignInJoin: 'Sign in to join',
+    competeInvitesSection: 'Invites & friends',
+    competeInviteEmail: 'Invite by email',
+    competeInviteEmailHint: 'They get an email with a link to this competition.',
+    competeInvitePlaceholder: 'friend@email.com',
+    competeSendInvite: 'Send',
+    competeRemoveInvite: 'Remove',
+    competeAddFriendsTitle: 'Add friends',
+    competeAddFriendsHint: 'Friends must already be connected on your account.',
+    competeAddToComp: 'Add',
+    competeDeleteTitle: 'Delete competition?',
+    competeDeleteMessage: 'This removes the competition and its standings for everyone.',
+    competeDeleteKeep: 'Keep',
+    competeDeleteConfirm: 'Delete',
+    competeErrDeleteOwn: 'You can only delete competitions you created.',
+    competeErrSignInJoin: 'Sign in to join.',
+    competeErrFull: 'This competition is full or unavailable.',
+    competeErrEmailInvite: 'Enter a valid email address.',
+    competeErrSignInInvite: 'Sign in to send invites.',
+    competeErrDeleteFailed: 'Could not delete this competition.',
+    competeErrGeneric: 'Something went wrong. Try again.',
+    competeToastDeleted: 'Competition deleted.',
+    competeToastJoined: "You're in!",
+    competeToastLeft: 'You left the competition.',
+    competeToastInviteSent: 'Invite sent.',
+    competeToastInviteSavedNoEmail: 'Invite saved. Email could not be sent.',
+    competeToastInviteRemoved: 'Invite removed.',
+    competeToastFriendAdded: 'Friend added to the competition.',
+    competeLoadingCatalog: 'Loading competitions…',
+    compFormErrNoName: 'Enter a competition name.',
+    compFormErrTimes: 'Choose start and end times.',
+    compFormErrEndAfterStart: 'End must be after start.',
+    compFormErrMaxBelowParticipants: 'Max participants must be at least {count} (already joined).',
+    compFormErrTargetRange: 'Target score must be between 0 and 5.',
+    compCreateTitle: 'New competition',
+    compCreateSubtitle: 'Same rules and venue options as the web app. You need to be signed in.',
+    compCreateSubmit: 'Create competition',
+    compCreateSaving: 'Creating…',
+    compCreateSignIn: 'Sign in with Google from Profile to create a competition.',
+    compCreateErrNoRow: 'Competition was not created. Try again.',
+    compCreatePubHint: 'Optional — link to a pub from our directory.',
+    compCreateFieldLinkedPub: 'Linked pub',
+    compCreatePickPub: 'Choose pub',
+    compCreatePubNone: 'No pub linked',
+    competitionPhaseBefore: 'Starts in',
+    competitionPhaseLive: 'Live',
+    competitionPhaseAfter: 'Ended',
+    competitionLeaderboardTitle: 'Leaderboard',
+    competitionLbRowHint: 'Tap a row to open the pour',
+    competitionLbEmpty: 'No scored pours in this competition yet.',
+    competitionJoin: 'Join competition',
+    competitionLeave: 'Leave',
+    competitionRosterFull: 'Roster full',
+    competitionSignInToJoin: 'Sign in to join this competition.',
+    competitionWebHintLess: 'Invites and some organizer tools are also on split-the-g.app.',
     languageTitle: 'Language',
     languageSubtitle: 'Choose your display language.',
     pourResultsEyebrow: 'Pour result',
@@ -1082,6 +1276,20 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionLinkedPub: 'Linked pub',
     competitionOpenPub: 'Open pub →',
     competitionBackToList: 'Back to competitions list',
+    competitionTabLeaderboard: 'Leaderboard',
+    competitionTabParticipants: "Who's in",
+    competitionParticipantYou: 'You',
+    competitionFriendStatusFriends: 'Friends',
+    competitionFriendInvite: 'Add friend',
+    competitionFriendPending: 'Invite sent',
+    competitionFriendNoEmail: 'No email on file',
+    competitionFriendSignIn: 'Sign in to add friends',
+    competitionPickerDone: 'Done',
+    competitionPickerCancel: 'Cancel',
+    competitionPickStart: 'Start time',
+    competitionPickEnd: 'End time',
+    compVenueNamePlaceholder: 'Search Google Maps…',
+    competitionParticipantsEmpty: 'No one has joined this competition yet.',
     compEditLoadError: 'Could not load competition.',
     compEditNotAllowed: 'Only the competition creator can edit this event.',
     compEditFieldName: 'Name',

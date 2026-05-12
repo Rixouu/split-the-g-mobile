@@ -46,6 +46,7 @@ export default function RootLayout() {
             headerTintColor: brandColors.cream,
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="wall" options={{ headerShown: false }} />
           <Stack.Screen name="pour/[pourRef]" options={{ title: 'Pour result' }} />
           <Stack.Screen name="competition/create" options={{ title: 'Create competition' }} />
           <Stack.Screen name="competition/[competitionId]" options={{ title: 'Competition' }} />

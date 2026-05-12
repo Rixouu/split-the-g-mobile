@@ -219,7 +219,7 @@ export default function HomeScreen() {
           <Body style={styles.browseLabel}>{t('homeTopSplits')}</Body>
         </Pressable>
         <Pressable
-          onPress={() => router.push('/wall')}
+          onPress={() => router.push('/feed?tab=wall')}
           style={({ pressed }) => [styles.browseBtn, pressed && styles.browsePressed]}
           accessibilityRole="button">
           <Body style={styles.browseLabel}>{t('homeWall')}</Body>

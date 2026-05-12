@@ -11,7 +11,6 @@ import {
   StyleSheet,
   Text,
   View,
-  useWindowDimensions,
 } from 'react-native';
 
 import { AchievementStickerGraphic } from '@/components/profile/achievement-sticker-graphic';
@@ -92,13 +91,6 @@ export default function ProfileAchievementsScreen() {
   const { user } = useAuth();
   const { t, tVars } = useLocale();
   const router = useRouter();
-  const { width: windowWidth } = useWindowDimensions();
-
-  const screenPad = 20;
-  const sectionPad = 16;
-  const gridGap = 12;
-  const gridInnerW = Math.max(0, windowWidth - screenPad * 2 - sectionPad * 2);
-  const cellW = (gridInnerW - gridGap) / 2;
 
   const bundle = useQuery({
     queryKey: ['profile-achievements-screen', user?.id],
@@ -196,7 +188,7 @@ export default function ProfileAchievementsScreen() {
         <Text style={styles.sectionTitle}>{t('profileAchievementsTitle')}</Text>
         <Muted style={styles.sectionBlurb}>{t('profileAchievementsSectionBlurb')}</Muted>
 
-        <View style={[styles.grid, { gap: gridGap }]}>
+        <View style={styles.grid}>
           {rows.map((row) => {
             const titleKey = profileAchievementTitleKey(row.def.uiKey);
             const label = t(titleKey);
@@ -249,7 +241,7 @@ export default function ProfileAchievementsScreen() {
                   style={({ pressed }) => [
                     styles.badgeCard,
                     styles.badgeCardUnlocked,
-                    { width: cellW },
+                    styles.badgeCell,
                     pressed && styles.badgeCardPressed,
                   ]}>
                   {cardInner}
@@ -258,7 +250,7 @@ export default function ProfileAchievementsScreen() {
             }
 
             return (
-              <View key={row.def.persistCode} style={[styles.badgeCard, styles.badgeCardLocked, { width: cellW }]}>
+              <View key={row.def.persistCode} style={[styles.badgeCard, styles.badgeCardLocked, styles.badgeCell]}>
                 {cardInner}
               </View>
             );
@@ -359,6 +351,8 @@ const styles = StyleSheet.create({
     marginTop: 16,
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    rowGap: 12,
   },
   badgeCard: {
     borderRadius: 12,
@@ -366,6 +360,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
     marginBottom: 0,
+  },
+  badgeCell: {
+    width: '48.5%',
   },
   badgeCardUnlocked: {
     borderColor: CARD_BORDER_UNLOCKED,
