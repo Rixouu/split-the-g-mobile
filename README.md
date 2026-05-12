@@ -160,7 +160,7 @@ If **`redirectTo`** is not allowlisted **exactly**, Supabase sends users to the 
 The app builds `redirectTo` in **`lib/auth/oauth-redirect.ts`**:
 
 - **`npx expo run:android` / `run:ios` (dev client), EAS builds, standalone:** `splittheg://auth/callback` — add this **once** under **Authentication → URL Configuration → Redirect URLs**.
-- **Expo Go only:** `exp://HOST:8081/--/auth/callback` (host changes per machine). In **`__DEV__`**, Metro logs the exact URL; copy it into Supabase. **Android emulator** often needs **`exp://10.0.2.2:8081/--/auth/callback`** in addition to your LAN IP.
+- **Expo Go only:** Supabase **GoTrue rejects** `redirectTo` URLs whose hostname is a **non-loopback IP** (e.g. `192.168.*`, `10.0.2.2`) **before** the dashboard allowlist runs — adding those `exp://` URLs does not fix OAuth. Use **`npx expo start --tunnel`** and allowlist the logged `exp://…` URL (hostname is a domain), use a **simulator** (this app rewrites LAN IPs to `127.0.0.1` in dev), or use a **development build** with **`splittheg://auth/callback`**.
 
 Optional: set **`EXPO_PUBLIC_AUTH_REDIRECT_URL`** (see **`.env.example`**) to force a single redirect during debugging.
 

@@ -61,6 +61,61 @@ export interface PubSummary {
   submission_count: number;
 }
 
+/** Row shape from `pub_wall_scores` RPC — matches web `PubWallRow`. */
+export interface PubWallScoreRow {
+  id: string;
+  slug?: string | null;
+  username: string | null;
+  pint_image_url: string | null;
+  created_at: string;
+  split_score: number;
+  bar_name?: string | null;
+  bar_address?: string | null;
+  city?: string | null;
+  region?: string | null;
+  country_code?: string | null;
+  pint_price?: number | null;
+}
+
+/** First row from `pub_extra_stats_for_bar` RPC. */
+export interface PubExtraStatsRow {
+  distinct_drinkers: number;
+  total_pint_spend: number;
+  my_pint_spend: number;
+}
+
+/** Public `pub_place_details` row (select-only on mobile). */
+export interface PubPlaceDetailsRow {
+  bar_key: string;
+  opening_hours: string | null;
+  guinness_info: string | null;
+  alcohol_promotions: string | null;
+  maps_place_url: string | null;
+  google_place_id: string | null;
+  updated_at: string;
+  updated_by: string | null;
+}
+
+export interface PubLinkedCompetitionRow {
+  id: string;
+  title: string;
+  starts_at: string;
+  ends_at: string;
+  path_segment: string | null;
+}
+
+/** Matches web `pubs.$barKey` loader bundle (minus deferred Google hours fetch). */
+export interface PubDetailPageData {
+  bar: PubSummary;
+  wallPours: PubWallScoreRow[];
+  wallError: string | null;
+  extra: PubExtraStatsRow;
+  extraError: string | null;
+  placeDetails: PubPlaceDetailsRow | null;
+  linkedCompetitions: PubLinkedCompetitionRow[];
+  favId: string | null;
+}
+
 export interface PourSubmissionResponse {
   success: boolean;
   redirectTo?: string;

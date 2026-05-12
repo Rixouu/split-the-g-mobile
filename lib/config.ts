@@ -8,6 +8,9 @@ interface AppExtraConfig {
   googleMapsApiKey?: string;
   posthogKey?: string;
   posthogHost?: string;
+  roboflowPublishableKey?: string;
+  roboflowInferenceModel?: string;
+  roboflowInferenceVersion?: string;
 }
 
 const extra = (Constants.expoConfig?.extra ?? {}) as AppExtraConfig;
@@ -44,9 +47,31 @@ export const appConfig = {
     'EXPO_PUBLIC_POSTHOG_HOST',
     extra.posthogHost ?? 'https://us.i.posthog.com',
   ),
+  /** Same defaults as web `useHomePourClient` (`VITE_ROBOFLOW_*`). */
+  roboflowPublishableKey: valueFromEnv(
+    'EXPO_PUBLIC_ROBOFLOW_PUBLISHABLE_KEY',
+    valueFromEnv('EXPO_PUBLIC_ROBOFLOW_API_KEY', extra.roboflowPublishableKey ?? ''),
+  ),
+  roboflowInferenceModel: valueFromEnv(
+    'EXPO_PUBLIC_ROBOFLOW_INFERENCE_MODEL',
+    extra.roboflowInferenceModel ?? 'split-g-label-experiment',
+  ),
+  roboflowInferenceVersion: valueFromEnv(
+    'EXPO_PUBLIC_ROBOFLOW_INFERENCE_VERSION',
+    extra.roboflowInferenceVersion ?? '8',
+  ),
   appScheme: 'splittheg',
 };
 
 export function hasSupabaseConfig(): boolean {
   return Boolean(appConfig.supabaseUrl && appConfig.supabaseAnonKey);
+}
+
+/** Publishable key + model id — used for live hosted detect (same model as web Inference.js). */
+export function hasRoboflowLiveDetectConfig(): boolean {
+  return Boolean(
+    appConfig.roboflowPublishableKey.trim() &&
+      appConfig.roboflowInferenceModel.trim() &&
+      appConfig.roboflowInferenceVersion.trim(),
+  );
 }

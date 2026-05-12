@@ -18,6 +18,10 @@ export const brandColors = {
   border: 'rgba(179, 139, 45, 0.28)',
   borderSubtle: 'rgba(179, 139, 45, 0.15)',
   dockBackground: 'rgba(29, 24, 15, 0.95)',
+  /** Matches web mobile profile card stroke (`border-[#2A2211]`). */
+  hubStroke: '#2A2211',
+  /** Web pour / score cards (`border-[#312814]` in `score.tsx`). */
+  pourCardStroke: '#312814',
 };
 
 export const Colors = {

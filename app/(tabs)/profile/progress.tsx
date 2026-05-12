@@ -1,16 +1,16 @@
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
-import { useMyScores } from '@/components/profile/hooks/use-my-scores';
+import { ProfileProgressDashboard } from '@/components/profile/profile-progress-dashboard';
+import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
-import { computeProgressStats } from '@/lib/profile/compute-progress-stats';
-import { formatSplitScore } from '@/lib/pour/format-split-score';
 
 export default function ProfileProgressScreen() {
   const { user } = useAuth();
   const { t } = useLocale();
-  const scores = useMyScores();
-  const stats = computeProgressStats(scores.data ?? []);
+  const hub = useProfileHubData();
+
+  const scores = hub.data?.scores ?? [];
 
   return (
     <Screen>
@@ -20,34 +20,32 @@ export default function ProfileProgressScreen() {
         </Card>
       ) : null}
 
-      {scores.isLoading ? (
+      {user && hub.isLoading ? (
         <Card>
           <Body>{t('commonLoading')}</Body>
         </Card>
       ) : null}
 
-      {user && (scores.data?.length ?? 0) === 0 ? (
+      {user && hub.isError ? (
         <Card>
-          <Muted>{t('profileScoresEmpty')}</Muted>
+          <Body>{t('profileProgressLoadError')}</Body>
         </Card>
       ) : null}
 
-      {stats.count > 0 ? (
+      {user && !hub.isLoading && !hub.isError && scores.length === 0 ? (
         <Card>
-          <Body style={{ fontWeight: '700', marginBottom: 8 }}>{t('profileProgressTitle')}</Body>
-          <Muted>
-            {t('profileProgressTotalPints')}: {stats.count}
-          </Muted>
-          <Muted>
-            {t('profileProgressAvg')}: {formatSplitScore(stats.avg)}
-          </Muted>
-          <Muted>
-            {t('profileProgressBest')}: {formatSplitScore(stats.best)}
-          </Muted>
-          <Muted>
-            {t('profileProgressLast7')}: {stats.last7}
-          </Muted>
+          <Muted>{t('profileScoresEmptyBlurb')}</Muted>
         </Card>
+      ) : null}
+
+      {user && !hub.isLoading && !hub.isError && scores.length > 0 && hub.data ? (
+        <ProfileProgressDashboard
+          scores={scores}
+          comparisonScores={hub.data.comparisonScores}
+          comparisonLabels={hub.data.comparisonLabels}
+          userEmail={user.email ?? null}
+          streakSnapshot={hub.data.streakSnapshot}
+        />
       ) : null}
     </Screen>
   );

@@ -1,5 +1,6 @@
 import { PostHog } from 'posthog-react-native';
 
+import { getCachedAnalyticsConsent } from '@/lib/analytics/consent';
 import { appConfig } from '@/lib/config';
 
 let posthog: PostHog | null = null;
@@ -18,6 +19,8 @@ export function trackEvent(
   eventName: string,
   properties?: Record<string, string | number | boolean | null | undefined>,
 ) {
+  if (getCachedAnalyticsConsent() !== 'accepted') return;
+
   const sanitizedProperties = Object.fromEntries(
     Object.entries(properties ?? {}).filter(([, value]) => value !== undefined),
   ) as Record<string, string | number | boolean | null>;

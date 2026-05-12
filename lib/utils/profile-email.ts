@@ -6,3 +6,8 @@ export function escapeIlikePattern(value: string): string {
 export function normalizeEmail(e: string): string {
   return e.trim().toLowerCase();
 }
+
+export function emailDisplayName(email: string): string {
+  const local = email.split('@')[0]?.trim();
+  return local || email;
+}

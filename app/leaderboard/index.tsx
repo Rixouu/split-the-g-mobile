@@ -1,46 +1,34 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { ScoreCard } from '@/components/split-the-g/score-card';
+import { LeaderboardEntryRow } from '@/components/leaderboard/leaderboard-entry-row';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
-import type { PourScore } from '@/lib/api/types';
 import {
   fetchLeaderboardForCountry,
   fetchLeaderboardForFriends,
   fetchLeaderboardGlobal,
   fetchProfileCountryCode,
-  type LeaderboardEntry,
 } from '@/lib/api/leaderboard';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
+import type { TranslationKey } from '@/lib/i18n/translations';
 
 type LeaderTab = 'global' | 'local' | 'friends';
 
-function entryToPourScore(e: LeaderboardEntry): PourScore {
-  return {
-    id: e.id,
-    slug: e.slug ?? null,
-    username: e.username,
-    split_score: e.split_score,
-    created_at: e.created_at,
-    split_image_url: e.split_image_url,
-    pint_image_url: null,
-    g_closeup_image_url: null,
-    city: null,
-    region: null,
-    country: null,
-    country_code: e.country_code ?? null,
-  };
+function titleKeyForTab(tab: LeaderTab): TranslationKey {
+  if (tab === 'local') return 'lbTitleLocalWeek';
+  if (tab === 'friends') return 'lbTitleFriendsWeek';
+  return 'lbTitleGlobalWeek';
 }
 
 export default function LeaderboardScreen() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { user } = useAuth();
   const [tab, setTab] = useState<LeaderTab>('global');
 
@@ -78,40 +66,55 @@ export default function LeaderboardScreen() {
     return null;
   }, [tab, user, countryCode, countryQuery.isFetched, listQuery.isFetched, listQuery.data?.length, t]);
 
+  const titleKey = titleKeyForTab(tab);
+
   return (
     <Screen>
       <View style={styles.header}>
         <View style={styles.titleRow}>
-          <View style={{ flex: 1 }}>
-            <Eyebrow>{t('navLeaderboard')}</Eyebrow>
-            <Title>{t('lbTitle')}</Title>
-          </View>
-          <Pressable onPress={() => router.push('/faq')} style={styles.faqBtn}>
+          <Text style={styles.pageTitle}>{t(titleKey)}</Text>
+          <Pressable onPress={() => router.push('/faq')} style={styles.faqBtn} accessibilityRole="button">
             <Muted style={styles.faqBtnLabel}>{t('faqLink')}</Muted>
           </Pressable>
         </View>
-        <Muted>{t('lbSubtitle')}</Muted>
-        <AppButton label={t('lbCountryStats')} variant="secondary" onPress={() => router.push('/leaderboard/country-stats')} />
+        <Muted style={styles.subtitle}>{t('lbSubtitle')}</Muted>
+
+        <View style={styles.inlineLinks}>
+          <Pressable onPress={() => router.push('/leaderboard/country-stats')} accessibilityRole="button">
+            <Muted style={styles.linkText}>{t('lbCountryStatsLink')}</Muted>
+          </Pressable>
+        </View>
+
+        <AppButton
+          label={t('lbViewSubmissions')}
+          variant="primary"
+          onPress={() => router.push('/wall')}
+          style={styles.primaryCta}
+        />
       </View>
 
-      <View style={styles.tabs}>
-        {(['global', 'local', 'friends'] as const).map((k) => (
-          <Pressable
-            key={k}
-            onPress={() => setTab(k)}
-            style={[styles.tab, tab === k && styles.tabActive]}
-            accessibilityRole="button">
-            <Body style={[styles.tabLabel, tab === k && styles.tabLabelActive]}>
-              {k === 'global' ? t('lbTabGlobal') : k === 'local' ? t('lbTabLocal') : t('lbTabFriends')}
-            </Body>
-          </Pressable>
-        ))}
+      <View style={styles.segment} accessibilityRole="tablist">
+        {(['global', 'local', 'friends'] as const).map((k) => {
+          const active = tab === k;
+          const label =
+            k === 'global' ? t('lbTabGlobal') : k === 'local' ? t('lbTabLocal') : t('lbTabFriends');
+          return (
+            <Pressable
+              key={k}
+              onPress={() => setTab(k)}
+              style={[styles.segmentTab, active && styles.segmentTabActive]}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}>
+              <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
       {hint ? (
-        <Card>
-          <Muted>{hint}</Muted>
-        </Card>
+        <View style={styles.hintBanner}>
+          <Text style={styles.hintText}>{hint}</Text>
+        </View>
       ) : null}
 
       {listQuery.isLoading || (tab === 'local' && countryQuery.isLoading) ? (
@@ -128,58 +131,134 @@ export default function LeaderboardScreen() {
       ) : null}
 
       {!listQuery.isLoading && !listQuery.error && (listQuery.data?.length ?? 0) === 0 && !hint ? (
-        <Card>
-          <Muted>{t('lbEmpty')}</Muted>
-        </Card>
+        <View style={styles.emptyBanner}>
+          <Text style={styles.emptyText}>{t('lbEmpty')}</Text>
+        </View>
       ) : null}
 
-      {listQuery.data?.map((entry) => (
-        <ScoreCard key={entry.id} score={entryToPourScore(entry)} previewImageUrl={entry.split_image_url} />
-      ))}
+      <View style={styles.list}>
+        {listQuery.data?.map((entry, index) => (
+          <LeaderboardEntryRow key={entry.id} entry={entry} rank={index + 1} locale={locale} />
+        ))}
+      </View>
+
+      <AppButton
+        label={t('lbNewSplit')}
+        variant="outlineGold"
+        onPress={() => router.push('/')}
+        style={styles.footerCta}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    gap: 10,
-    paddingTop: 16,
+    gap: 12,
+    paddingTop: 8,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 8,
+    gap: 10,
+  },
+  pageTitle: {
+    flex: 1,
+    color: brandColors.gold,
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+    lineHeight: 30,
   },
   faqBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 2,
   },
   faqBtnLabel: {
     color: brandColors.gold,
     textDecorationLine: 'underline',
+    fontSize: 13,
   },
-  tabs: {
+  subtitle: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: 'rgba(212, 183, 143, 0.78)',
+  },
+  inlineLinks: {
     flexDirection: 'row',
-    gap: 8,
+    flexWrap: 'wrap',
+    gap: 12,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 999,
+  linkText: {
+    color: brandColors.goldBright,
+    textDecorationLine: 'underline',
+    fontSize: 13,
+  },
+  primaryCta: {
+    alignSelf: 'stretch',
+  },
+  segment: {
+    flexDirection: 'row',
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: brandColors.frame,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(11, 11, 11, 0.45)',
+    overflow: 'hidden',
+    minHeight: 48,
+  },
+  segmentTab: {
+    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 6,
   },
-  tabActive: {
-    borderColor: brandColors.gold,
-    backgroundColor: 'rgba(179, 139, 45, 0.15)',
+  segmentTabActive: {
+    backgroundColor: brandColors.gold,
   },
-  tabLabel: {
+  segmentLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: brandColors.muted,
+    color: 'rgba(212, 183, 143, 0.85)',
+    textAlign: 'center',
   },
-  tabLabelActive: {
-    color: brandColors.goldBright,
+  segmentLabelActive: {
+    color: brandColors.black,
+  },
+  hintBanner: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.22)',
+    backgroundColor: 'rgba(29, 24, 15, 0.4)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  hintText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: 'rgba(253, 251, 243, 0.88)',
+  },
+  emptyBanner: {
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(29, 24, 15, 0.3)',
+    paddingVertical: 28,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    textAlign: 'center',
+    color: 'rgba(212, 183, 143, 0.72)',
+    lineHeight: 20,
+  },
+  list: {
+    gap: 16,
+  },
+  footerCta: {
+    alignSelf: 'stretch',
+    marginTop: 8,
   },
 });

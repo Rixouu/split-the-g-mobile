@@ -7,6 +7,7 @@ export function computeProgressStats(scores: MyScoreRow[]) {
       best: 0,
       avg: 0,
       last7: 0,
+      dialPct: 0,
       totalSpend: 0,
     };
   }
@@ -14,6 +15,7 @@ export function computeProgressStats(scores: MyScoreRow[]) {
   const best = Math.max(...scores.map((s) => s.split_score));
   const sum = scores.reduce((a, s) => a + s.split_score, 0);
   const avg = sum / scores.length;
+  const dialPct = Math.min(100, Math.max(0, (avg / 5) * 100));
   const t7 = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const last7 = scores.filter((s) => new Date(s.created_at).getTime() >= t7).length;
   const totalSpend = scores.reduce((acc, s) => {
@@ -27,6 +29,7 @@ export function computeProgressStats(scores: MyScoreRow[]) {
     best,
     avg,
     last7,
+    dialPct,
     totalSpend,
   };
 }

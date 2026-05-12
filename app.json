@@ -50,6 +50,14 @@
         {
           "locationWhenInUsePermission": "Split The G uses your location once to confirm you are at the selected venue when saving details."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Split The G uses the camera to line up your pint and detect the Guinness G before scoring.",
+          "microphonePermission": "Split The G uses the microphone only when you record video.",
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "extra": {

@@ -9,7 +9,7 @@ import {
   type PropsWithChildren,
 } from 'react';
 
-import { getOAuthRedirectTo } from '@/lib/auth/oauth-redirect';
+import { getOAuthRedirectTo, oauthRedirectLikelyRejectedByGoTrue } from '@/lib/auth/oauth-redirect';
 import { hasSupabaseConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase/client';
 
@@ -58,11 +58,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
     const redirectTo = getOAuthRedirectTo();
     if (__DEV__) {
-      // eslint-disable-next-line no-console -- Dev-only: Supabase must allowlist this exact redirect URL
-      console.warn(
-        '[SplitTheG Auth] OAuth redirectTo (must match Supabase Redirect URLs exactly or login falls back to Site URL in the browser):',
-        redirectTo,
-      );
+      if (oauthRedirectLikelyRejectedByGoTrue(redirectTo)) {
+        // eslint-disable-next-line no-console -- Dev-only: GoTrue rejects non-loopback IP hosts before the URL allowlist
+        console.error(
+          '[SplitTheG Auth] OAuth redirectTo uses a non-loopback IP as hostname — Supabase GoTrue rejects this before your Redirect URL allowlist, so sign-in opens the Site URL in the browser instead of returning here. Use `npx expo start --tunnel` and add that exp:// URL to Supabase, or run a development build (`splittheg://auth/callback`). On simulators we rewrite LAN IPs to 127.0.0.1 automatically.',
+          redirectTo,
+        );
+      } else {
+        // eslint-disable-next-line no-console -- Dev-only: confirm redirect URL for Supabase allowlist / custom schemes
+        console.warn('[SplitTheG Auth] OAuth redirectTo:', redirectTo);
+      }
     }
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

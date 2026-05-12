@@ -7,7 +7,12 @@ import type {
   CompetitionSummary,
   PourRankContext,
   PourScore,
+  PubDetailPageData,
+  PubExtraStatsRow,
+  PubLinkedCompetitionRow,
+  PubPlaceDetailsRow,
   PubSummary,
+  PubWallScoreRow,
 } from './types';
 
 const SCORE_PUBLIC_SELECT =
@@ -309,33 +314,150 @@ export async function updateCompetitionDetails(
   return data as CompetitionDetail;
 }
 
+const BAR_STAT_SELECT =
+  'bar_key, display_name, sample_address, google_place_id, avg_pour_rating, rating_count, submission_count';
+
+/** Match web `PUB_WALL_PAGE_LIMIT` in `pubs.$barKey.shared.ts`. */
+const PUB_WALL_PAGE_LIMIT = 120;
+
+function numFromDb(v: unknown): number {
+  if (v == null) return 0;
+  const n = typeof v === 'number' ? v : Number.parseFloat(String(v));
+  return Number.isFinite(n) ? n : 0;
+}
+
+/** Match web `pubs.$barKey.loader`: prefer `bar_pub_stats_mv`, then `bar_pub_stats`. */
 export async function fetchPubByBarKey(barKey: string): Promise<PubSummary | null> {
-  const key = barKey.trim();
+  const key = barKey.trim().toLowerCase();
   if (!key) return null;
 
-  const { data, error } = await supabase
-    .from('bar_pub_stats')
-    .select(
-      'bar_key, display_name, sample_address, google_place_id, avg_pour_rating, rating_count, submission_count',
-    )
-    .eq('bar_key', key)
-    .maybeSingle();
+  let q = await supabase.from('bar_pub_stats_mv').select(BAR_STAT_SELECT).eq('bar_key', key).maybeSingle();
+  if (q.error || !q.data) {
+    q = await supabase.from('bar_pub_stats').select(BAR_STAT_SELECT).eq('bar_key', key).maybeSingle();
+  }
+  if (q.error) throw q.error;
+  return (q.data ?? null) as PubSummary | null;
+}
 
-  if (error) throw error;
-  return data as PubSummary | null;
+/**
+ * Pub detail payload aligned with web `pubs.$barKey` loader: stats MV, wall RPC,
+ * spend RPC, directory row, linked competitions, and optional favorite id.
+ */
+export async function fetchPubDetailPage(barKey: string, userId: string | null): Promise<PubDetailPageData | null> {
+  const key = barKey.trim().toLowerCase();
+  if (!key) return null;
+
+  const bar = await fetchPubByBarKey(key);
+  if (!bar) return null;
+
+  const nowIso = new Date().toISOString();
+
+  const [wallRes, extraRes, placeRes, compRes, favRes] = await Promise.all([
+    supabase.rpc('pub_wall_scores', { p_bar_key: key, p_limit: PUB_WALL_PAGE_LIMIT }),
+    supabase.rpc('pub_extra_stats_for_bar', { p_bar_key: key }),
+    supabase
+      .from('pub_place_details')
+      .select(
+        'bar_key, opening_hours, guinness_info, alcohol_promotions, maps_place_url, google_place_id, updated_at, updated_by',
+      )
+      .eq('bar_key', key)
+      .maybeSingle(),
+    supabase
+      .from('competitions')
+      .select('id, title, starts_at, ends_at, path_segment')
+      .eq('linked_bar_key', key)
+      .gt('ends_at', nowIso)
+      .order('ends_at', { ascending: true }),
+    userId
+      ? supabase.from('user_favorite_bars').select('id, bar_name').eq('user_id', userId)
+      : Promise.resolve({ data: [] as { id: string; bar_name: string }[], error: null }),
+  ]);
+
+  let wallPours: PubWallScoreRow[] = [];
+  let wallError: string | null = null;
+  if (wallRes.error) {
+    const msg = `${wallRes.error.message ?? ''} ${wallRes.error.code ?? ''}`.toLowerCase();
+    if (wallRes.error.code === '42883' || msg.includes('pub_wall_scores') || msg.includes('function')) {
+      wallError =
+        'Wall requires migration 20260328300000_pub_wall_scores_rpc (run Supabase migrations).';
+    } else {
+      wallError = wallRes.error.message ?? 'Could not load wall.';
+    }
+  } else {
+    wallPours = (wallRes.data ?? []).map((row: Record<string, unknown>) => ({
+      id: String(row.id ?? ''),
+      slug: (row.slug as string | null | undefined) ?? null,
+      username: (row.username as string | null) ?? '—',
+      pint_image_url: (row.pint_image_url as string | null) ?? null,
+      created_at: String(row.created_at ?? ''),
+      split_score: numFromDb(row.split_score),
+      bar_name: (row.bar_name as string | null | undefined) ?? null,
+      bar_address: (row.bar_address as string | null | undefined) ?? null,
+      city: (row.city as string | null | undefined) ?? null,
+      region: (row.region as string | null | undefined) ?? null,
+      country_code: (row.country_code as string | null | undefined) ?? null,
+      pint_price: row.pint_price != null ? numFromDb(row.pint_price) : null,
+    }));
+  }
+
+  let extra: PubExtraStatsRow = {
+    distinct_drinkers: 0,
+    total_pint_spend: 0,
+    my_pint_spend: 0,
+  };
+  let extraError: string | null = null;
+  if (extraRes.error) {
+    extraError = extraRes.error.message;
+  } else {
+    const raw = (extraRes.data ?? [])[0] as
+      | { distinct_drinkers?: unknown; total_pint_spend?: unknown; my_pint_spend?: unknown }
+      | undefined;
+    extra = {
+      distinct_drinkers: Math.round(numFromDb(raw?.distinct_drinkers)),
+      total_pint_spend: numFromDb(raw?.total_pint_spend),
+      my_pint_spend: numFromDb(raw?.my_pint_spend),
+    };
+  }
+
+  const placeDetails = !placeRes.error ? ((placeRes.data ?? null) as PubPlaceDetailsRow | null) : null;
+
+  const linkedCompetitions: PubLinkedCompetitionRow[] = !compRes.error
+    ? ((compRes.data ?? []) as PubLinkedCompetitionRow[])
+    : [];
+
+  let favId: string | null = null;
+  if (userId && !favRes.error && favRes.data?.length) {
+    const match = favRes.data.find((r) => r.bar_name.trim().toLowerCase() === key);
+    favId = match?.id ?? null;
+  }
+
+  return {
+    bar,
+    wallPours,
+    wallError,
+    extra,
+    extraError,
+    placeDetails,
+    linkedCompetitions,
+    favId,
+  };
 }
 
 export async function fetchPubs(limit = 50): Promise<PubSummary[]> {
-  const { data, error } = await supabase
-    .from('bar_pub_stats')
-    .select(
-      'bar_key, display_name, sample_address, google_place_id, avg_pour_rating, rating_count, submission_count',
-    )
+  let q = await supabase
+    .from('bar_pub_stats_mv')
+    .select(BAR_STAT_SELECT)
     .order('rating_count', { ascending: false })
     .limit(limit);
-
-  if (error) throw error;
-  return (data ?? []) as PubSummary[];
+  if (q.error) {
+    q = await supabase
+      .from('bar_pub_stats')
+      .select(BAR_STAT_SELECT)
+      .order('rating_count', { ascending: false })
+      .limit(limit);
+  }
+  if (q.error) throw q.error;
+  return (q.data ?? []) as PubSummary[];
 }
 
 export function absoluteWebUrl(path: string): string {

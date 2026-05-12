@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
+import type { ComparisonScoreRow } from '@/lib/profile/profile-leaderboard';
 
-import { escapeIlikePattern, normalizeEmail } from '@/lib/utils/profile-email';
+import { emailDisplayName, escapeIlikePattern, normalizeEmail } from '@/lib/utils/profile-email';
 
 export interface MyScoreRow {
   id: string;
@@ -16,6 +17,46 @@ export interface FavoriteRow {
   bar_name: string;
   bar_address: string | null;
   created_at: string;
+}
+
+export interface FavoriteBarStats {
+  avg: number;
+  count: number;
+}
+
+export function barKey(name: string, address?: string | null): string {
+  return `${name.trim().toLowerCase()}::${(address ?? '').trim().toLowerCase()}`;
+}
+
+export function favoriteMapsUrl(f: FavoriteRow): string {
+  const q = [f.bar_name, f.bar_address].filter(Boolean).join(' ');
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+}
+
+/** Aggregate pour counts / avg split by bar name (+ optional address), matching web profile favorites. */
+export async function fetchFavoriteBarStats(favorites: FavoriteRow[]): Promise<Record<string, FavoriteBarStats>> {
+  if (favorites.length === 0) return {};
+  const favoriteNames = [...new Set(favorites.map((f) => f.bar_name))];
+  const { data: ratingRows, error } = await supabase
+    .from('scores')
+    .select('bar_name, bar_address, split_score')
+    .in('bar_name', favoriteNames);
+  if (error) throw error;
+  return (ratingRows ?? []).reduce<Record<string, FavoriteBarStats>>((acc, row) => {
+    const name = String((row as { bar_name?: string }).bar_name ?? '').trim();
+    if (!name) return acc;
+    const addr = (row as { bar_address?: string | null }).bar_address ?? null;
+    const keys = [barKey(name, addr), barKey(name)];
+    for (const key of keys) {
+      const current = acc[key] ?? { avg: 0, count: 0 };
+      const nextCount = current.count + 1;
+      acc[key] = {
+        avg: (current.avg * current.count + Number((row as { split_score?: number }).split_score ?? 0)) / nextCount,
+        count: nextCount,
+      };
+    }
+    return acc;
+  }, {});
 }
 
 export interface FriendRequestRow {
@@ -65,6 +106,27 @@ export async function fetchMyAchievementCodes(userId: string): Promise<string[]>
   return (data ?? [])
     .map((r) => String((r as { code?: string }).code ?? '').trim())
     .filter(Boolean);
+}
+
+export async function fetchUserStreakSnapshot(
+  userId: string,
+): Promise<{ daily: number; weekend: number; weekly: number } | null> {
+  const { data, error } = await supabase
+    .from('user_streak_snapshots')
+    .select('daily_streak, weekly_streak, weekend_streak')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  const r = data as {
+    daily_streak?: number | null;
+    weekly_streak?: number | null;
+    weekend_streak?: number | null;
+  };
+  return {
+    daily: Number(r.daily_streak ?? 0),
+    weekly: Number(r.weekly_streak ?? 0),
+    weekend: Number(r.weekend_streak ?? 0),
+  };
 }
 
 export async function fetchFavoriteRows(userId: string): Promise<FavoriteRow[]> {
@@ -125,6 +187,76 @@ export async function loadSocial(userId: string, userEmail: string | null) {
   const friends = (frRes.data ?? []) as UserFriendRow[];
 
   return { outgoing, incoming, friends };
+}
+
+/** Loads score rows + display labels for the signed-in user and accepted friends (matches web `loadFriendComparison`). */
+export async function loadFriendComparisonScores(
+  userId: string,
+  userEmail: string | null,
+  friends: UserFriendRow[],
+): Promise<{ scores: ComparisonScoreRow[]; labels: Record<string, string> }> {
+  if (!userEmail?.trim()) {
+    return { scores: [], labels: {} };
+  }
+
+  const norm = normalizeEmail(userEmail);
+  const ownFriendRows = friends.filter((row) => row.user_id === userId);
+  const comparisonEmails = [
+    norm,
+    ...ownFriendRows
+      .map((row) => row.peer_email?.trim())
+      .filter((value): value is string => Boolean(value))
+      .map(normalizeEmail),
+  ];
+  const uniqueEmails = [...new Set(comparisonEmails)].filter(Boolean);
+  const friendUserIds = ownFriendRows.map((row) => row.friend_user_id);
+  const profileIds = [...new Set([userId, ...friendUserIds])];
+
+  if (uniqueEmails.length === 0) {
+    return { scores: [], labels: {} };
+  }
+
+  const { data: scoreRows } = await supabase
+    .from('scores')
+    .select('email, username, split_score, created_at')
+    .in('email', uniqueEmails)
+    .order('created_at', { ascending: false })
+    .limit(500);
+
+  const profileRes = await supabase
+    .from('public_profiles')
+    .select('user_id, display_name, nickname')
+    .in('user_id', profileIds);
+
+  type ProfilePick = { user_id: string; display_name: string | null; nickname: string | null };
+  let profileRows = (profileRes.data ?? []) as ProfilePick[];
+  if (profileRes.error) {
+    const fallback = await supabase
+      .from('public_profiles')
+      .select('user_id, display_name')
+      .in('user_id', profileIds);
+    profileRows = (fallback.data ?? []) as ProfilePick[];
+  }
+
+  const profileByUserId = new Map(profileRows.map((row) => [row.user_id, row]));
+  const labels: Record<string, string> = {};
+  labels[norm] =
+    profileByUserId.get(userId)?.nickname?.trim() ||
+    profileByUserId.get(userId)?.display_name?.trim() ||
+    emailDisplayName(userEmail);
+
+  for (const row of ownFriendRows) {
+    const peerEmail = row.peer_email?.trim();
+    if (!peerEmail) continue;
+    const profile = profileByUserId.get(row.friend_user_id);
+    labels[normalizeEmail(peerEmail)] =
+      profile?.nickname?.trim() || profile?.display_name?.trim() || emailDisplayName(peerEmail);
+  }
+
+  return {
+    scores: (scoreRows ?? []) as ComparisonScoreRow[],
+    labels,
+  };
 }
 
 export async function sendFriendInvite(params: {

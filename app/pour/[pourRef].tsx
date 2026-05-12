@@ -3,21 +3,21 @@ import { RefreshControl } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { PourClaimCard } from '@/components/pour-detail/pour-claim-card';
-import { PourCtaStrip } from '@/components/pour-detail/pour-cta-strip';
-import { PourGallery } from '@/components/pour-detail/pour-gallery';
-import { PourHero } from '@/components/pour-detail/pour-hero';
-import { PourRankStrip } from '@/components/pour-detail/pour-rank-strip';
+import { PourImageCards } from '@/components/pour-detail/pour-image-cards';
+import { PourResultsHeader } from '@/components/pour-detail/pour-results-header';
+import { PourScoreSummary } from '@/components/pour-detail/pour-score-summary';
+import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl } from '@/lib/api/client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { canUnclaimPour, fetchLeaderboardDisplayNameForUser } from '@/lib/auth/leaderboard-display-name';
 import { useLocale } from '@/lib/i18n/locale-context';
-import { buildPourShareMessage, translate } from '@/lib/i18n/translations';
+import { buildPourShareMessage, getPourCelebrationLine, translate } from '@/lib/i18n/translations';
 import { getIsPourOwner } from '@/lib/pour/ownership';
 import { getPourSessionId } from '@/lib/pour/session';
 import { supabase } from '@/lib/supabase/client';
@@ -106,6 +106,8 @@ export default function PourDetailScreen() {
   }, [d, rank, locale, webUrl]);
 
   const closeupFirst = d?.g_closeup_image_url?.trim() || d?.split_image_url || null;
+  const annotatedUrl = d?.split_image_url ?? null;
+  const previewImageUrl = d?.pint_image_url?.trim() || annotatedUrl;
 
   const onRefresh = useCallback(() => {
     void query.refetch();
@@ -120,7 +122,7 @@ export default function PourDetailScreen() {
           tintColor={brandColors.gold}
         />
       }>
-      <Eyebrow>{t('pourResultsEyebrow')}</Eyebrow>
+      <PourResultsHeader />
 
       {query.isLoading ? (
         <Card>
@@ -148,13 +150,18 @@ export default function PourDetailScreen() {
 
       {d ? (
         <>
-          <PourHero username={d.username} splitScore={d.split_score} />
-          {rank ? <PourRankStrip rank={rank} /> : null}
-          <PourGallery
-            pintUrl={d.pint_image_url}
-            splitUrl={d.split_image_url}
-            closeupUrl={closeupFirst}
+          <PourScoreSummary
+            score={d}
+            rank={rank ?? null}
+            celebration={
+              typeof d.split_score === 'number' && Number.isFinite(d.split_score)
+                ? getPourCelebrationLine(locale, d.split_score)
+                : ''
+            }
+            pubPageBarKey={pubPageBarKey}
+            onPressPub={(barKey) => router.push(`/pub/${encodeURIComponent(barKey)}`)}
           />
+          <PourImageCards closeupUrl={closeupFirst} annotatedUrl={annotatedUrl} />
 
           {isOwner ? (
             <>
@@ -166,29 +173,14 @@ export default function PourDetailScreen() {
                 </Card>
               ) : null}
             </>
-          ) : (
-            <Card>
-              <Body>{[d.city, d.region, d.country].filter(Boolean).join(', ')}</Body>
-              {(d.bar_name || d.bar_address) && (
-                <Body style={{ marginTop: 10 }}>
-                  {[d.bar_name, d.bar_address].filter(Boolean).join(' · ')}
-                </Body>
-              )}
-              {typeof d.pour_rating === 'number' ? (
-                <Body style={{ marginTop: 10 }}>
-                  Pour rating (1–5): {d.pour_rating.toFixed(1)}
-                </Body>
-              ) : null}
-              {typeof d.pint_price === 'number' ? (
-                <Body style={{ marginTop: 10 }}>Pint price recorded: {d.pint_price}</Body>
-              ) : null}
-              {d.created_at ? <Muted style={{ marginTop: 10 }}>{formatWhen(d.created_at)}</Muted> : null}
-            </Card>
-          )}
+          ) : null}
 
-          <PourCtaStrip
+          <PourSharePanel
             shareMessage={shareMessage}
             webUrl={webUrl}
+            splitScore={Number(d.split_score ?? 0)}
+            rank={rank ?? null}
+            previewImageUrl={previewImageUrl}
             pubPageBarKey={pubPageBarKey}
             googlePlaceId={d.google_place_id?.trim() || null}
           />

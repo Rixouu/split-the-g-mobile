@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { SignedInProfileHub } from '@/components/profile/signed-in-profile-hub';
+import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
@@ -9,31 +11,16 @@ import { brandColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-function ProfileLinkRow({ label, onPress }: { label: string; onPress: () => void }) {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.linkRow, pressed && styles.linkRowPressed]}
-      accessibilityRole="button">
-      <Body style={styles.linkLabel}>{label}</Body>
-      <Ionicons name="chevron-forward" size={18} color={brandColors.tanMuted} />
-    </Pressable>
-  );
-}
+const HUB_STROKE = brandColors.hubStroke;
 
 export default function ProfileHubScreen() {
   const router = useRouter();
   const { isConfigured, isLoading, signInWithGoogle, user } = useAuth();
-  const { t } = useLocale();
+  const { t, tVars } = useLocale();
+  const hubQuery = useProfileHubData();
 
   return (
-    <Screen>
-      <View style={styles.header}>
-        <Eyebrow>{t('navMe')}</Eyebrow>
-        <Title>{t('profileHubTitle')}</Title>
-        <Muted>{t('profileHubSubtitle')}</Muted>
-      </View>
-
+    <Screen contentContainerStyle={styles.scroll}>
       {!isConfigured ? (
         <Card>
           <Body>{t('errorSupabaseEnvTitle')}</Body>
@@ -41,71 +28,145 @@ export default function ProfileHubScreen() {
         </Card>
       ) : null}
 
-      <Card>
-        <ProfileLinkRow label={t('profileNavAccount')} onPress={() => router.push('/profile/account')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavScores')} onPress={() => router.push('/profile/scores')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavProgress')} onPress={() => router.push('/profile/progress')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavExpenses')} onPress={() => router.push('/profile/expenses')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavFavorites')} onPress={() => router.push('/profile/favorites')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavFriends')} onPress={() => router.push('/profile/friends')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavAchievements')} onPress={() => router.push('/profile/achievements')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('profileNavFaq')} onPress={() => router.push('/faq')} />
-      </Card>
-
-      <Card>
-        <Eyebrow style={{ marginBottom: 8 }}>Shortcuts</Eyebrow>
-        <ProfileLinkRow label={t('navLang')} onPress={() => router.push('/language')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('navCompete')} onPress={() => router.push('/compete')} />
-        <View style={styles.divider} />
-        <ProfileLinkRow label={t('navLeaderboard')} onPress={() => router.push('/leaderboard')} />
-      </Card>
-
-      <Card>
-        {isLoading ? <Body>Checking session…</Body> : null}
-        {!isLoading && !user ? (
-          <>
-            <Body>{t('signInPrompt')}</Body>
+      {!isLoading && !user ? (
+        <View style={styles.guestStack}>
+          <Eyebrow>{t('profileGuestEyebrow')}</Eyebrow>
+          <View style={styles.guestHero}>
+            <Title style={styles.guestTitle}>{t('profileGuestTitle')}</Title>
+            <Muted style={styles.guestBlurb}>{t('profileGuestBlurb')}</Muted>
             <AppButton label={t('signInGoogle')} onPress={signInWithGoogle} />
-          </>
-        ) : null}
-        {!isLoading && user ? (
-          <>
-            <Body>{user.email}</Body>
-            <Muted>{t('profileNextSteps')}</Muted>
-          </>
-        ) : null}
-      </Card>
+            <Text style={styles.guestFaqLine}>
+              <Text style={styles.guestFaqLink} onPress={() => router.push('/faq')}>
+                {t('profileNavFaq')}
+              </Text>
+              <Muted style={styles.guestFaqSuffix}>{t('profileGuestFaqBlurbSuffix')}</Muted>
+            </Text>
+          </View>
+          <View style={styles.guestTeaser}>
+            <Muted style={styles.guestTeaserText}>{t('profileGuestTeaser')}</Muted>
+          </View>
+        </View>
+      ) : null}
+
+      {isLoading ? (
+        <Card>
+          <Body>{t('commonLoading')}</Body>
+        </Card>
+      ) : null}
+
+      {user && !user.email?.trim() ? (
+        <Card>
+          <Body>{t('signInPrompt')}</Body>
+        </Card>
+      ) : null}
+
+      {user?.email?.trim() ? (
+        <>
+          {hubQuery.isLoading ? (
+            <Card>
+              <Body>{t('commonLoading')}</Body>
+            </Card>
+          ) : null}
+          {hubQuery.isError ? (
+            <Card>
+              <Body>{t('lbError')}</Body>
+              <AppButton label={t('profileHubRetry')} variant="secondary" onPress={() => hubQuery.refetch()} />
+            </Card>
+          ) : null}
+          {hubQuery.data ? (
+            <SignedInProfileHub user={user} hub={hubQuery.data} t={t} tVars={tVars} />
+          ) : null}
+        </>
+      ) : null}
+
+      {user?.email?.trim() && hubQuery.data ? (
+        <View style={styles.shortcuts}>
+          <Eyebrow style={styles.shortcutsEyebrow}>{t('navLang')}</Eyebrow>
+          <Pressable
+            onPress={() => router.push('/language')}
+            style={({ pressed }) => [styles.shortcutRow, pressed && styles.shortcutRowPressed]}
+            accessibilityRole="button">
+            <Ionicons name="globe-outline" size={20} color={brandColors.gold} />
+            <Body style={styles.shortcutLabel}>{t('languageTitle')}</Body>
+            <Ionicons name="chevron-forward" size={18} color={brandColors.tanMuted} />
+          </Pressable>
+        </View>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    gap: 10,
-    paddingTop: 16,
+  scroll: {
+    gap: 22,
   },
-  linkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
+  guestStack: {
+    gap: 20,
+    paddingTop: 8,
   },
-  linkRowPressed: {
+  guestHero: {
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.25)',
+    borderRadius: 16,
+    padding: 22,
+    backgroundColor: 'rgba(29, 24, 15, 0.5)',
+    gap: 14,
+  },
+  guestTitle: {
+    fontSize: 26,
+    lineHeight: 32,
+    color: brandColors.gold,
+  },
+  guestBlurb: {
+    lineHeight: 22,
+  },
+  guestFaqLine: {
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  guestFaqLink: {
+    color: brandColors.gold,
+    fontWeight: '700',
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
+  guestFaqSuffix: {
+    fontSize: 13,
+  },
+  guestTeaser: {
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.15)',
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    backgroundColor: 'rgba(29, 24, 15, 0.25)',
     opacity: 0.85,
   },
-  linkLabel: {
-    flex: 1,
+  guestTeaserText: {
+    textAlign: 'center',
+    fontSize: 12,
   },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: brandColors.borderSubtle,
+  shortcuts: {
+    marginTop: 4,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: HUB_STROKE,
+    gap: 10,
+  },
+  shortcutsEyebrow: {
+    marginBottom: 4,
+  },
+  shortcutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+  },
+  shortcutRowPressed: {
+    opacity: 0.85,
+  },
+  shortcutLabel: {
+    flex: 1,
   },
 });

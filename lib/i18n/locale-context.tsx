@@ -13,6 +13,7 @@ import {
   defaultLocale as fallbackLocale,
   supportedLocales,
   translate as translateStatic,
+  translateVars as translateVarsStatic,
   type SupportedLocale,
   type TranslationKey,
 } from '@/lib/i18n/translations';
@@ -23,6 +24,7 @@ interface LocaleContextValue {
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => Promise<void>;
   t: (key: TranslationKey) => string;
+  tVars: (key: TranslationKey, vars: Record<string, string | number>) => string;
 }
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -55,9 +57,14 @@ export function LocaleProvider({ children }: PropsWithChildren) {
 
   const t = useCallback((key: TranslationKey) => translateStatic(locale, key), [locale]);
 
+  const tVars = useCallback(
+    (key: TranslationKey, vars: Record<string, string | number>) => translateVarsStatic(locale, key, vars),
+    [locale],
+  );
+
   const value = useMemo(
-    () => ({ locale, setLocale, t }),
-    [locale, setLocale, t],
+    () => ({ locale, setLocale, t, tVars }),
+    [locale, setLocale, t, tVars],
   );
 
   return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;

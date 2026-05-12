@@ -1,10 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { FlatList, ListRenderItem, RefreshControl, StyleSheet, View } from 'react-native';
+import { Link } from 'expo-router';
+import {
+  FlatList,
+  type ListRenderItem,
+  Pressable,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ScoreCard } from '@/components/split-the-g/score-card';
+import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { Card } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { fetchRecentScores } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
@@ -14,10 +23,14 @@ export default function FeedScreen() {
   const { t } = useLocale();
   const scores = useQuery({
     queryKey: ['scores', 'recent'],
-    queryFn: () => fetchRecentScores(25),
+    queryFn: () => fetchRecentScores(36),
   });
 
-  const renderItem: ListRenderItem<PourScore> = ({ item }) => <ScoreCard score={item} />;
+  const renderItem: ListRenderItem<PourScore> = ({ item }) => (
+    <View style={styles.gridCell}>
+      <PourGridCard score={item} />
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -26,12 +39,19 @@ export default function FeedScreen() {
         contentContainerStyle={styles.content}
         data={scores.data ?? []}
         keyExtractor={(item) => item.id}
+        numColumns={2}
+        columnWrapperStyle={styles.columnWrap}
         renderItem={renderItem}
         ListHeaderComponent={
           <View style={styles.header}>
-            <Eyebrow>{t('feedEyebrow')}</Eyebrow>
-            <Title>{t('feedTitle')}</Title>
-            <Muted>{t('feedSubtitle')}</Muted>
+            <Text style={styles.heroTitle}>{t('navFeed')}</Text>
+            <Muted style={styles.heroSubtitle}>{t('feedSubtitle')}</Muted>
+            <Link href="/" asChild>
+              <Pressable style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]} accessibilityRole="button">
+                <Text style={styles.ctaLabel}>{t('homeScorePour')}</Text>
+              </Pressable>
+            </Link>
+            <Text style={styles.sectionLabel}>{t('feedPoursSection')}</Text>
           </View>
         }
         ListEmptyComponent={
@@ -69,14 +89,57 @@ const styles = StyleSheet.create({
   },
   list: { flex: 1 },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 132,
-    gap: 14,
+    gap: 0,
+  },
+  columnWrap: {
+    gap: 12,
+    marginBottom: 12,
+  },
+  gridCell: {
+    flex: 1,
+    minWidth: 0,
   },
   header: {
-    gap: 10,
-    marginBottom: 8,
-    paddingTop: 8,
+    marginBottom: 20,
+    gap: 12,
+    paddingTop: 4,
+  },
+  heroTitle: {
+    fontSize: 34,
+    fontWeight: '800',
+    letterSpacing: -0.6,
+    color: brandColors.goldBright,
+  },
+  heroSubtitle: {
+    marginTop: -4,
+  },
+  cta: {
+    marginTop: 4,
+    borderRadius: 999,
+    backgroundColor: brandColors.gold,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  ctaPressed: {
+    opacity: 0.92,
+    transform: [{ scale: 0.99 }],
+  },
+  ctaLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: brandColors.black,
+    letterSpacing: 0.2,
+  },
+  sectionLabel: {
+    marginTop: 8,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: -0.2,
+    color: brandColors.cream,
   },
 });

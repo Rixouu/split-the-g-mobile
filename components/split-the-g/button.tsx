@@ -4,26 +4,45 @@ import { brandColors } from '@/constants/theme';
 
 interface AppButtonProps extends PressableProps {
   label: string;
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'outlineGold';
+  /** Pill (default) vs web-style rounded rectangle on profile / forms. */
+  shape?: 'pill' | 'rounded';
+  fullWidth?: boolean;
 }
 
-export function AppButton({ label, variant = 'primary', style, disabled, ...props }: AppButtonProps) {
+export function AppButton({
+  label,
+  variant = 'primary',
+  shape = 'pill',
+  fullWidth,
+  style,
+  disabled,
+  ...props
+}: AppButtonProps) {
+  const labelStyle =
+    variant === 'primary'
+      ? styles.primaryLabel
+      : variant === 'outlineGold'
+        ? styles.outlineGoldLabel
+        : styles.secondaryLabel;
+
   return (
     <Pressable
       {...props}
       disabled={disabled}
       style={(state) => [
         styles.base,
+        shape === 'rounded' ? styles.rounded : styles.pill,
+        fullWidth ? styles.fullWidth : null,
         variant === 'primary' ? styles.primary : null,
         variant === 'secondary' ? styles.secondary : null,
         variant === 'ghost' ? styles.ghost : null,
+        variant === 'outlineGold' ? styles.outlineGold : null,
         disabled && styles.disabled,
         state.pressed && !disabled && styles.pressed,
         typeof style === 'function' ? style(state) : style,
       ]}>
-      <Text style={[styles.label, variant === 'primary' ? styles.primaryLabel : styles.secondaryLabel]}>
-        {label}
-      </Text>
+      <Text style={[styles.label, labelStyle]}>{label}</Text>
     </Pressable>
   );
 }
@@ -33,8 +52,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 52,
-    borderRadius: 999,
     paddingHorizontal: 20,
+  },
+  pill: {
+    borderRadius: 999,
+  },
+  rounded: {
+    borderRadius: 10,
+    minHeight: 48,
+  },
+  fullWidth: {
+    alignSelf: 'stretch',
   },
   primary: {
     backgroundColor: brandColors.gold,
@@ -47,6 +75,11 @@ const styles = StyleSheet.create({
   ghost: {
     backgroundColor: 'transparent',
   },
+  outlineGold: {
+    borderWidth: 2,
+    borderColor: 'rgba(179, 139, 45, 0.45)',
+    backgroundColor: 'transparent',
+  },
   label: {
     fontSize: 15,
     fontWeight: '800',
@@ -54,6 +87,9 @@ const styles = StyleSheet.create({
   },
   primaryLabel: {
     color: brandColors.black,
+  },
+  outlineGoldLabel: {
+    color: brandColors.gold,
   },
   secondaryLabel: {
     color: brandColors.cream,

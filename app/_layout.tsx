@@ -1,6 +1,7 @@
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { brandColors } from '@/constants/theme';
@@ -29,6 +30,12 @@ const splitTheGTheme = {
 };
 
 export default function RootLayout() {
+  useEffect(() => {
+    void import('@/lib/notifications/expo-listeners').then((m) =>
+      m.ensureExpoNotificationListenersRegistered(),
+    );
+  }, []);
+
   return (
     <AppProviders>
       <ThemeProvider value={splitTheGTheme}>

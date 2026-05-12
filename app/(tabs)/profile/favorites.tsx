@@ -1,24 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
+import { FavoriteVenueCard } from '@/components/profile/favorite-venue-card';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
+  barKey,
   deleteFavoriteBar,
+  favoriteMapsUrl,
+  fetchFavoriteBarStats,
   fetchFavoriteRows,
   insertFavoriteBar,
 } from '@/lib/api/profile';
-import { fetchPlaceAutocomplete, fetchPlaceDetails, type PlaceAutocompleteItem } from '@/lib/places/google-places';
 import { appConfig } from '@/lib/config';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { barKeyToPubPathSegment } from '@/lib/routing/pub-path';
+import { fetchPlaceAutocomplete, fetchPlaceDetails, type PlaceAutocompleteItem } from '@/lib/places/google-places';
 
 export default function ProfileFavoritesScreen() {
   const { user } = useAuth();
-  const { t } = useLocale();
+  const { t, tVars } = useLocale();
+  const router = useRouter();
   const qc = useQueryClient();
 
   const [name, setName] = useState('');
@@ -29,6 +36,13 @@ export default function ProfileFavoritesScreen() {
     queryKey: ['favorites', user?.id],
     queryFn: () => fetchFavoriteRows(user!.id),
     enabled: Boolean(user?.id),
+  });
+
+  const favKey = listQuery.data?.map((f) => f.id).join('|') ?? '';
+  const statsQuery = useQuery({
+    queryKey: ['favorite-stats', user?.id, favKey],
+    queryFn: () => fetchFavoriteBarStats(listQuery.data!),
+    enabled: Boolean(user?.id && listQuery.isSuccess && (listQuery.data?.length ?? 0) > 0),
   });
 
   useEffect(() => {
@@ -58,27 +72,25 @@ export default function ProfileFavoritesScreen() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: ['favorites', user?.id] }),
   });
 
-  const openMaps = useCallback((q: string) => {
-    void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`);
+  const onPick = useCallback(async (item: PlaceAutocompleteItem) => {
+    setSuggestions([]);
+    const d = await fetchPlaceDetails(item.placeId);
+    if (d) {
+      setName(d.name || item.mainText);
+      setAddress(d.formattedAddress || item.secondaryText);
+    } else {
+      setName(item.mainText);
+      setAddress(item.secondaryText);
+    }
   }, []);
 
-  const onPick = useCallback(
-    async (item: PlaceAutocompleteItem) => {
-      setSuggestions([]);
-      const d = await fetchPlaceDetails(item.placeId);
-      if (d) {
-        setName(d.name || item.mainText);
-        setAddress(d.formattedAddress || item.secondaryText);
-      } else {
-        setName(item.mainText);
-        setAddress(item.secondaryText);
-      }
-    },
-    [],
-  );
+  const stats = statsQuery.data ?? {};
+  const busy = addMut.isPending || delMut.isPending;
 
   return (
     <Screen>
+      <Stack.Screen options={{ title: t('profileFavoritesScreenTitle') }} />
+
       {!user ? (
         <Card>
           <Body>{t('signInPrompt')}</Body>
@@ -87,12 +99,14 @@ export default function ProfileFavoritesScreen() {
 
       {user ? (
         <Card>
-          <Body style={{ fontWeight: '700', marginBottom: 8 }}>{t('profileFavoritesTitle')}</Body>
-          <Muted style={styles.label}>{t('profileFavoritesName')}</Muted>
+          <Body style={styles.sectionTitle}>{t('profileFavoritesSectionTitle')}</Body>
+          <Muted style={styles.blurb}>{t('profileFavoritesSectionBlurb')}</Muted>
+
+          <Muted style={styles.fieldLabel}>{t('profileFavoritesSearchLabel')}</Muted>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder={t('profileFavoritesNamePlaceholder')}
+            placeholder={t('profileFavoritesPlacesPlaceholder')}
             placeholderTextColor={brandColors.tanMuted}
             style={styles.input}
           />
@@ -106,51 +120,94 @@ export default function ProfileFavoritesScreen() {
               ))}
             </View>
           ) : null}
-          <Muted style={styles.label}>{t('profileFavoritesAddress')}</Muted>
-          <TextInput
-            value={address}
-            onChangeText={setAddress}
-            placeholder="123 High St"
-            placeholderTextColor={brandColors.tanMuted}
-            style={styles.input}
-          />
+
           <AppButton
-            label={t('profileFavoritesAdd')}
-            disabled={addMut.isPending || !name.trim()}
+            label={t('profileFavoritesSaveButton')}
+            variant="primary"
+            shape="rounded"
+            fullWidth
+            disabled={busy || !name.trim()}
             onPress={() => addMut.mutate()}
           />
+          <Muted style={styles.hint}>{t('profileFavoritesAddressHint')}</Muted>
         </Card>
       ) : null}
 
-      {listQuery.data?.map((f) => (
-        <Card key={f.id}>
-          <Body>{f.bar_name}</Body>
-          {f.bar_address ? <Muted>{f.bar_address}</Muted> : null}
-          <AppButton
-            label="Open in Maps"
-            variant="secondary"
-            onPress={() => openMaps([f.bar_name, f.bar_address].filter(Boolean).join(' '))}
-          />
-          <AppButton
-            label="Remove"
-            variant="ghost"
-            onPress={() => delMut.mutate(f.id)}
-            disabled={delMut.isPending}
-          />
+      {user && listQuery.isLoading ? (
+        <Muted style={styles.centerNote}>{t('commonLoading')}</Muted>
+      ) : null}
+
+      {user && listQuery.isError ? (
+        <Card>
+          <Body>{t('pubLoadError')}</Body>
         </Card>
-      ))}
+      ) : null}
+
+      {user && listQuery.isSuccess && (listQuery.data?.length ?? 0) > 0 ? (
+        <View style={styles.listBlock}>
+          {listQuery.data!.map((f) => {
+            const rowStats =
+              stats[barKey(f.bar_name, f.bar_address)] ?? stats[barKey(f.bar_name)] ?? null;
+            const pourCount = rowStats?.count ?? 0;
+            const pourLabel =
+              pourCount === 1 ? t('pubsCardPourOne') : tVars('pubsCardPourMany', { count: pourCount });
+            const ratingDotLabel =
+              pourCount === 1
+                ? t('pubsCardRatingDotOne')
+                : tVars('pubsCardRatingDotMany', { count: String(pourCount) });
+            const barKeySegment = barKeyToPubPathSegment(f.bar_name.trim().toLowerCase());
+            return (
+              <FavoriteVenueCard
+                key={f.id}
+                title={f.bar_name}
+                address={f.bar_address}
+                avgPourRating={rowStats?.avg ?? null}
+                ratingCount={pourCount}
+                pourLabel={pourLabel}
+                ratingOutOfLabel={t('pubsCardOutOfFive')}
+                ratingDotLabel={ratingDotLabel}
+                noRatingsLabel={t('pubsCardNoRatingsYet')}
+                mapsLabel={t('profileFavoritesMaps')}
+                removeLabel={t('profileFavoritesRemove')}
+                onPressPrimary={() =>
+                  router.push({ pathname: '/pub/[barKey]', params: { barKey: barKeySegment } })
+                }
+                onPressMaps={() => void Linking.openURL(favoriteMapsUrl(f))}
+                onPressRemove={() => delMut.mutate(f.id)}
+                removeDisabled={busy}
+              />
+            );
+          })}
+        </View>
+      ) : null}
+
+      {user && listQuery.isSuccess && (listQuery.data?.length ?? 0) === 0 ? (
+        <Muted style={styles.centerNote}>{t('profileFavoritesEmpty')}</Muted>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  label: {
-    marginTop: 8,
-    marginBottom: 4,
+  sectionTitle: {
+    fontWeight: '700',
+    fontSize: 18,
+    color: brandColors.gold,
+    marginBottom: 6,
+  },
+  blurb: {
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  fieldLabel: {
+    marginBottom: 6,
+    color: 'rgba(212, 183, 143, 0.85)',
+    fontWeight: '600',
+    fontSize: 13,
   },
   input: {
     borderWidth: 1,
-    borderColor: brandColors.borderSubtle,
+    borderColor: 'rgba(179, 139, 45, 0.28)',
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -162,7 +219,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: brandColors.frame,
     borderRadius: 10,
-    marginBottom: 8,
+    marginTop: 8,
+    marginBottom: 4,
     maxHeight: 160,
     overflow: 'hidden',
   },
@@ -170,5 +228,19 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: brandColors.borderSubtle,
+  },
+  hint: {
+    marginTop: 4,
+    fontSize: 12,
+    lineHeight: 18,
+    color: 'rgba(212, 183, 143, 0.55)',
+  },
+  listBlock: {
+    gap: 12,
+    marginTop: 2,
+  },
+  centerNote: {
+    textAlign: 'center',
+    paddingVertical: 8,
   },
 });
