@@ -26,6 +26,9 @@ import { supabase } from '@/lib/supabase/client';
 
 type ToastState = { key: TranslationKey; vars?: Record<string, string> } | null;
 
+const EMPTY_PARTICIPANT_COUNTS: Record<string, number> = {};
+const EMPTY_COMPETITIONS_LIST: CompetitionDetail[] = [];
+
 function mergeCompetitions(
   catalog: CompetitionDetail[],
   userRows: CompetitionDetail[] | null,
@@ -75,8 +78,8 @@ export function useCompetitionsListState({
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [pastWinnerByCompId, setPastWinnerByCompId] = useState<Record<string, string | null>>({});
 
-  const loaderCounts = catalog?.participantCounts ?? {};
-  const competitions = catalog?.competitions ?? [];
+  const loaderCounts = catalog?.participantCounts ?? EMPTY_PARTICIPANT_COUNTS;
+  const competitions = catalog?.competitions ?? EMPTY_COMPETITIONS_LIST;
   const listError = catalog?.listError ?? null;
 
   useEffect(() => {
@@ -108,7 +111,7 @@ export function useCompetitionsListState({
   useEffect(() => {
     let cancelled = false;
     if (pastCompetitions.length === 0) {
-      setPastWinnerByCompId({});
+      setPastWinnerByCompId((prev) => (Object.keys(prev).length === 0 ? prev : {}));
       return;
     }
     void (async () => {

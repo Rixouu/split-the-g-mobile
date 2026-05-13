@@ -3,7 +3,6 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMyScores } from '@/components/profile/hooks/use-my-scores';
-import { AppButton } from '@/components/split-the-g/button';
 import { Screen } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -160,14 +159,6 @@ export default function ProfileExpensesScreen() {
               <Muted style={styles.noPrices}>{t('profileExpensesNoPricesYet')}</Muted>
             )}
           </View>
-
-          <AppButton
-            label={t('actionBack')}
-            variant="outlineGold"
-            shape="rounded"
-            fullWidth
-            onPress={() => router.back()}
-          />
         </>
       ) : null}
     </Screen>

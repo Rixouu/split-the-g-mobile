@@ -1,13 +1,15 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
  * Mirrors split-the-g `AppNavigation.tsx` mobile dock:
  * - FAB: `h-[3.85rem] w-[3.85rem]`, `top-0`, `-translate-y-[38%]` (center sits just below panel top edge, ~62% of circle above).
- * - Center gap: `w-[4.5rem]` between Compete and Pubs.
- * Row 1: Feed | Compete · FAB · Pubs | Me (pour glyph only on FAB, like `nav-mask-icons.css`).
+ * - Center gap: fixed width between Compete and Pubs for the FAB column.
+ * Row: Feed | Compete · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
 import { brandColors } from '@/constants/theme';
@@ -21,6 +23,7 @@ const FAB_OVERLAP_UP = FAB_SIZE * 0.38;
 const DOCK_CENTER_GAP = 72;
 /** Web: `MobileNavIcon` pour uses `h-8 w-8` (32 CSS px). */
 const POUR_FAB_GLYPH = 32;
+const DOCK_TAB_ICON = 20;
 
 const dockIconIdle = 'rgba(212, 183, 143, 0.45)';
 
@@ -28,17 +31,32 @@ function triggerHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
 
-function DockLabel({
-  children,
+/** Icon + label column; `renderIcon` receives tint so idle/active match the label. */
+function DockTabIcon({
   active,
+  label,
+  onPress,
+  renderIcon,
 }: {
-  children: string;
   active: boolean;
+  label: string;
+  onPress: () => void;
+  renderIcon: (color: string) => ReactNode;
 }) {
+  const color = active ? brandColors.gold : dockIconIdle;
   return (
-    <Text style={[styles.dockLabel, active ? styles.dockLabelActive : styles.dockLabelIdle]} numberOfLines={1}>
-      {children}
-    </Text>
+    <Pressable
+      accessibilityRole="tab"
+      accessibilityState={{ selected: active }}
+      onPress={onPress}
+      style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
+      <View style={styles.dockTabInner}>
+        {renderIcon(color)}
+        <Text style={[styles.dockLabel, active ? styles.dockLabelActive : styles.dockLabelIdle]} numberOfLines={1}>
+          {label}
+        </Text>
+      </View>
+    </Pressable>
   );
 }
 
@@ -65,35 +83,33 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
       <View style={styles.dockWrap}>
         <View style={styles.panel}>
           <View style={styles.row1}>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: current === 'feed' }}
+            <DockTabIcon
+              active={current === 'feed'}
+              label={t('navFeed')}
               onPress={() => go('feed')}
-              style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
-              <DockLabel active={current === 'feed'}>{t('navFeed')}</DockLabel>
-            </Pressable>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: current === 'compete' }}
+              renderIcon={(color) => <Ionicons name="albums-outline" size={DOCK_TAB_ICON} color={color} />}
+            />
+            <DockTabIcon
+              active={current === 'compete'}
+              label={t('navCompete')}
               onPress={() => go('compete')}
-              style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
-              <DockLabel active={current === 'compete'}>{t('navCompete')}</DockLabel>
-            </Pressable>
+              renderIcon={(color) => <Ionicons name="trophy-outline" size={DOCK_TAB_ICON} color={color} />}
+            />
             <View style={styles.row1Spacer} />
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: current === 'pubs' }}
+            <DockTabIcon
+              active={current === 'pubs'}
+              label={t('navPubs')}
               onPress={() => go('pubs')}
-              style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
-              <DockLabel active={current === 'pubs'}>{t('navPubs')}</DockLabel>
-            </Pressable>
-            <Pressable
-              accessibilityRole="tab"
-              accessibilityState={{ selected: current === 'profile' }}
+              renderIcon={(color) => (
+                <MaterialCommunityIcons name="glass-mug-variant" size={DOCK_TAB_ICON} color={color} />
+              )}
+            />
+            <DockTabIcon
+              active={current === 'profile'}
+              label={t('navProfile')}
               onPress={() => go('profile')}
-              style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>
-              <DockLabel active={current === 'profile'}>{t('navMe')}</DockLabel>
-            </Pressable>
+              renderIcon={(color) => <Ionicons name="person-outline" size={DOCK_TAB_ICON} color={color} />}
+            />
           </View>
         </View>
 
@@ -144,30 +160,36 @@ const styles = StyleSheet.create({
   },
   row1: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 44,
+    minHeight: 52,
     paddingHorizontal: 2,
   },
   row1Item: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    paddingBottom: 6,
-    minHeight: 44,
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  dockTabInner: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
   },
   row1Spacer: {
     width: DOCK_CENTER_GAP,
+    flexShrink: 0,
   },
   dockLabel: {
     fontSize: 9,
     fontWeight: '800',
     textTransform: 'uppercase',
     letterSpacing: 0.6,
-    paddingBottom: 4,
+    paddingBottom: 3,
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
     textAlign: 'center',
+    includeFontPadding: false,
   },
   dockLabelActive: {
     color: brandColors.gold,

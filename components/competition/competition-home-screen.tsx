@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import * as Linking from 'expo-linking';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   ListRenderItem,
+  Platform,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -18,6 +20,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
+import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 import { fetchCompetitionsCatalog } from '@/lib/api/client';
 import type { CompetitionDetail } from '@/lib/api/types';
@@ -31,9 +35,6 @@ import { useCompetitionsListState } from '@/lib/competition/use-competitions-lis
 import { translationKeyForWinRule } from '@/lib/competition/win-rule-i18n';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { TranslationKey } from '@/lib/i18n/translations';
-
-const AD_MAILTO =
-  'mailto:contact@split-the-g.app?subject=Split%20the%20G%20%E2%80%94%20competitions%20advertising';
 
 function nativeCompetitionRef(c: CompetitionDetail): string {
   const seg = c.path_segment?.trim();
@@ -140,10 +141,21 @@ export default function CompetitionHomeScreen() {
     () => (
       <View style={styles.headerBlock}>
         <View style={styles.hero}>
-          <Eyebrow>{t('competeEyebrow')}</Eyebrow>
-          <Title>{t('competeTitle')}</Title>
+          <Eyebrow style={styles.heroEyebrow}>{t('navCompete')}</Eyebrow>
+          <View style={styles.heroTitleRow}>
+            <View style={styles.heroTitleWrap}>
+              <Title style={styles.heroTitle}>{t('competeTitle')}</Title>
+            </View>
+            <AppButton
+              label={t('competeCreateToolbar')}
+              variant="outlineGold"
+              shape="pill"
+              accessibilityLabel={t('competeCreateCta')}
+              onPress={() => router.push('/competition/create')}
+              style={styles.heroCreateBtn}
+            />
+          </View>
           <Muted>{t('competeSubtitle')}</Muted>
-          <AppButton label={t('competeCreateCta')} onPress={() => router.push('/competition/create')} />
         </View>
 
         {invitedTitles.length > 0 ? (
@@ -158,17 +170,8 @@ export default function CompetitionHomeScreen() {
           </View>
         ) : null}
 
-        <Pressable
-          onPress={() => void Linking.openURL(AD_MAILTO)}
-          style={({ pressed }) => [styles.adCard, pressed && styles.pressed]}>
-          <Text style={styles.adEyebrow}>{t('competeAdTitle')}</Text>
-          <Muted>{t('competeAdBody')}</Muted>
-          <Body style={styles.adCta}>{t('competeAdCta')}</Body>
-        </Pressable>
-
         <View style={styles.mineHeader}>
-          <Title style={styles.mineTitle}>{t('competeMineHeading')}</Title>
-          <Muted>{t('competeMineDescription')}</Muted>
+          <Eyebrow style={styles.mineEyebrow}>{t('competeMineHeading')}</Eyebrow>
           <Muted style={styles.countsMeta}>
             {tVars('competeOpenPastCounts', {
               open: String(openCompetitions.length),
@@ -177,21 +180,15 @@ export default function CompetitionHomeScreen() {
           </Muted>
         </View>
 
-        <View style={styles.segment} accessibilityRole="tablist">
-          {(['open', 'past'] as const).map((k) => {
-            const active = listingsTab === k;
-            const label = k === 'open' ? t('competeTabOpen') : t('competeTabPast');
-            return (
-              <Pressable
-                key={k}
-                onPress={() => setListingsTab(k)}
-                style={[styles.segmentTab, active && styles.segmentTabActive]}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}>
-                <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.listingsTabChrome} accessibilityRole="tablist">
+          <UnderlineTabRow<'open' | 'past'>
+            tabs={[
+              { key: 'open', label: t('competeTabOpen') },
+              { key: 'past', label: t('competeTabPast') },
+            ]}
+            active={listingsTab}
+            onChange={setListingsTab}
+          />
         </View>
 
         {listError ? (
@@ -241,195 +238,276 @@ export default function CompetitionHomeScreen() {
 
     const ref = nativeCompetitionRef(c);
 
+    const glassesDisplay =
+      winRuleUsesUnlimitedGlasses(c.win_rule) || isStoredGlassesUnlimited(c.glasses_per_person)
+        ? t('competeGlassesUnlimited')
+        : String(c.glasses_per_person);
+
+    const ruleDisplay =
+      `${t(translationKeyForWinRule(c.win_rule))}${c.win_rule === 'closest_to_target' && c.target_score != null ? ` · ${Number(c.target_score).toFixed(2)}` : ''}`;
+
     return (
-      <Card>
-        <View style={styles.cardInner}>
-          <View style={styles.cardTop}>
-            <View style={styles.titleRow}>
-              <Title style={styles.cardTitle}>{c.title}</Title>
-              {isPastTab ? (
-                <Text style={styles.badgeEnded}>{t('competeBadgeEnded')}</Text>
-              ) : null}
-              {isJoined ? (
-                <Text style={isPastTab ? styles.badgeGhost : styles.badgeIn}>
-                  {isPastTab ? t('competeBadgeParticipated') : t('competeBadgeIn')}
-                </Text>
-              ) : null}
-              <Text style={priv ? styles.badgePriv : styles.badgePub}>
-                {priv ? t('competeBadgePrivate') : t('competeBadgePublic')}
+      <View style={styles.competeCard}>
+        <View style={styles.cardHeaderBlock}>
+          <Text style={styles.cardTitleText} numberOfLines={2}>
+            {c.title}
+          </Text>
+          <View style={styles.badgeRow}>
+            {isPastTab ? <Text style={styles.badgeEnded}>{t('competeBadgeEnded')}</Text> : null}
+            {isJoined ? (
+              <Text style={isPastTab ? styles.badgeGhost : styles.badgeIn}>
+                {isPastTab ? t('competeBadgeParticipated') : t('competeBadgeIn')}
               </Text>
-            </View>
-            <Muted style={styles.dateLine}>{formatRange(c.starts_at, c.ends_at)}</Muted>
-            {isPastTab ? (
-              <Body style={styles.winnerLine}>
-                {t('competeWinner')}: {winnerLine}
-              </Body>
+            ) : null}
+            <Text style={priv ? styles.badgePriv : styles.badgePub}>
+              {priv ? t('competeBadgePrivate') : t('competeBadgePublic')}
+            </Text>
+          </View>
+        </View>
+
+        <Muted style={styles.cardDate}>{formatRange(c.starts_at, c.ends_at)}</Muted>
+
+        {isPastTab ? (
+          <View style={styles.winnerBanner}>
+            <Text style={styles.winnerLabel}>{t('competeWinner')}</Text>
+            <Text style={styles.winnerValue} numberOfLines={2}>
+              {winnerLine}
+            </Text>
+          </View>
+        ) : null}
+
+        <View style={styles.statsGrid}>
+          <View style={styles.statCell}>
+            <Text style={styles.statLabel}>{t('competeStatJoined')}</Text>
+            <Text style={styles.statValue}>
+              {count} / {c.max_participants}
+            </Text>
+          </View>
+          <View style={styles.statCell}>
+            <Text style={styles.statLabel}>{t('competeStatGlasses')}</Text>
+            <Text style={styles.statValue} numberOfLines={1}>
+              {glassesDisplay}
+            </Text>
+          </View>
+          <View style={[styles.statCell, styles.statCellWide]}>
+            <Text style={styles.statLabel}>{t('competeStatRule')}</Text>
+            <Text style={styles.statValueSmall} numberOfLines={2}>
+              {ruleDisplay}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.cardDivider} />
+
+        <View style={styles.actionsRow}>
+          <AppButton
+            label={t('competeView')}
+            variant="secondary"
+            shape="pill"
+            onPress={() => router.push(`/competition/${ref}`)}
+            style={styles.cardActionBtn}
+          />
+          {isOwner ? (
+            <>
+              <AppButton
+                label={t('competeEdit')}
+                variant="secondary"
+                shape="pill"
+                onPress={() => router.push(`/competition/${ref}/edit`)}
+                style={styles.cardActionBtn}
+              />
+              <AppButton
+                label={t('competeDelete')}
+                variant="secondary"
+                shape="pill"
+                onPress={() => void requestDeleteCompetition(c)}
+                style={[styles.cardActionBtn, styles.cardActionDanger]}
+              />
+            </>
+          ) : userId ? (
+            isJoined ? (
+              <AppButton
+                label={t('competeLeave')}
+                variant="secondary"
+                shape="pill"
+                onPress={() => void handleLeave(c.id)}
+                style={styles.cardActionBtn}
+              />
+            ) : isPastTab ? (
+              <Muted style={styles.actionMuted}>{t('competeClosed')}</Muted>
+            ) : (
+              <AppButton
+                label={full ? t('competeFull') : t('competeJoin')}
+                variant={full ? 'secondary' : 'primary'}
+                shape="pill"
+                disabled={full}
+                onPress={() => void handleJoin(c.id)}
+                style={styles.cardActionBtn}
+              />
+            )
+          ) : isPastTab ? null : (
+            <Muted style={styles.actionMuted}>{t('competeSignInJoin')}</Muted>
+          )}
+        </View>
+
+        {isOwner && !isPastTab ? (
+          <View style={styles.invitesWrap}>
+            <Pressable
+              onPress={() => setExpandedInvitesId((id) => (id === c.id ? null : c.id))}
+              style={styles.invitesToggle}>
+              <Body style={styles.invitesToggleText}>{t('competeInvitesSection')}</Body>
+              <Muted>{expandedInvitesId === c.id ? '▲' : '▼'}</Muted>
+            </Pressable>
+            {expandedInvitesId === c.id ? (
+              <View style={styles.invitesBody}>
+                <Muted>{t('competeInviteEmail')}</Muted>
+                <Muted style={styles.hint}>{t('competeInviteEmailHint')}</Muted>
+                <TextInput
+                  value={inviteInputs[c.id] ?? ''}
+                  onChangeText={(v) => setInviteInputs((prev) => ({ ...prev, [c.id]: v }))}
+                  placeholder={t('competeInvitePlaceholder')}
+                  placeholderTextColor={brandColors.tanMuted}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={styles.inviteInput}
+                />
+                <AppButton
+                  label={t('competeSendInvite')}
+                  disabled={inviteBusy === c.id}
+                  onPress={() => void addEmailInvite(c.id)}
+                />
+                {invites.length > 0 ? (
+                  <View style={styles.inviteList}>
+                    {invites.map((inv) => (
+                      <View key={inv.id} style={styles.inviteLine}>
+                        <Body style={styles.inviteEmail}>{inv.invited_email}</Body>
+                        <Pressable onPress={() => void removeInvite(c.id, inv.id)}>
+                          <Body style={styles.removeLink}>{t('competeRemoveInvite')}</Body>
+                        </Pressable>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+
+                {myFriends.length > 0 ? (
+                  <View style={styles.friendsBlock}>
+                    <Muted>{t('competeAddFriendsTitle')}</Muted>
+                    <Muted style={styles.hint}>{t('competeAddFriendsHint')}</Muted>
+                    {myFriends.map((f) => (
+                      <View key={f.friend_user_id} style={styles.friendRow}>
+                        <Body style={styles.flex1}>
+                          {f.peer_email ?? `${f.friend_user_id.slice(0, 8)}…`}
+                        </Body>
+                        <AppButton
+                          label={t('competeAddToComp')}
+                          variant="secondary"
+                          onPress={() => void addFriendParticipant(c.id, f.friend_user_id)}
+                        />
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
             ) : null}
           </View>
-
-          <View style={styles.statsRow}>
-            <View style={styles.stat}>
-              <Muted style={styles.statLabel}>{t('competeStatJoined')}</Muted>
-              <Body>
-                {count} / {c.max_participants}
-              </Body>
-            </View>
-            <View style={styles.stat}>
-              <Muted style={styles.statLabel}>{t('competeStatGlasses')}</Muted>
-              <Body>
-                {winRuleUsesUnlimitedGlasses(c.win_rule) || isStoredGlassesUnlimited(c.glasses_per_person)
-                  ? t('competeGlassesUnlimited')
-                  : c.glasses_per_person}
-              </Body>
-            </View>
-            <View style={styles.stat}>
-              <Muted style={styles.statLabel}>{t('competeStatRule')}</Muted>
-              <Body style={styles.ruleText}>
-                {t(translationKeyForWinRule(c.win_rule))}
-                {c.win_rule === 'closest_to_target' && c.target_score != null
-                  ? ` · ${Number(c.target_score).toFixed(2)}`
-                  : ''}
-              </Body>
-            </View>
-          </View>
-
-          <View style={styles.actionsRow}>
-            <AppButton
-              label={t('competeView')}
-              variant="secondary"
-              onPress={() => router.push(`/competition/${ref}`)}
-            />
-            {isOwner ? (
-              <>
-                <AppButton
-                  label={t('competeEdit')}
-                  variant="secondary"
-                  onPress={() => router.push(`/competition/${ref}/edit`)}
-                />
-                <AppButton
-                  label={t('competeDelete')}
-                  variant="secondary"
-                  onPress={() => void requestDeleteCompetition(c)}
-                />
-              </>
-            ) : userId ? (
-              isJoined ? (
-                <AppButton
-                  label={t('competeLeave')}
-                  variant="secondary"
-                  onPress={() => void handleLeave(c.id)}
-                />
-              ) : isPastTab ? (
-                <Muted>{t('competeClosed')}</Muted>
-              ) : (
-                <AppButton
-                  label={full ? t('competeFull') : t('competeJoin')}
-                  disabled={full}
-                  onPress={() => void handleJoin(c.id)}
-                />
-              )
-            ) : isPastTab ? null : (
-              <Muted>{t('competeSignInJoin')}</Muted>
-            )}
-          </View>
-
-          {isOwner && !isPastTab ? (
-            <View style={styles.invitesWrap}>
-              <Pressable
-                onPress={() => setExpandedInvitesId((id) => (id === c.id ? null : c.id))}
-                style={styles.invitesToggle}>
-                <Body style={styles.invitesToggleText}>{t('competeInvitesSection')}</Body>
-                <Muted>{expandedInvitesId === c.id ? '▲' : '▼'}</Muted>
-              </Pressable>
-              {expandedInvitesId === c.id ? (
-                <View style={styles.invitesBody}>
-                  <Muted>{t('competeInviteEmail')}</Muted>
-                  <Muted style={styles.hint}>{t('competeInviteEmailHint')}</Muted>
-                  <TextInput
-                    value={inviteInputs[c.id] ?? ''}
-                    onChangeText={(v) => setInviteInputs((prev) => ({ ...prev, [c.id]: v }))}
-                    placeholder={t('competeInvitePlaceholder')}
-                    placeholderTextColor={brandColors.tanMuted}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    style={styles.inviteInput}
-                  />
-                  <AppButton
-                    label={t('competeSendInvite')}
-                    disabled={inviteBusy === c.id}
-                    onPress={() => void addEmailInvite(c.id)}
-                  />
-                  {invites.length > 0 ? (
-                    <View style={styles.inviteList}>
-                      {invites.map((inv) => (
-                        <View key={inv.id} style={styles.inviteLine}>
-                          <Body style={styles.inviteEmail}>{inv.invited_email}</Body>
-                          <Pressable onPress={() => void removeInvite(c.id, inv.id)}>
-                            <Body style={styles.removeLink}>{t('competeRemoveInvite')}</Body>
-                          </Pressable>
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-
-                  {myFriends.length > 0 ? (
-                    <View style={styles.friendsBlock}>
-                      <Muted>{t('competeAddFriendsTitle')}</Muted>
-                      <Muted style={styles.hint}>{t('competeAddFriendsHint')}</Muted>
-                      {myFriends.map((f) => (
-                        <View key={f.friend_user_id} style={styles.friendRow}>
-                          <Body style={styles.flex1}>
-                            {f.peer_email ?? `${f.friend_user_id.slice(0, 8)}…`}
-                          </Body>
-                          <AppButton
-                            label={t('competeAddToComp')}
-                            variant="secondary"
-                            onPress={() => void addFriendParticipant(c.id, f.friend_user_id)}
-                          />
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-                </View>
-              ) : null}
-            </View>
-          ) : null}
-        </View>
-      </Card>
+        ) : null}
+      </View>
     );
   };
 
-  const emptyCopy = (() => {
-    if (mergedCompetitions.length === 0) return t('competeNoCompsYet');
-    if (listingsTab === 'open') return t('competeNoOpenComps');
-    return t('competeNoPastComps');
-  })();
+  const listEmpty = useMemo(() => {
+    if (catalogQuery.isLoading && !catalogQuery.data) {
+      return (
+        <View style={styles.emptyStateCard}>
+          <ActivityIndicator color={brandColors.goldBright} size="large" />
+          <Muted style={styles.emptyBody}>{t('competeLoadingCatalog')}</Muted>
+        </View>
+      );
+    }
+    if (catalogQuery.error) {
+      const errMsg = (catalogQuery.error as Error).message?.trim();
+      return (
+        <View style={styles.emptyStateCard}>
+          <View style={styles.emptyIconRing}>
+            <MaterialCommunityIcons name="alert-circle-outline" size={28} color={brandColors.goldBright} />
+          </View>
+          <Text style={styles.emptyTitle}>{t('competeCatalogFetchFailed')}</Text>
+          {errMsg ? <Muted style={styles.emptyBody}>{errMsg}</Muted> : null}
+        </View>
+      );
+    }
+    if (mergedCompetitions.length === 0) {
+      return (
+        <View style={styles.emptyStateCard}>
+          <View style={styles.emptyIconRing}>
+            <MaterialCommunityIcons name="trophy-variant-outline" size={28} color={brandColors.goldBright} />
+          </View>
+          <Text style={styles.emptyTitle}>{t('competeCatalogEmptyTitle')}</Text>
+          <Muted style={styles.emptyBody}>{t('competeCatalogEmptyBody')}</Muted>
+          <AppButton
+            label={t('competeCreateCta')}
+            variant="outlineGold"
+            shape="pill"
+            onPress={() => router.push('/competition/create')}
+            style={styles.emptyPrimaryCta}
+          />
+        </View>
+      );
+    }
+    if (listingsTab === 'open') {
+      return (
+        <View style={styles.emptyStateCard}>
+          <View style={styles.emptyIconRing}>
+            <MaterialCommunityIcons name="calendar-clock-outline" size={28} color={brandColors.goldBright} />
+          </View>
+          <Text style={styles.emptyTitle}>{t('competeOpenEmptyTitle')}</Text>
+          <Muted style={styles.emptyBody}>{t('competeOpenEmptyBody')}</Muted>
+          <AppButton
+            label={t('competeCreateCta')}
+            variant="outlineGold"
+            shape="pill"
+            onPress={() => router.push('/competition/create')}
+            style={styles.emptyPrimaryCta}
+          />
+          <Pressable onPress={() => setListingsTab('past')} style={styles.emptyLinkHit} accessibilityRole="button">
+            <Text style={styles.emptyLink}>{t('competeEmptyOpenGoPast')}</Text>
+          </Pressable>
+        </View>
+      );
+    }
+    return (
+      <View style={styles.emptyStateCard}>
+        <View style={styles.emptyIconRing}>
+          <MaterialCommunityIcons name="archive-outline" size={28} color={brandColors.goldBright} />
+        </View>
+        <Text style={styles.emptyTitle}>{t('competePastEmptyTitle')}</Text>
+        <Muted style={styles.emptyBody}>{t('competePastEmptyBody')}</Muted>
+      </View>
+    );
+  }, [
+    catalogQuery.isLoading,
+    catalogQuery.data,
+    catalogQuery.error,
+    mergedCompetitions.length,
+    listingsTab,
+    t,
+    router,
+    setListingsTab,
+  ]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <FlatList
         style={styles.list}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          visibleCompetitions.length === 0 ? styles.contentWhenEmpty : null,
+        ]}
         data={visibleCompetitions}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         ListHeaderComponent={header}
-        ListEmptyComponent={
-          catalogQuery.isLoading && !catalogQuery.data ? (
-            <Card>
-              <Body>{t('competeLoadingCatalog')}</Body>
-            </Card>
-          ) : catalogQuery.error ? (
-            <Card>
-              <Body>{t('competitionLoadError')}</Body>
-              <Muted>{(catalogQuery.error as Error).message}</Muted>
-            </Card>
-          ) : (
-            <Card>
-              <Body>{emptyCopy}</Body>
-            </Card>
-          )
-        }
+        ListEmptyComponent={listEmpty}
         refreshControl={
           <RefreshControl
             refreshing={catalogQuery.isRefetching}
@@ -449,51 +527,51 @@ const styles = StyleSheet.create({
   },
   list: { flex: 1 },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
+    paddingTop: 16,
     paddingBottom: 132,
-    gap: 12,
+    gap: 14,
   },
-  headerBlock: { gap: 14, marginBottom: 8 },
-  hero: { gap: 10 },
-  invitedWrap: {},
+  contentWhenEmpty: {
+    flexGrow: 1,
+  },
+  headerBlock: { gap: 22, paddingBottom: 4 },
+  hero: { gap: 8, paddingTop: 12 },
+  heroEyebrow: {
+    alignSelf: 'flex-start',
+  },
+  heroTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    marginTop: 2,
+  },
+  heroTitleWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 4,
+  },
+  heroTitle: {
+    flexShrink: 1,
+  },
+  heroCreateBtn: {
+    flexShrink: 0,
+    alignSelf: 'center',
+    minHeight: 36,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  invitedWrap: { marginTop: -2 },
   invitedTitle: { fontWeight: '800', color: brandColors.goldBright },
   invitedHint: { marginTop: 4 },
-  adCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: brandColors.border,
-    padding: 14,
-    gap: 8,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
+  mineHeader: { gap: 8, marginTop: 10 },
+  mineEyebrow: { letterSpacing: 1.8 },
+  listingsTabChrome: {
+    marginTop: 6,
+    marginBottom: 6,
   },
-  adEyebrow: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-    color: brandColors.gold,
-  },
-  adCta: { color: brandColors.goldBright, fontWeight: '700', marginTop: 4 },
-  mineHeader: { gap: 8 },
-  mineTitle: { fontSize: 22 },
-  countsMeta: { opacity: 0.75 },
-  segment: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: brandColors.border,
-    overflow: 'hidden',
-  },
-  segmentTab: { flex: 1, paddingVertical: 12, alignItems: 'center' },
-  segmentTabActive: { backgroundColor: 'rgba(212, 183, 143, 0.15)' },
-  segmentLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    color: 'rgba(212, 183, 143, 0.45)',
-  },
-  segmentLabelActive: { color: brandColors.goldBright },
+  countsMeta: { opacity: 0.82 },
   feedbackBanner: {
     borderWidth: 1,
     borderColor: brandColors.gold,
@@ -504,72 +582,234 @@ const styles = StyleSheet.create({
   },
   feedbackText: { color: brandColors.cream },
   dismissHint: { fontSize: 11, opacity: 0.7 },
-  cardInner: { gap: 12 },
-  cardTop: { gap: 6 },
-  titleRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
-  cardTitle: { flexShrink: 1, fontSize: 18 },
+
+  emptyStateCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(29, 24, 15, 0.72)',
+    paddingVertical: 28,
+    paddingHorizontal: 22,
+    alignItems: 'center',
+    gap: 14,
+    alignSelf: 'stretch',
+  },
+  emptyIconRing: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(179, 139, 45, 0.12)',
+    borderWidth: 1,
+    borderColor: brandColors.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
+  emptyTitle: {
+    color: brandColors.cream,
+    fontSize: 18,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: -0.3,
+    lineHeight: 24,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  },
+  emptyBody: {
+    textAlign: 'center',
+    paddingHorizontal: 4,
+    lineHeight: 22,
+  },
+  emptyPrimaryCta: {
+    marginTop: 4,
+    minHeight: 48,
+    paddingHorizontal: 24,
+    alignSelf: 'center',
+  },
+  emptyLinkHit: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginBottom: -4,
+  },
+  emptyLink: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: brandColors.gold,
+    letterSpacing: 0.2,
+    textDecorationLine: 'underline',
+    textDecorationColor: 'rgba(179, 139, 45, 0.55)',
+  },
+
+  competeCard: {
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(29, 24, 15, 0.72)',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    gap: 0,
+  },
+  cardHeaderBlock: { gap: 10 },
+  cardTitleText: {
+    color: brandColors.cream,
+    fontSize: 19,
+    fontWeight: '700',
+    letterSpacing: -0.35,
+    lineHeight: 25,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  },
+  badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
   badgeEnded: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
-    color: '#fcd34d',
+    letterSpacing: 0.5,
+    color: brandColors.goldBright,
     borderWidth: 1,
-    borderColor: 'rgba(245, 158, 11, 0.4)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderColor: brandColors.border,
+    backgroundColor: 'rgba(179, 139, 45, 0.1)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   badgeIn: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
-    color: '#6ee7b7',
+    letterSpacing: 0.5,
+    color: brandColors.green,
     borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.45)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderColor: 'rgba(11, 91, 55, 0.45)',
+    backgroundColor: 'rgba(11, 91, 55, 0.12)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   badgeGhost: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
     color: brandColors.tanMuted,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderColor: brandColors.borderSubtle,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   badgePub: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
     backgroundColor: brandColors.gold,
     color: brandColors.black,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
   badgePriv: {
     fontSize: 10,
     fontWeight: '800',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
     color: brandColors.cream,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(253, 251, 243, 0.06)',
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 999,
   },
-  dateLine: { fontSize: 12 },
-  winnerLine: { marginTop: 4, color: brandColors.gold },
-  statsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  stat: { minWidth: '28%', gap: 2 },
-  statLabel: { fontSize: 10, fontWeight: '800', letterSpacing: 0.8, textTransform: 'uppercase' },
-  ruleText: { flexShrink: 1 },
+  cardDate: {
+    marginTop: 10,
+    fontSize: 12,
+    lineHeight: 17,
+    color: 'rgba(253, 251, 243, 0.55)',
+  },
+  winnerBanner: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(179, 139, 45, 0.08)',
+    gap: 4,
+  },
+  winnerLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.85,
+    textTransform: 'uppercase',
+    color: brandColors.goldBright,
+  },
+  winnerValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: brandColors.cream,
+    lineHeight: 20,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 14,
+  },
+  statCell: {
+    flexGrow: 1,
+    flexBasis: '28%',
+    minWidth: '28%',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(179, 139, 45, 0.06)',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    gap: 5,
+  },
+  statCellWide: {
+    flexBasis: '100%',
+    minWidth: '100%',
+  },
+  statLabel: {
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 0.95,
+    textTransform: 'uppercase',
+    color: 'rgba(212, 183, 143, 0.55)',
+  },
+  statValue: {
+    color: brandColors.cream,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  statValueSmall: {
+    color: brandColors.cream,
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 19,
+    letterSpacing: -0.15,
+  },
+  cardDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: brandColors.borderSubtle,
+    marginTop: 16,
+    marginBottom: 14,
+    alignSelf: 'stretch',
+  },
   actionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  invitesWrap: { borderTopWidth: 1, borderTopColor: brandColors.frame, paddingTop: 10 },
+  cardActionBtn: {
+    minHeight: 42,
+    paddingVertical: 0,
+    paddingHorizontal: 16,
+  },
+  cardActionDanger: {
+    borderColor: 'rgba(216, 74, 58, 0.45)',
+    backgroundColor: 'rgba(216, 74, 58, 0.08)',
+  },
+  actionMuted: { alignSelf: 'center', flexShrink: 1 },
+  invitesWrap: { borderTopWidth: 1, borderTopColor: brandColors.pourCardStroke, paddingTop: 14, marginTop: 14 },
   invitesToggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   invitesToggleText: { color: brandColors.gold, fontWeight: '700' },
   invitesBody: { gap: 10, marginTop: 10 },
@@ -588,5 +828,4 @@ const styles = StyleSheet.create({
   friendsBlock: { gap: 8, marginTop: 8 },
   friendRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   flex1: { flex: 1 },
-  pressed: { opacity: 0.88 },
 });

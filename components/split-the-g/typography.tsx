@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
 import { brandColors } from '@/constants/theme';
 
@@ -23,15 +23,19 @@ export function Muted({ style, ...props }: TextProps) {
   return <Text {...props} style={[styles.muted, style]} />;
 }
 
+const androidText = Platform.OS === 'android' ? { includeFontPadding: false } : {};
+
 const styles = StyleSheet.create({
   eyebrow: {
+    ...androidText,
     color: 'rgba(212, 183, 143, 0.5)',
     fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 2.2,
+    letterSpacing: 1.4,
     textTransform: 'uppercase',
   },
   title: {
+    ...androidText,
     color: brandColors.cream,
     fontSize: 32,
     fontWeight: '800',
@@ -39,6 +43,7 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   tagline: {
+    ...androidText,
     color: brandColors.gold,
     fontSize: 16,
     fontWeight: '600',
@@ -46,11 +51,13 @@ const styles = StyleSheet.create({
     letterSpacing: -0.2,
   },
   body: {
+    ...androidText,
     color: brandColors.cream,
     fontSize: 16,
     lineHeight: 24,
   },
   muted: {
+    ...androidText,
     color: 'rgba(212, 183, 143, 0.72)',
     fontSize: 14,
     lineHeight: 21,

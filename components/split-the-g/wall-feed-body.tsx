@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { PourListRow } from '@/components/split-the-g/pour-list-row';
 import { Card } from '@/components/split-the-g/screen';
-import { Body, Muted } from '@/components/split-the-g/typography';
+import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 import { fetchRecentScores } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
@@ -69,22 +70,23 @@ export function WallFeedBody() {
         />
       }>
       <View style={styles.header}>
-        <Text style={styles.heroTitle}>{t('navWall')}</Text>
-        <Muted style={styles.heroSubtitle}>{t('wallSubtitle')}</Muted>
+        <Eyebrow>{t('wallEyebrow')}</Eyebrow>
+        <Title>{t('wallTitle')}</Title>
+        <Muted>{t('wallSubtitle')}</Muted>
       </View>
 
       {scores.isLoading ? (
         <Card>
-          <Body>Loading wall…</Body>
+          <Body>{t('commonLoading')}</Body>
         </Card>
       ) : scores.error ? (
         <Card>
-          <Body>Wall unavailable</Body>
+          <Body>{t('wallLoadError')}</Body>
           <Muted>{scores.error.message}</Muted>
         </Card>
       ) : empty ? (
         <Card>
-          <Body>No pours yet.</Body>
+          <Body>{t('feedEmptyState')}</Body>
         </Card>
       ) : (
         <>
@@ -141,23 +143,14 @@ export function WallFeedBody() {
 const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
+    paddingTop: 4,
     paddingBottom: 132,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 18,
     gap: 10,
-    paddingTop: 4,
-  },
-  heroTitle: {
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: -0.6,
-    color: brandColors.goldBright,
-  },
-  heroSubtitle: {
-    marginTop: -4,
+    paddingTop: 16,
   },
   sectionTitle: {
     fontSize: 13,
@@ -166,6 +159,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     color: brandColors.goldBright,
     marginBottom: 10,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   sectionSpaced: {
     marginTop: 22,

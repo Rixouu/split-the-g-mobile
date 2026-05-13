@@ -44,6 +44,9 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: brandColors.black },
             headerStyle: { backgroundColor: brandColors.black },
             headerTintColor: brandColors.cream,
+            headerTitleAlign: 'center',
+            headerBackButtonDisplayMode: 'minimal',
+            headerTitleStyle: { color: brandColors.goldBright, fontWeight: '700' },
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="wall" options={{ headerShown: false }} />
@@ -61,8 +64,6 @@ export default function RootLayout() {
             options={{
               presentation: 'modal',
               title: 'Language',
-              headerStyle: { backgroundColor: brandColors.black },
-              headerTintColor: brandColors.cream,
             }}
           />
           <Stack.Screen name="auth/callback" options={{ headerShown: false }} />

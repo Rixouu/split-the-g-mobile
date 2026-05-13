@@ -44,6 +44,24 @@ export async function fetchPlaceAutocomplete(input: string): Promise<PlaceAutoco
   }));
 }
 
+/** Resolve free-text address or venue name to coordinates (Geocoding API). */
+export async function geocodeAddress(query: string): Promise<{ lat: number; lng: number } | null> {
+  const key = appConfig.googleMapsApiKey?.trim();
+  if (!key || !query.trim()) return null;
+
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query.trim())}&key=${encodeURIComponent(key)}`;
+  const res = await fetch(url);
+  const json = (await res.json()) as {
+    status: string;
+    results?: { geometry?: { location: { lat: number; lng: number } } }[];
+  };
+
+  if (json.status !== 'OK' || !json.results?.length) return null;
+  const loc = json.results[0]?.geometry?.location;
+  if (!loc || !Number.isFinite(loc.lat) || !Number.isFinite(loc.lng)) return null;
+  return { lat: loc.lat, lng: loc.lng };
+}
+
 export async function fetchPlaceDetails(placeId: string): Promise<PlaceDetailsSelection | null> {
   const key = appConfig.googleMapsApiKey?.trim();
   if (!key) return null;

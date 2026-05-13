@@ -15,7 +15,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { WallFeedBody } from '@/components/split-the-g/wall-feed-body';
 import { Card } from '@/components/split-the-g/screen';
-import { Body, Muted } from '@/components/split-the-g/typography';
+import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
+import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 import { fetchRecentScores } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
@@ -30,7 +32,7 @@ function normalizeTabParam(raw: string | string[] | undefined): DiscoverSegment 
 }
 
 export default function FeedScreen() {
-  const { t } = useLocale();
+  const { t, tVars } = useLocale();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string | string[] }>();
   const tabFromUrl = normalizeTabParam(tabParam);
   const [segment, setSegment] = useState<DiscoverSegment>(tabFromUrl === 'wall' ? 'wall' : 'feed');
@@ -45,6 +47,8 @@ export default function FeedScreen() {
     enabled: segment === 'feed',
   });
 
+  const pourCount = scores.data?.length ?? 0;
+
   const renderItem: ListRenderItem<PourScore> = ({ item }) => (
     <View style={styles.gridCell}>
       <PourGridCard score={item} />
@@ -53,21 +57,15 @@ export default function FeedScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.segment} accessibilityRole="tablist">
-        {(['feed', 'wall'] as const).map((k) => {
-          const active = segment === k;
-          const label = k === 'feed' ? t('navFeed') : t('navWall');
-          return (
-            <Pressable
-              key={k}
-              onPress={() => setSegment(k)}
-              style={[styles.segmentTab, active && styles.segmentTabActive]}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}>
-              <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text>
-            </Pressable>
-          );
-        })}
+      <View style={styles.discoverTabChrome} accessibilityRole="tablist">
+        <UnderlineTabRow<'feed' | 'wall'>
+          tabs={[
+            { key: 'feed', label: t('navFeed') },
+            { key: 'wall', label: t('navWall') },
+          ]}
+          active={segment}
+          onChange={(next) => setSegment(next)}
+        />
       </View>
 
       {segment === 'wall' ? (
@@ -83,29 +81,38 @@ export default function FeedScreen() {
           renderItem={renderItem}
           ListHeaderComponent={
             <View style={styles.header}>
-              <Text style={styles.heroTitle}>{t('navFeed')}</Text>
-              <Muted style={styles.heroSubtitle}>{t('feedSubtitle')}</Muted>
+              <Eyebrow>{t('feedEyebrow')}</Eyebrow>
+              <Title>{t('feedTitle')}</Title>
+              <Muted>{t('feedSubtitle')}</Muted>
               <Link href="/" asChild>
-                <Pressable style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]} accessibilityRole="button">
+                <Pressable
+                  style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
+                  accessibilityRole="button">
                   <Text style={styles.ctaLabel}>{t('homeScorePour')}</Text>
                 </Pressable>
               </Link>
-              <Text style={styles.sectionLabel}>{t('feedPoursSection')}</Text>
+              {!scores.isLoading && !scores.error && pourCount > 0 ? (
+                <View style={styles.gridIntro}>
+                  <Eyebrow style={styles.gridIntroEyebrow}>
+                    {pourCount === 1 ? t('feedGridIntroOne') : tVars('feedGridIntroMany', { count: pourCount })}
+                  </Eyebrow>
+                </View>
+              ) : null}
             </View>
           }
           ListEmptyComponent={
             scores.isLoading ? (
               <Card>
-                <Body>Loading pours...</Body>
+                <Body>{t('commonLoading')}</Body>
               </Card>
             ) : scores.error ? (
               <Card>
-                <Body>Feed unavailable</Body>
+                <Body>{t('feedLoadError')}</Body>
                 <Muted>{scores.error.message}</Muted>
               </Card>
             ) : (
               <Card>
-                <Body>No pours yet.</Body>
+                <Body>{t('feedEmptyState')}</Body>
               </Card>
             )
           }
@@ -127,40 +134,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: brandColors.black,
   },
-  segment: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 4,
-    marginBottom: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: brandColors.border,
-    overflow: 'hidden',
-    backgroundColor: 'rgba(29, 24, 15, 0.45)',
-  },
-  segmentTab: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  segmentTabActive: {
-    backgroundColor: 'rgba(212, 183, 143, 0.18)',
-  },
-  segmentLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.4,
-    textTransform: 'uppercase',
-    color: 'rgba(212, 183, 143, 0.45)',
-  },
-  segmentLabelActive: {
-    color: brandColors.goldBright,
+  discoverTabChrome: {
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
+    paddingTop: 10,
+    marginBottom: 6,
   },
   list: { flex: 1 },
   content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
+    paddingTop: 4,
     paddingBottom: 132,
     gap: 0,
   },
@@ -173,25 +155,26 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   header: {
-    marginBottom: 20,
-    gap: 12,
-    paddingTop: 4,
+    marginBottom: 16,
+    gap: 10,
+    paddingTop: 16,
   },
-  heroTitle: {
-    fontSize: 34,
-    fontWeight: '800',
-    letterSpacing: -0.6,
-    color: brandColors.goldBright,
+  gridIntro: {
+    marginTop: 2,
+    marginBottom: -2,
   },
-  heroSubtitle: {
-    marginTop: -4,
+  gridIntroEyebrow: {
+    letterSpacing: 1.8,
   },
   cta: {
-    marginTop: 4,
+    marginTop: 6,
+    alignSelf: 'flex-start',
     borderRadius: 999,
-    backgroundColor: brandColors.gold,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
+    borderWidth: 2,
+    borderColor: 'rgba(179, 139, 45, 0.45)',
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -202,14 +185,7 @@ const styles = StyleSheet.create({
   ctaLabel: {
     fontSize: 15,
     fontWeight: '800',
-    color: brandColors.black,
-    letterSpacing: 0.2,
-  },
-  sectionLabel: {
-    marginTop: 8,
-    fontSize: 15,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-    color: brandColors.cream,
+    color: brandColors.gold,
+    letterSpacing: 0.35,
   },
 });

@@ -7,7 +7,19 @@ export type TranslationKey =
   | 'navFeed'
   | 'navWall'
   | 'navPubs'
-  | 'navMe'
+  | 'pubsTitle'
+  | 'pubsSubtitle'
+  | 'pubsLoadingDirectory'
+  | 'pubsDirectoryUnavailableTitle'
+  | 'pubsEmptyDirectoryTitle'
+  | 'pubsEmptyDirectoryBody'
+  | 'pubsVenueOne'
+  | 'pubsVenueMany'
+  | 'pubsCardUnnamed'
+  | 'pubsCardAddressPending'
+  | 'pubsListingRatingsOne'
+  | 'pubsListingRatingsMany'
+  | 'navProfile'
   | 'navCompete'
   | 'navLeaderboard'
   | 'navLang'
@@ -60,6 +72,10 @@ export type TranslationKey =
   | 'feedEyebrow'
   | 'feedSubtitle'
   | 'feedPoursSection'
+  | 'feedGridIntroOne'
+  | 'feedGridIntroMany'
+  | 'feedLoadError'
+  | 'feedEmptyState'
   | 'feedNoImage'
   | 'wallLast24'
   | 'wallTopWeek'
@@ -67,6 +83,7 @@ export type TranslationKey =
   | 'wallEmptyDay'
   | 'wallTopWeekEmpty'
   | 'wallArchiveEmpty'
+  | 'wallLoadError'
   | 'wallTitle'
   | 'wallEyebrow'
   | 'wallSubtitle'
@@ -76,20 +93,25 @@ export type TranslationKey =
   | 'competeEmpty'
   | 'competeParticipants'
   | 'competeCreateCta'
+  | 'competeCreateToolbar'
   | 'competeTabOpen'
   | 'competeTabPast'
   | 'competeMineHeading'
-  | 'competeMineDescription'
   | 'competeOpenPastCounts'
   | 'competeListError'
   | 'competeNoCompsYet'
   | 'competeNoOpenComps'
   | 'competeNoPastComps'
+  | 'competeCatalogEmptyTitle'
+  | 'competeCatalogEmptyBody'
+  | 'competeOpenEmptyTitle'
+  | 'competeOpenEmptyBody'
+  | 'competeEmptyOpenGoPast'
+  | 'competePastEmptyTitle'
+  | 'competePastEmptyBody'
+  | 'competeCatalogFetchFailed'
   | 'competeInvitedTitle'
   | 'competeInvitedHint'
-  | 'competeAdTitle'
-  | 'competeAdBody'
-  | 'competeAdCta'
   | 'competeStatJoined'
   | 'competeStatGlasses'
   | 'competeStatRule'
@@ -687,7 +709,19 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     navFeed: 'Feed',
     navWall: 'Wall',
     navPubs: 'Pubs',
-    navMe: 'Me',
+    pubsTitle: 'Find a Guinness nearby',
+    pubsSubtitle: 'Open a pub to see the wall, stats, and how to log your split.',
+    pubsLoadingDirectory: 'Loading directory…',
+    pubsDirectoryUnavailableTitle: 'Pub directory unavailable',
+    pubsEmptyDirectoryTitle: 'No pubs in the directory yet.',
+    pubsEmptyDirectoryBody: 'Check back soon as the community adds venues.',
+    pubsVenueOne: '1 venue',
+    pubsVenueMany: '{count} venues',
+    pubsCardUnnamed: 'Unnamed pub',
+    pubsCardAddressPending: 'Address pending',
+    pubsListingRatingsOne: '1 rating',
+    pubsListingRatingsMany: '{count} ratings',
+    navProfile: 'Profile',
     navCompete: 'Compete',
     navLeaderboard: 'Leaderboard',
     navLang: 'Lang',
@@ -741,9 +775,13 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     signInGoogle: 'Continue with Google',
     signInPrompt: 'Sign in to claim scores and sync your leaderboard name.',
     feedTitle: 'Latest pours',
-    feedEyebrow: 'Feed',
+    feedEyebrow: 'Discover',
     feedSubtitle: 'Fresh splits from the community.',
     feedPoursSection: 'Recent pours',
+    feedGridIntroOne: '1 pour',
+    feedGridIntroMany: '{count} pours',
+    feedLoadError: 'Could not load the feed.',
+    feedEmptyState: 'No pours yet.',
     feedNoImage: 'No photo',
     wallLast24: 'Last 24 hours',
     wallTopWeek: 'Top of the week',
@@ -751,31 +789,37 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     wallEmptyDay: 'No pours in the last day yet.',
     wallTopWeekEmpty: 'No pours from the rest of this week yet.',
     wallArchiveEmpty: 'All visible pours are from the last 24 hours.',
+    wallLoadError: 'Could not load the wall.',
     wallTitle: 'The wall',
-    wallEyebrow: 'Wall',
-    wallSubtitle: 'Pour cards in chronological order — same data as web.',
+    wallEyebrow: 'Activity',
+    wallSubtitle: 'Newest community pours first, grouped by day.',
     competeTitle: 'Competitions',
     competeEyebrow: 'Compete',
-    competeSubtitle:
-      'Open and past tabs, invites, and organizer tools — aligned with the web app. Pour from Home with a competition link to attach scores.',
+    competeSubtitle: 'Browse open and past competitions, invite friends, and track standings.',
     competeEmpty: 'No competitions to show yet.',
     competeParticipants: '{count} in',
     competeCreateCta: 'New competition',
+    competeCreateToolbar: 'Create',
     competeTabOpen: 'Open',
     competeTabPast: 'Past',
     competeMineHeading: 'Your competitions',
-    competeMineDescription:
-      'Listings summarize members, timing, and current leaders. Open one to pour, invite friends, and track standings.',
     competeOpenPastCounts: '{open} open · {past} past',
     competeListError: 'Could not load competitions: {detail}',
     competeNoCompsYet: 'No competitions match your account yet.',
     competeNoOpenComps: 'No open or upcoming competitions. Check Past for finished ones.',
     competeNoPastComps: 'No past competitions yet.',
+    competeCatalogEmptyTitle: 'Your first competition starts here',
+    competeCatalogEmptyBody:
+      'Create a comp, invite friends, and track pours on the leaderboard right from the app.',
+    competeOpenEmptyTitle: 'No open competitions',
+    competeOpenEmptyBody:
+      'Everything you\'re in has finished, or nothing is live yet. Browse Past for results, or start a new competition.',
+    competeEmptyOpenGoPast: 'Browse past competitions',
+    competePastEmptyTitle: 'No past competitions yet',
+    competePastEmptyBody: 'When a competition ends, it shows up here with winners and stats.',
+    competeCatalogFetchFailed: 'Could not load competitions',
     competeInvitedTitle: "You're invited",
     competeInvitedHint: 'Open a competition from the list below to join.',
-    competeAdTitle: 'Ad space',
-    competeAdBody: 'Align your brand with community competitions. Ask about placements, formats, and rates.',
-    competeAdCta: 'Contact',
     competeStatJoined: 'Joined',
     competeStatGlasses: 'Glasses each',
     competeStatRule: 'Rule',

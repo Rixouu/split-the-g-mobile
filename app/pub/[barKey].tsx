@@ -3,19 +3,20 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import * as WebBrowser from 'expo-web-browser';
 import { useMemo, useState } from 'react';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
-import MapView from 'react-native-maps';
+import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import MapView, { Marker } from 'react-native-maps';
 
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Tagline, Title } from '@/components/split-the-g/typography';
+import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl, fetchPubDetailPage } from '@/lib/api/client';
 import type { PubLinkedCompetitionRow } from '@/lib/api/types';
 import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { fetchPlaceDetails, geocodeAddress } from '@/lib/places/google-places';
 
 const BANGKOK_REGION = {
   latitude: 13.7563,
@@ -25,6 +26,23 @@ const BANGKOK_REGION = {
 };
 
 const MAIL_ADS = 'mailto:contact@split-the-g.app?subject=Split%20the%20G%20%E2%80%94%20banner%20ads';
+
+async function resolvePubMapCoords(
+  placeId: string | null,
+  displayName: string,
+  sampleAddress: string | null,
+): Promise<{ lat: number; lng: number } | null> {
+  const trimmedPlaceId = placeId?.trim();
+  if (trimmedPlaceId) {
+    const details = await fetchPlaceDetails(trimmedPlaceId);
+    if (details && Number.isFinite(details.lat) && Number.isFinite(details.lng)) {
+      return { lat: details.lat, lng: details.lng };
+    }
+  }
+  const geoQuery = [displayName.trim(), (sampleAddress ?? '').trim()].filter(Boolean).join(', ');
+  if (!geoQuery) return null;
+  return geocodeAddress(geoQuery);
+}
 
 function formatSpend(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return '—';
@@ -159,6 +177,33 @@ export default function PubDetailScreen() {
       .filter(Boolean);
   }, [page?.placeDetails?.opening_hours]);
 
+  const mapCoordsQuery = useQuery({
+    queryKey: ['pub-map-coords', barKey, resolvedPlaceId, bar?.display_name, bar?.sample_address],
+    queryFn: () =>
+      resolvePubMapCoords(resolvedPlaceId, bar!.display_name || '', bar!.sample_address ?? null),
+    enabled: Boolean(bar),
+    staleTime: 86_400_000,
+  });
+
+  const mapRegion = useMemo(() => {
+    const c = mapCoordsQuery.data;
+    if (c && Number.isFinite(c.lat) && Number.isFinite(c.lng)) {
+      return {
+        latitude: c.lat,
+        longitude: c.lng,
+        latitudeDelta: 0.012,
+        longitudeDelta: 0.012,
+      };
+    }
+    return BANGKOK_REGION;
+  }, [mapCoordsQuery.data]);
+
+  const mapPin = mapCoordsQuery.data;
+  const mapKey =
+    mapPin && Number.isFinite(mapPin.lat) && Number.isFinite(mapPin.lng)
+      ? `pin-${mapPin.lat}-${mapPin.lng}`
+      : 'region-fallback';
+
   const favMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id || !page) throw new Error('sign-in');
@@ -210,36 +255,9 @@ export default function PubDetailScreen() {
       <View style={styles.header}>
         <Eyebrow>{t('pubEyebrow')}</Eyebrow>
         {bar ? <Title>{bar.display_name || t('pubTitleFallback')}</Title> : <Title>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>}
-        {bar ? <Tagline style={styles.taglineTight}>{t('pubPageTagline')}</Tagline> : null}
+        {bar ? <Muted>{t('pubPageTagline')}</Muted> : null}
         {bar?.sample_address ? <Muted>{bar.sample_address}</Muted> : null}
       </View>
-
-      {bar ? (
-        <View style={styles.favRow}>
-          {user ? (
-            <Pressable
-              accessibilityRole="button"
-              disabled={favMutation.isPending}
-              onPress={() => favMutation.mutate()}
-              style={({ pressed }) => [
-                styles.favButton,
-                page?.favId ? styles.favButtonOn : null,
-                pressed && styles.favButtonPressed,
-              ]}>
-              <MaterialCommunityIcons
-                name={page?.favId ? 'heart' : 'heart-outline'}
-                size={22}
-                color={page?.favId ? brandColors.goldBright : brandColors.cream}
-              />
-              <Text style={[styles.favLabel, page?.favId && styles.favLabelOn]}>
-                {favMutation.isPending ? t('pubDetailFavoriteBusy') : page?.favId ? t('pubDetailSaved') : t('pubDetailFavorite')}
-              </Text>
-            </Pressable>
-          ) : (
-            <Muted>{t('pubDetailSignInForFavorite')}</Muted>
-          )}
-        </View>
-      ) : null}
 
       {q.isLoading ? (
         <Card>
@@ -269,26 +287,65 @@ export default function PubDetailScreen() {
 
       {bar ? (
         <>
-          <View style={styles.mapShell}>
-            <MapView
-              style={styles.map}
-              initialRegion={BANGKOK_REGION}
-              scrollEnabled={false}
-              rotateEnabled={false}
-              pitchEnabled={false}
-              zoomEnabled={false}
-              toolbarEnabled={false}
-            />
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('pubDetailMapTapHint')}
-              onPress={() => void openInGoogleMaps()}
-              style={({ pressed }) => [styles.mapOverlay, pressed && styles.mapOverlayPressed]}>
-              <View style={styles.mapHintPill}>
-                <Text style={styles.mapHintText}>{t('pubDetailMapTapHint')}</Text>
-              </View>
-            </Pressable>
-          </View>
+          <Card>
+            <View style={styles.mapShell}>
+              <MapView
+                key={mapKey}
+                style={styles.map}
+                initialRegion={mapRegion}
+                scrollEnabled={false}
+                rotateEnabled={false}
+                pitchEnabled={false}
+                zoomEnabled={false}
+                toolbarEnabled={false}>
+                {mapPin ? (
+                  <Marker
+                    coordinate={{ latitude: mapPin.lat, longitude: mapPin.lng }}
+                    title={bar.display_name?.trim() || t('pubTitleFallback')}
+                  />
+                ) : null}
+              </MapView>
+              {mapCoordsQuery.isFetching ? (
+                <View style={styles.mapFetchBadge} accessibilityRole="progressbar">
+                  <ActivityIndicator color={brandColors.goldBright} size="small" />
+                </View>
+              ) : null}
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('pubDetailMapTapHint')}
+                onPress={() => void openInGoogleMaps()}
+                style={({ pressed }) => [styles.mapOverlay, pressed && styles.mapOverlayPressed]}>
+                <View style={styles.mapHintPill}>
+                  <Text style={styles.mapHintText}>{t('pubDetailMapTapHint')}</Text>
+                </View>
+              </Pressable>
+            </View>
+
+            <View style={styles.heroActions}>
+              {user ? (
+                <Pressable
+                  accessibilityRole="button"
+                  disabled={favMutation.isPending}
+                  onPress={() => favMutation.mutate()}
+                  style={({ pressed }) => [
+                    styles.favButton,
+                    page?.favId ? styles.favButtonOn : null,
+                    pressed && styles.favButtonPressed,
+                  ]}>
+                  <MaterialCommunityIcons
+                    name={page?.favId ? 'heart' : 'heart-outline'}
+                    size={22}
+                    color={page?.favId ? brandColors.goldBright : brandColors.cream}
+                  />
+                  <Text style={[styles.favLabel, page?.favId && styles.favLabelOn]}>
+                    {favMutation.isPending ? t('pubDetailFavoriteBusy') : page?.favId ? t('pubDetailSaved') : t('pubDetailFavorite')}
+                  </Text>
+                </Pressable>
+              ) : (
+                <Muted>{t('pubDetailSignInForFavorite')}</Muted>
+              )}
+            </View>
+          </Card>
 
           <Card>
             <SectionHeading>{t('pubDetailLocationTitle')}</SectionHeading>
@@ -454,11 +511,8 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingTop: 16,
   },
-  taglineTight: {
-    marginTop: 2,
-  },
-  favRow: {
-    marginTop: 4,
+  heroActions: {
+    gap: 10,
   },
   favButton: {
     flexDirection: 'row',
@@ -510,6 +564,16 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     paddingBottom: 14,
+  },
+  mapFetchBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    padding: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(11, 11, 11, 0.72)',
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.45)',
   },
   mapOverlayPressed: {
     backgroundColor: 'rgba(11, 11, 11, 0.2)',

@@ -1,8 +1,6 @@
-import { Link, router } from 'expo-router';
-import { useCallback } from 'react';
+import { Link, Stack } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -16,35 +14,12 @@ export default function ProfileScoresScreen() {
   const { t, tVars, locale } = useLocale();
   const scores = useMyScores();
 
-  const goProfileHub = useCallback(() => {
-    router.replace('/profile');
-  }, []);
-
-  const showSignedInChrome = Boolean(user);
   const list = scores.data ?? [];
   const hasScores = list.length > 0;
 
   return (
     <Screen contentContainerStyle={styles.screenContent}>
-      {showSignedInChrome ? (
-        <View style={styles.subHeader} accessibilityRole="header">
-          <View style={styles.headerGrid}>
-            <View style={[styles.headerSide, styles.headerSideLeft]}>
-              <Pressable
-                onPress={goProfileHub}
-                style={({ pressed }) => [styles.backTop, pressed && styles.backPressed]}
-                accessibilityRole="button"
-                accessibilityLabel={t('actionBack')}>
-                <Text style={styles.backTopLabel}>{t('actionBack')}</Text>
-              </Pressable>
-            </View>
-            <Text style={styles.pageTitle} numberOfLines={1}>
-              {t('profileNavScores')}
-            </Text>
-            <View style={styles.headerSide} />
-          </View>
-        </View>
-      ) : null}
+      <Stack.Screen options={{ title: t('profileNavScores') }} />
 
       {!user ? (
         <Card>
@@ -113,16 +88,6 @@ export default function ProfileScoresScreen() {
           })}
         </>
       ) : null}
-
-      {user && !scores.isLoading && !scores.error ? (
-        <AppButton
-          label={t('actionBack')}
-          variant="outlineGold"
-          shape="rounded"
-          fullWidth
-          onPress={goProfileHub}
-        />
-      ) : null}
     </Screen>
   );
 }
@@ -130,54 +95,6 @@ export default function ProfileScoresScreen() {
 const styles = StyleSheet.create({
   screenContent: {
     paddingTop: 8,
-  },
-  subHeader: {
-    marginBottom: 20,
-    paddingBottom: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(212, 175, 55, 0.12)',
-  },
-  headerGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  headerSide: {
-    flex: 1,
-    minWidth: 0,
-    justifyContent: 'center',
-  },
-  headerSideLeft: {
-    alignItems: 'flex-start',
-  },
-  backTop: {
-    minHeight: 40,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(212, 175, 55, 0.4)',
-    backgroundColor: 'rgba(11, 11, 11, 0.6)',
-    justifyContent: 'center',
-  },
-  backPressed: {
-    backgroundColor: 'rgba(197, 160, 89, 0.1)',
-    borderColor: 'rgba(212, 175, 55, 0.55)',
-  },
-  backTopLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: brandColors.goldBright,
-  },
-  pageTitle: {
-    flexShrink: 1,
-    maxWidth: '72%',
-    textAlign: 'center',
-    fontSize: 22,
-    fontWeight: '800',
-    lineHeight: 26,
-    color: brandColors.goldBright,
-    letterSpacing: -0.3,
   },
   sectionTitle: {
     fontSize: 17,

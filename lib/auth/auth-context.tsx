@@ -13,9 +13,20 @@ import { getOAuthRedirectTo, oauthRedirectLikelyRejectedByGoTrue } from '@/lib/a
 import { hasSupabaseConfig } from '@/lib/config';
 import { supabase } from '@/lib/supabase/client';
 
-import type { Session, User } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 
 WebBrowser.maybeCompleteAuthSession();
+
+function isInvalidStoredSessionError(error: AuthError | null): boolean {
+  if (!error) return false;
+  const code = error.code ?? '';
+  const msg = error.message ?? '';
+  return (
+    code === 'refresh_token_not_found' ||
+    msg.includes('Invalid Refresh Token') ||
+    msg.includes('Refresh Token Not Found')
+  );
+}
 
 interface AuthContextValue {
   isConfigured: boolean;
@@ -36,8 +47,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
   useEffect(() => {
     let isMounted = true;
 
-    supabase.auth.getSession().then(({ data }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
       if (!isMounted) return;
+      if (error && isInvalidStoredSessionError(error)) {
+        await supabase.auth.signOut({ scope: 'local' });
+        if (!isMounted) return;
+        setSession(null);
+        setIsLoading(false);
+        return;
+      }
       setSession(data.session ?? null);
       setIsLoading(false);
     });
@@ -103,7 +121,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         if (sessionError) throw sessionError;
       }
     } finally {
-      await WebBrowser.dismissBrowser().catch(() => undefined);
+      await Promise.resolve(WebBrowser.dismissBrowser()).catch(() => undefined);
     }
   }, []);
 

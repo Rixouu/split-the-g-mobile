@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Body, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { supportedLocales, type SupportedLocale } from '@/lib/i18n/translations';
@@ -29,7 +29,6 @@ export default function LanguageScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
       <View style={styles.inner}>
-        <Title>{t('languageTitle')}</Title>
         <Muted adjustsFontSizeToFit>{t('languageSubtitle')}</Muted>
         <View style={styles.list}>
           {supportedLocales.map((code) => (

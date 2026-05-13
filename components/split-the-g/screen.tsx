@@ -1,6 +1,7 @@
 import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 
 const CARD_RADIUS = 14;
@@ -29,7 +30,7 @@ const styles = StyleSheet.create({
   },
   content: {
     gap: 18,
-    paddingHorizontal: 20,
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
     paddingTop: 12,
     paddingBottom: 132,
   },
