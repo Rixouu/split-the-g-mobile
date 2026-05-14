@@ -1,13 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
 
 import { CompetitionDateTimeRangeField } from '@/components/competition/competition-datetime-range-field';
 import {
   CompetitionLocationField,
   type CompetitionLocationValue,
 } from '@/components/competition/competition-location-field';
+import {
+  CompetitionFormHairline,
+  CompetitionFormInset,
+  CompetitionFormSection,
+  competitionFormStyles,
+} from '@/components/competition/competition-form-layout';
+import { DiscoverSegmentHeader } from '@/components/split-the-g/discover-feed-chrome';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -20,6 +27,7 @@ import {
 import type { CompetitionDetail } from '@/lib/api/types';
 import {
   GLASSES_PER_PERSON_UNLIMITED_SENTINEL,
+  updateGlassesPerPersonForWinRule,
   isPrivateCompetitionVisibility,
   normalizeWinRuleChoice,
   toDatetimeLocalValue,
@@ -149,7 +157,14 @@ export default function CompetitionEditScreen() {
       WIN_RULES.map((r) => (
         <Pressable
           key={r}
-          onPress={() => form && setForm({ ...form, winRule: r })}
+          onPress={() => {
+            if (!form) return;
+            setForm({
+              ...form,
+              winRule: r,
+              glassesPerPerson: String(updateGlassesPerPersonForWinRule(r, parseInt(form.glassesPerPerson, 10) || 1)),
+            });
+          }}
           style={[styles.ruleChip, form?.winRule === r && styles.ruleChipOn]}
           accessibilityRole="button">
           <Body style={[styles.ruleChipText, form?.winRule === r && styles.ruleChipTextOn]}>
@@ -192,45 +207,90 @@ export default function CompetitionEditScreen() {
   }
 
   return (
-    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
-      <Card>
-        <Muted>{t('compEditFieldName')}</Muted>
-        <TextInput
-          value={form.title}
-          onChangeText={(title) => setForm({ ...form, title })}
-          style={styles.input}
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        <Muted>{t('compEditFieldMaxParticipants')}</Muted>
-        <TextInput
-          value={form.maxParticipants}
-          onChangeText={(maxParticipants) => setForm({ ...form, maxParticipants })}
-          style={styles.input}
-          keyboardType="number-pad"
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        <Muted>{t('compEditFieldGlasses')}</Muted>
-        <TextInput
-          value={form.glassesPerPerson}
-          onChangeText={(glassesPerPerson) => setForm({ ...form, glassesPerPerson })}
-          style={styles.input}
-          keyboardType="number-pad"
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        <Muted>{t('compEditFieldWinRule')}</Muted>
-        <View style={styles.ruleRow}>{winRuleSelectors}</View>
-        {form.winRule === 'closest_to_target' ? (
-          <>
-            <Muted>{t('compEditFieldTarget')}</Muted>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES} contentContainerStyle={styles.screenContent}>
+      <DiscoverSegmentHeader
+        eyebrow={t('competitionEyebrow')}
+        title={t('compEditScreenTitle')}
+        subtitle={c.title}
+      />
+
+      <CompetitionFormSection title={t('compFormSectionDetails')} spacing="afterHero">
+        <CompetitionFormInset>
+          <View style={competitionFormStyles.stackedFieldPadding}>
+            <Muted style={competitionFormStyles.stackedLabel}>{t('compEditFieldName')}</Muted>
             <TextInput
-              value={form.targetScore}
-              onChangeText={(targetScore) => setForm({ ...form, targetScore })}
-              style={styles.input}
-              keyboardType="decimal-pad"
+              value={form.title}
+              onChangeText={(title) => setForm({ ...form, title })}
+              style={competitionFormStyles.groupedInput}
+              placeholderTextColor={brandColors.tanMuted}
+              autoCorrect
+              autoCapitalize="sentences"
+            />
+          </View>
+          <CompetitionFormHairline />
+          <View style={competitionFormStyles.stackedFieldPadding}>
+            <Muted style={competitionFormStyles.stackedLabel}>{t('compEditFieldMaxParticipants')}</Muted>
+            <TextInput
+              value={form.maxParticipants}
+              onChangeText={(maxParticipants) => setForm({ ...form, maxParticipants })}
+              style={competitionFormStyles.groupedInput}
+              keyboardType="number-pad"
               placeholderTextColor={brandColors.tanMuted}
             />
-          </>
-        ) : null}
+          </View>
+          <CompetitionFormHairline />
+          <View style={[competitionFormStyles.stackedFieldPadding, styles.glassesPad]}>
+            <Muted style={competitionFormStyles.stackedLabel}>{t('compEditFieldGlasses')}</Muted>
+            <TextInput
+              value={form.glassesPerPerson}
+              onChangeText={(glassesPerPerson) => setForm({ ...form, glassesPerPerson })}
+              style={[
+                competitionFormStyles.groupedInput,
+                form.winRule === 'most_submissions' && styles.dimmed,
+              ]}
+              keyboardType="number-pad"
+              placeholderTextColor={brandColors.tanMuted}
+              editable={form.winRule !== 'most_submissions'}
+            />
+          </View>
+        </CompetitionFormInset>
+      </CompetitionFormSection>
+
+      <CompetitionFormSection title={t('compFormSectionScoring')}>
+        <CompetitionFormInset>
+          <View style={styles.winRuleBlock}>
+            <Muted style={[competitionFormStyles.stackedLabel, styles.winRuleHeading]}>
+              {t('compEditFieldWinRule')}
+            </Muted>
+            <ScrollView
+              horizontal
+              nestedScrollEnabled
+              directionalLockEnabled
+              showsHorizontalScrollIndicator={false}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={styles.winRuleScroll}>
+              {winRuleSelectors}
+            </ScrollView>
+          </View>
+          {form.winRule === 'closest_to_target' ? (
+            <>
+              <CompetitionFormHairline />
+              <View style={[competitionFormStyles.stackedFieldPadding, styles.glassesPad]}>
+                <Muted style={competitionFormStyles.stackedLabel}>{t('compEditFieldTarget')}</Muted>
+                <TextInput
+                  value={form.targetScore}
+                  onChangeText={(targetScore) => setForm({ ...form, targetScore })}
+                  style={competitionFormStyles.groupedInput}
+                  keyboardType="decimal-pad"
+                  placeholderTextColor={brandColors.tanMuted}
+                />
+              </View>
+            </>
+          ) : null}
+        </CompetitionFormInset>
+      </CompetitionFormSection>
+
+      <CompetitionFormSection title={t('compFormSectionSchedule')}>
         <CompetitionDateTimeRangeField
           startsAt={form.startsAt}
           endsAt={form.endsAt}
@@ -242,29 +302,66 @@ export default function CompetitionEditScreen() {
           pickEndTitle={t('competitionPickEnd')}
           doneLabel={t('competitionPickerDone')}
           cancelLabel={t('competitionPickerCancel')}
+          emptyValueLabel={t('compFormPickDateTime')}
+          presentation="grouped"
         />
-        <Pressable
-          onPress={() => setForm({ ...form, isPublic: !form.isPublic })}
-          style={styles.toggle}
-          accessibilityRole="button">
-          <Body>{form.isPublic ? t('compEditPublic') : t('compEditPrivate')}</Body>
-        </Pressable>
+      </CompetitionFormSection>
+
+      <CompetitionFormSection title={t('compFormSectionDiscovery')}>
+        <CompetitionFormInset>
+          <View style={competitionFormStyles.switchRow}>
+            <Body style={[competitionFormStyles.switchBody, { color: brandColors.cream }]} accessibilityRole="text">
+              {form.isPublic ? t('compEditPublic') : t('compEditPrivate')}
+            </Body>
+            <Switch
+              accessibilityRole="switch"
+              accessibilityState={{ checked: form.isPublic }}
+              value={form.isPublic}
+              onValueChange={(v) => setForm({ ...form, isPublic: v })}
+              trackColor={{
+                false: 'rgba(60, 60, 60, 0.9)',
+                true: 'rgba(179, 139, 45, 0.65)',
+              }}
+              ios_backgroundColor="rgba(60, 60, 60, 0.9)"
+              thumbColor={form.isPublic ? brandColors.goldBright : '#888'}
+            />
+          </View>
+        </CompetitionFormInset>
+      </CompetitionFormSection>
+
+      <CompetitionFormSection title={t('compFormSectionVenue')}>
         <CompetitionLocationField
           value={form.location}
           onChange={(location) => setForm({ ...form, location })}
           venueNameLabel={t('compEditVenueName')}
           venueNamePlaceholder={t('compVenueNamePlaceholder')}
           venueAddressLabel={t('compEditVenueAddress')}
+          presentation="grouped"
         />
-        <Muted>{t('compEditLinkedBarKey')}</Muted>
-        <TextInput
-          value={form.linkedBarKey}
-          onChangeText={(linkedBarKey) => setForm({ ...form, linkedBarKey })}
-          style={styles.input}
-          autoCapitalize="none"
-          placeholderTextColor={brandColors.tanMuted}
-        />
-        {error ? <Body style={styles.err}>{error}</Body> : null}
+      </CompetitionFormSection>
+
+      <CompetitionFormSection title={t('compFormSectionPubLink')}>
+        <CompetitionFormInset>
+          <View style={[competitionFormStyles.stackedFieldPadding, styles.glassesPad]}>
+            <Muted style={competitionFormStyles.stackedLabel}>{t('compEditLinkedBarKey')}</Muted>
+            <TextInput
+              value={form.linkedBarKey}
+              onChangeText={(linkedBarKey) => setForm({ ...form, linkedBarKey })}
+              style={competitionFormStyles.groupedInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              placeholderTextColor={brandColors.tanMuted}
+            />
+          </View>
+        </CompetitionFormInset>
+      </CompetitionFormSection>
+
+      <View style={competitionFormStyles.footerActions}>
+        {error ? (
+          <Body style={styles.err} accessibilityRole="alert">
+            {error}
+          </Body>
+        ) : null}
         <AppButton
           label={saveMut.isPending ? t('compEditSaving') : t('compEditSave')}
           disabled={saveMut.isPending}
@@ -274,52 +371,50 @@ export default function CompetitionEditScreen() {
           }}
         />
         <AppButton label={t('compEditCancel')} variant="secondary" onPress={() => router.back()} />
-      </Card>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  input: {
-    borderWidth: 1,
-    borderColor: brandColors.borderSubtle,
-    borderRadius: 10,
-    padding: 12,
-    color: brandColors.cream,
-    marginBottom: 12,
-    backgroundColor: 'rgba(11, 11, 11, 0.45)',
+  screenContent: { gap: 0 },
+  glassesPad: { paddingBottom: 4 },
+  dimmed: { opacity: 0.42 },
+  winRuleBlock: {
+    paddingTop: 10,
+    paddingBottom: 4,
+    paddingLeft: 14,
+    gap: 10,
   },
-  ruleRow: {
+  winRuleHeading: { marginBottom: 2 },
+  winRuleScroll: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 12,
+    alignItems: 'center',
+    paddingRight: 14,
+    paddingBottom: 8,
+    gap: 10,
+    flexWrap: 'nowrap',
   },
   ruleChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 999,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     borderColor: brandColors.frame,
+    backgroundColor: 'rgba(11, 11, 11, 0.25)',
   },
   ruleChipOn: {
     borderColor: brandColors.gold,
-    backgroundColor: 'rgba(179, 139, 45, 0.15)',
+    backgroundColor: 'rgba(179, 139, 45, 0.22)',
+    borderWidth: 1,
   },
-  ruleChipText: {
-    fontSize: 13,
-    color: brandColors.muted,
-  },
-  ruleChipTextOn: {
-    color: brandColors.goldBright,
-    fontWeight: '700',
-  },
-  toggle: {
-    paddingVertical: 12,
-    marginBottom: 12,
-  },
+  ruleChipText: { fontSize: 13.5, color: brandColors.muted, fontWeight: '600' },
+  ruleChipTextOn: { color: brandColors.goldBright, fontWeight: '800' },
   err: {
     color: brandColors.red,
-    marginBottom: 8,
+    fontWeight: '600',
+    paddingHorizontal: 4,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

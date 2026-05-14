@@ -165,6 +165,13 @@ export type TranslationKey =
   | 'compFormErrEndAfterStart'
   | 'compFormErrMaxBelowParticipants'
   | 'compFormErrTargetRange'
+  | 'compFormSectionDetails'
+  | 'compFormSectionScoring'
+  | 'compFormSectionSchedule'
+  | 'compFormSectionDiscovery'
+  | 'compFormSectionVenue'
+  | 'compFormSectionPubLink'
+  | 'compFormPickDateTime'
   | 'compCreateTitle'
   | 'compCreateSubtitle'
   | 'compCreateSubmit'
@@ -570,6 +577,7 @@ export type TranslationKey =
   | 'compEditVenueName'
   | 'compEditVenueAddress'
   | 'compEditLinkedBarKey'
+  | 'compEditScreenTitle'
   | 'compEditSave'
   | 'compEditSaving'
   | 'compEditCancel'
@@ -875,8 +883,16 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     compFormErrEndAfterStart: 'End must be after start.',
     compFormErrMaxBelowParticipants: 'Max participants must be at least {count} (already joined).',
     compFormErrTargetRange: 'Target score must be between 0 and 5.',
+    compFormSectionDetails: 'Competition details',
+    compFormSectionScoring: 'How winners are picked',
+    compFormSectionSchedule: 'Schedule',
+    compFormSectionDiscovery: 'Visibility',
+    compFormSectionVenue: 'Venue',
+    compFormSectionPubLink: 'Directory link',
+    compFormPickDateTime: 'Choose date & time',
     compCreateTitle: 'New competition',
-    compCreateSubtitle: 'Same rules and venue options as the web app. You need to be signed in.',
+    compCreateSubtitle:
+      'Name your event, set scoring and schedule, and choose whether it shows on the Discover list. Sign in required.',
     compCreateSubmit: 'Create competition',
     compCreateSaving: 'Creating…',
     compCreateSignIn: 'Sign in with Google from Profile to create a competition.',
@@ -1353,6 +1369,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     compEditVenueName: 'Venue name',
     compEditVenueAddress: 'Venue address',
     compEditLinkedBarKey: 'Linked pub bar key (optional)',
+    compEditScreenTitle: 'Edit competition',
     compEditSave: 'Save changes',
     compEditSaving: 'Saving…',
     compEditCancel: 'Cancel',

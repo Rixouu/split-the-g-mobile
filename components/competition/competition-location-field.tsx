@@ -9,6 +9,11 @@ import {
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
+import {
+  CompetitionFormHairline,
+  CompetitionFormInset,
+  competitionFormStyles,
+} from '@/components/competition/competition-form-layout';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { PlaceAutocompleteItem } from '@/lib/places/google-places';
@@ -28,6 +33,7 @@ interface CompetitionLocationFieldProps {
   venueNameLabel: string;
   venueNamePlaceholder: string;
   venueAddressLabel: string;
+  presentation?: 'grouped' | 'classic';
 }
 
 export function CompetitionLocationField({
@@ -36,6 +42,7 @@ export function CompetitionLocationField({
   venueNamePlaceholder,
   venueAddressLabel,
   venueNameLabel,
+  presentation = 'grouped',
 }: CompetitionLocationFieldProps) {
   const [suggestions, setSuggestions] = useState<PlaceAutocompleteItem[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -96,6 +103,64 @@ export function CompetitionLocationField({
 
   const hasMap = value.lat != null && value.lng != null && Number.isFinite(value.lat) && Number.isFinite(value.lng);
 
+  const mapEl = hasMap ? (
+    <MapView
+      style={presentation === 'grouped' ? styles.mapGrouped : styles.map}
+      pointerEvents="none"
+      region={{
+        latitude: value.lat as number,
+        longitude: value.lng as number,
+        latitudeDelta: 0.02,
+        longitudeDelta: 0.02,
+      }}>
+      <Marker coordinate={{ latitude: value.lat as number, longitude: value.lng as number }} />
+    </MapView>
+  ) : null;
+
+  if (presentation === 'grouped') {
+    return (
+      <View style={styles.wrapGrouped}>
+        <CompetitionFormInset>
+          <View style={competitionFormStyles.stackedFieldPadding}>
+            <Muted style={competitionFormStyles.stackedLabel}>{venueNameLabel}</Muted>
+            <TextInput
+              value={value.name}
+              onChangeText={(name) => {
+                onChange({ ...value, name, lat: null, lng: null, placeId: null });
+                runAutocomplete(name);
+              }}
+              style={competitionFormStyles.groupedInput}
+              placeholder={venueNamePlaceholder}
+              placeholderTextColor={brandColors.tanMuted}
+            />
+          </View>
+          {suggestions.length > 0 ? (
+            <View style={styles.suggestInset}>
+              <FlatList
+                data={suggestions}
+                keyboardShouldPersistTaps="handled"
+                keyExtractor={(item) => item.placeId}
+                renderItem={renderSuggestion}
+                style={styles.suggestList}
+              />
+            </View>
+          ) : null}
+          <CompetitionFormHairline />
+          <View style={[competitionFormStyles.stackedFieldPadding, styles.addressBlock]}>
+            <Muted style={competitionFormStyles.stackedLabel}>{venueAddressLabel}</Muted>
+            <TextInput
+              value={value.address}
+              onChangeText={(address) => onChange({ ...value, address, lat: null, lng: null, placeId: null })}
+              style={competitionFormStyles.groupedInput}
+              placeholderTextColor={brandColors.tanMuted}
+            />
+          </View>
+        </CompetitionFormInset>
+        {mapEl}
+      </View>
+    );
+  }
+
   return (
     <View style={styles.wrap}>
       <Muted>{venueNameLabel}</Muted>
@@ -127,24 +192,29 @@ export function CompetitionLocationField({
         style={styles.input}
         placeholderTextColor={brandColors.tanMuted}
       />
-      {hasMap ? (
-        <MapView
-          style={styles.map}
-          pointerEvents="none"
-          region={{
-            latitude: value.lat as number,
-            longitude: value.lng as number,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02,
-          }}>
-          <Marker coordinate={{ latitude: value.lat as number, longitude: value.lng as number }} />
-        </MapView>
-      ) : null}
+      {mapEl}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapGrouped: { gap: 10 },
+  addressBlock: { paddingBottom: 4 },
+  suggestInset: {
+    maxHeight: 160,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(11, 11, 11, 0.35)',
+  },
+  mapGrouped: {
+    height: 148,
+    borderRadius: 16,
+    marginTop: 2,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
+    overflow: 'hidden',
+  },
   wrap: { gap: 6 },
   input: {
     borderWidth: 1,

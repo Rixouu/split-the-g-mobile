@@ -1,7 +1,13 @@
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useCallback, useMemo, useState } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
+import {
+  CompetitionFormHairline,
+  CompetitionFormInset,
+  competitionFormStyles,
+} from '@/components/competition/competition-form-layout';
 import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -24,6 +30,9 @@ interface CompetitionDateTimeRangeFieldProps {
   pickEndTitle: string;
   doneLabel: string;
   cancelLabel: string;
+  emptyValueLabel: string;
+  /** `grouped` = inset list rows; `classic` = legacy bordered fields. */
+  presentation?: 'grouped' | 'classic';
 }
 
 export function CompetitionDateTimeRangeField({
@@ -33,10 +42,12 @@ export function CompetitionDateTimeRangeField({
   onChangeEndsAt,
   cancelLabel,
   doneLabel,
+  emptyValueLabel,
   pickEndTitle,
   pickStartTitle,
   labelEnd,
   labelStart,
+  presentation = 'grouped',
 }: CompetitionDateTimeRangeFieldProps) {
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<PickerTarget>('start');
@@ -120,19 +131,11 @@ export function CompetitionDateTimeRangeField({
       <DateTimePicker value={draft} mode={androidMode} display="default" onChange={onAndroidChange} themeVariant="dark" />
     ) : null;
 
-  return (
-    <View style={styles.wrap}>
-      <Muted>{labelStart}</Muted>
-      <Pressable onPress={() => openFor('start')} style={styles.field} accessibilityRole="button">
-        <Body style={styles.fieldText}>
-          {startsAt.trim() ? formatCompetitionDatetimeButtonLabel(startsAt) : '—'}
-        </Body>
-      </Pressable>
-      <Muted>{labelEnd}</Muted>
-      <Pressable onPress={() => openFor('end')} style={styles.field} accessibilityRole="button">
-        <Body style={styles.fieldText}>{endsAt.trim() ? formatCompetitionDatetimeButtonLabel(endsAt) : '—'}</Body>
-      </Pressable>
+  const startDisplay = startsAt.trim() ? formatCompetitionDatetimeButtonLabel(startsAt) : emptyValueLabel;
+  const endDisplay = endsAt.trim() ? formatCompetitionDatetimeButtonLabel(endsAt) : emptyValueLabel;
 
+  const pickerShell = (
+    <>
       {Platform.OS === 'ios' ? (
         <Modal visible={open} animationType="slide" transparent>
           <View style={styles.backdrop}>
@@ -148,11 +151,84 @@ export function CompetitionDateTimeRangeField({
         </Modal>
       ) : null}
       {androidPicker}
+    </>
+  );
+
+  if (presentation === 'grouped') {
+    return (
+      <View style={styles.groupedWrap}>
+        <CompetitionFormInset>
+          <Pressable
+            android_ripple={{ color: 'rgba(197, 160, 89, 0.12)' }}
+            onPress={() => openFor('start')}
+            style={({ pressed }) => [competitionFormStyles.pickerRow, pressed && styles.pressedRow]}
+            accessibilityRole="button"
+            accessibilityLabel={labelStart}>
+            <View style={competitionFormStyles.pickerTexts}>
+              <Muted style={styles.pickerLabel}>{labelStart}</Muted>
+              <Body style={styles.pickerValue}>{startDisplay}</Body>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="rgba(197, 160, 89, 0.45)"
+              style={competitionFormStyles.pickerChevronWrap}
+            />
+          </Pressable>
+          <CompetitionFormHairline />
+          <Pressable
+            android_ripple={{ color: 'rgba(197, 160, 89, 0.12)' }}
+            onPress={() => openFor('end')}
+            style={({ pressed }) => [competitionFormStyles.pickerRow, pressed && styles.pressedRow]}
+            accessibilityRole="button"
+            accessibilityLabel={labelEnd}>
+            <View style={competitionFormStyles.pickerTexts}>
+              <Muted style={styles.pickerLabel}>{labelEnd}</Muted>
+              <Body style={styles.pickerValue}>{endDisplay}</Body>
+            </View>
+            <Ionicons
+              name="chevron-forward"
+              size={20}
+              color="rgba(197, 160, 89, 0.45)"
+              style={competitionFormStyles.pickerChevronWrap}
+            />
+          </Pressable>
+        </CompetitionFormInset>
+        {pickerShell}
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.wrap}>
+      <Muted>{labelStart}</Muted>
+      <Pressable onPress={() => openFor('start')} style={styles.field} accessibilityRole="button">
+        <Body style={styles.fieldText}>{startDisplay}</Body>
+      </Pressable>
+      <Muted>{labelEnd}</Muted>
+      <Pressable onPress={() => openFor('end')} style={styles.field} accessibilityRole="button">
+        <Body style={styles.fieldText}>{endDisplay}</Body>
+      </Pressable>
+      {pickerShell}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  groupedWrap: { marginBottom: 2 },
+  pressedRow: {
+    backgroundColor: 'rgba(29, 24, 15, 0.55)',
+  },
+  pickerLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.35,
+  },
+  pickerValue: {
+    fontWeight: '600',
+    fontSize: 16,
+    color: brandColors.cream,
+  },
   wrap: { gap: 6, marginBottom: 4 },
   field: {
     borderWidth: 1,
