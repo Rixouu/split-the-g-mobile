@@ -1,5 +1,5 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -30,31 +30,49 @@ export function PourScoreSummary({
   const barName = score.bar_name?.trim() ?? '';
   const barAddress = score.bar_address?.trim() ?? '';
   const canOpenPub = Boolean(pubPageBarKey && onPressPub);
+  const isPub = Boolean(barName);
 
-  function venueInner() {
-    if (barName) {
-      return (
-        <>
-          <Muted style={styles.sectionEyebrow}>{t('pourVenueLabel')}</Muted>
-          {canOpenPub ? (
-            <Body style={styles.truncate}>{barName}</Body>
-          ) : (
-            <Body style={styles.venueText}>{barName}</Body>
-          )}
-          {barAddress ? <Muted style={styles.address}>{barAddress}</Muted> : null}
-        </>
-      );
-    }
-    if (geoLine) {
-      return (
-        <>
-          <Muted style={styles.sectionEyebrow}>{t('pourLocationLabel')}</Muted>
-          <Body style={styles.venueText}>{geoLine}</Body>
-        </>
-      );
-    }
-    return <Muted style={styles.noVenueMuted}>{t('pourNoVenueSaved')}</Muted>;
-  }
+  const locationIcon = isPub
+    ? ('glass-mug-variant' as const)
+    : geoLine
+      ? ('map-marker-radius' as const)
+      : ('map-marker-off-outline' as const);
+
+  const locationPlate = (
+    <View style={styles.locationPlate}>
+      <View style={styles.locationIconGlow}>
+        <MaterialCommunityIcons name={locationIcon} size={28} color={brandColors.goldBright} />
+      </View>
+      <View style={styles.locationCopy}>
+        <View style={styles.labelCapsule}>
+          <Text style={styles.labelCapsuleText}>{isPub ? t('pourVenueLabel') : t('pourLocationLabel')}</Text>
+        </View>
+
+        {isPub ? (
+          <>
+            {canOpenPub ? (
+              <Text style={styles.pubTitleLink} numberOfLines={2}>
+                {barName}
+              </Text>
+            ) : (
+              <Body style={styles.pubTitlePlain} numberOfLines={2}>
+                {barName}
+              </Body>
+            )}
+            {barAddress ? <Muted style={styles.address}>{barAddress}</Muted> : null}
+            {canOpenPub ? <Muted style={styles.tapHint}>{t('pourPourSpotHint')}</Muted> : null}
+          </>
+        ) : geoLine ? (
+          <Text style={styles.geoPrimary}>{geoLine}</Text>
+        ) : (
+          <Muted style={styles.emptyLocation}>{t('pourNoVenueSaved')}</Muted>
+        )}
+      </View>
+      {canOpenPub ? (
+        <Ionicons name="chevron-forward" size={22} color="rgba(197, 160, 89, 0.55)" />
+      ) : null}
+    </View>
+  );
 
   return (
     <CompetitionFormInset>
@@ -90,28 +108,63 @@ export function PourScoreSummary({
         {canOpenPub ? (
           <Pressable
             accessibilityRole="link"
-            android_ripple={{ color: 'rgba(197, 160, 89, 0.12)' }}
+            android_ripple={{ color: 'rgba(197, 160, 89, 0.14)' }}
             onPress={() => onPressPub!(pubPageBarKey!)}
-            style={({ pressed }) => [styles.venueTapRow, pressed && styles.rowPressed]}>
-            <View style={styles.venueTapBody}>{venueInner()}</View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(197, 160, 89, 0.45)" />
+            style={({ pressed }) => [styles.locationPressable, pressed && styles.locationPressed]}>
+            {locationPlate}
           </Pressable>
         ) : (
-          <View style={styles.venueBlock}>{venueInner()}</View>
+          locationPlate
         )}
 
         {celebration ? (
-          <>
-            <View style={styles.fullDivider} />
-            <View style={styles.celebrationWrap}>
-              <Text style={styles.celebration}>{celebration}</Text>
+          <View style={styles.verdictSlot} accessibilityRole="text">
+            <View style={styles.verdictShell}>
+              <View style={styles.verdictRibbon}>
+                <Ionicons name="sparkles" size={15} color={brandColors.goldBright} />
+                <Text style={styles.verdictRibbonText}>{t('pourCelebrationTitle')}</Text>
+                <Ionicons name="sparkles" size={15} color={brandColors.goldBright} />
+              </View>
+              <View style={styles.quoteBackdrop}>
+                <Text style={styles.quoteGhost} pointerEvents="none">
+                  “
+                </Text>
+                <Text style={styles.celebrationSerif} accessibilityLabel={celebration}>
+                  {celebration}
+                </Text>
+                <Text style={styles.quoteGhostEnd} pointerEvents="none">
+                  ”
+                </Text>
+              </View>
             </View>
-          </>
+          </View>
         ) : null}
       </View>
     </CompetitionFormInset>
   );
 }
+
+const glowShadow = Platform.select({
+  ios: {
+    shadowColor: brandColors.gold,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.28,
+    shadowRadius: 10,
+  },
+  android: { elevation: 6 },
+  default: {},
+});
+
+const verdictShadow = Platform.select({
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+  },
+  android: { elevation: 12 },
+  default: {},
+});
 
 const styles = StyleSheet.create({
   inner: {
@@ -192,66 +245,156 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     marginHorizontal: -4,
   },
-  venueTapRow: {
+  locationPressable: {
+    borderRadius: 18,
+    marginHorizontal: -4,
+  },
+  locationPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.995 }],
+  },
+  locationPlate: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginHorizontal: -8,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 12,
+    gap: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    backgroundColor: 'rgba(22, 19, 14, 0.88)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.32)',
   },
-  rowPressed: { backgroundColor: 'rgba(29, 24, 15, 0.65)' },
-  venueTapBody: { flex: 1, minWidth: 0, gap: 6 },
-  venueBlock: {
-    gap: 6,
+  locationIconGlow: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(8, 8, 8, 0.65)',
+    borderWidth: 2,
+    borderColor: 'rgba(197, 160, 89, 0.48)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...glowShadow,
   },
-  sectionEyebrow: {
+  locationCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 8,
+  },
+  labelCapsule: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(179, 139, 45, 0.2)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(197, 160, 89, 0.38)',
+  },
+  labelCapsuleText: {
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.75,
+    fontWeight: '900',
+    letterSpacing: 1.15,
     textTransform: 'uppercase',
-    color: 'rgba(197, 160, 89, 0.78)',
+    color: brandColors.goldBright,
   },
-  venueText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: brandColors.cream,
-    lineHeight: 22,
-  },
-  truncate: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: brandColors.gold,
+  pubTitleLink: {
+    fontSize: 18,
+    fontWeight: '800',
+    letterSpacing: -0.25,
+    color: brandColors.goldBright,
     textDecorationLine: 'underline',
-    textDecorationColor: 'rgba(179, 139, 45, 0.42)',
-    lineHeight: 23,
+    textDecorationColor: 'rgba(197, 160, 89, 0.42)',
+    lineHeight: 24,
+  },
+  pubTitlePlain: {
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
+  },
+  geoPrimary: {
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+    color: brandColors.cream,
+    lineHeight: 25,
   },
   address: {
     fontSize: 13,
     lineHeight: 19,
-    marginTop: 2,
+    marginTop: -2,
   },
-  noVenueMuted: {
-    textAlign: 'center',
+  tapHint: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 2,
+    color: 'rgba(197, 160, 89, 0.78)',
+  },
+  emptyLocation: {
     fontSize: 14,
     lineHeight: 20,
     color: brandColors.tanMuted,
   },
-  celebrationWrap: {
-    borderLeftWidth: 3,
-    borderLeftColor: brandColors.gold,
-    paddingLeft: 14,
-    paddingVertical: 2,
-    marginRight: 4,
-    backgroundColor: 'rgba(179, 139, 45, 0.06)',
-    borderRadius: 4,
+  verdictSlot: {
+    marginTop: 18,
   },
-  celebration: {
-    fontSize: 15,
-    lineHeight: 22,
+  verdictShell: {
+    borderRadius: 20,
+    paddingTop: 16,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
+    backgroundColor: 'rgba(14, 12, 10, 0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.38)',
+    ...verdictShadow,
+  },
+  verdictRibbon: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 14,
+  },
+  verdictRibbonText: {
+    fontSize: 11,
+    fontWeight: '900',
+    letterSpacing: 2.2,
+    textTransform: 'uppercase',
+    color: brandColors.gold,
+  },
+  quoteBackdrop: {
+    position: 'relative',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    minHeight: 72,
+    justifyContent: 'center',
+  },
+  quoteGhost: {
+    position: 'absolute',
+    left: -2,
+    top: -8,
+    fontSize: 64,
+    lineHeight: 64,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    color: 'rgba(197, 160, 89, 0.12)',
+    fontWeight: '700',
+  },
+  quoteGhostEnd: {
+    position: 'absolute',
+    right: -2,
+    bottom: -18,
+    fontSize: 64,
+    lineHeight: 64,
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    color: 'rgba(197, 160, 89, 0.1)',
+    fontWeight: '700',
+  },
+  celebrationSerif: {
+    fontFamily: Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' }),
+    fontSize: 18,
+    lineHeight: 27,
     fontStyle: 'italic',
     fontWeight: '500',
-    color: brandColors.goldBright,
+    color: 'rgba(253, 251, 243, 0.94)',
+    textAlign: 'center',
+    letterSpacing: 0.15,
   },
 });

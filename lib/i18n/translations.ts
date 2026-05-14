@@ -232,6 +232,8 @@ export type TranslationKey =
   | 'pourCelebrationMidHigh'
   | 'pourCelebrationMid'
   | 'pourCelebrationLow'
+  | 'pourCelebrationTitle'
+  | 'pourPourSpotHint'
   | 'pourRankAllTime'
   | 'pourRankThisWeek'
   | 'pourRankSplitsRecorded'
@@ -952,6 +954,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourCelebrationMidHigh: 'Solid pour — great eye on the G.',
     pourCelebrationMid: 'Nice work — room to tighten the line.',
     pourCelebrationLow: 'Keep practising — every pint is data.',
+    pourCelebrationTitle: 'The verdict',
+    pourPourSpotHint: 'Open the pub wall →',
     pourRankAllTime: 'All-time rank',
     pourRankThisWeek: 'This week',
     pourRankSplitsRecorded: 'Total splits recorded',
