@@ -1,4 +1,4 @@
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { ProfileProgressDashboard } from '@/components/profile/profile-progress-dashboard';
 import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
@@ -13,7 +13,7 @@ export default function ProfileProgressScreen() {
   const scores = hub.data?.scores ?? [];
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       {!user ? (
         <Card>
           <Body>{t('signInPrompt')}</Body>

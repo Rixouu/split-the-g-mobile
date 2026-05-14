@@ -16,7 +16,7 @@ import {
   type CompetitionLocationValue,
 } from '@/components/competition/competition-location-field';
 import { AppButton } from '@/components/split-the-g/button';
-import { Screen } from '@/components/split-the-g/screen';
+import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { createCompetitionRow, fetchBarLinkOptions } from '@/lib/api/client';
@@ -174,7 +174,7 @@ export default function CreateCompetitionScreen() {
 
   if (!user) {
     return (
-      <Screen>
+      <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <View style={styles.header}>
           <Eyebrow>{t('competeEyebrow')}</Eyebrow>
           <Title>{t('compCreateTitle')}</Title>
@@ -185,7 +185,7 @@ export default function CreateCompetitionScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.header}>
         <Eyebrow>{t('competeEyebrow')}</Eyebrow>
         <Title>{t('compCreateTitle')}</Title>

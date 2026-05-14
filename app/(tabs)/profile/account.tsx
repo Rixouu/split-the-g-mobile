@@ -13,7 +13,7 @@ import {
 import { ProfileAccountTierAvatar } from '@/components/profile/profile-tier-avatar';
 import { ProfileCountryPicker } from '@/components/profile/profile-country-picker';
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { getCachedAnalyticsConsent, persistAnalyticsConsent, type AnalyticsConsentStatus } from '@/lib/analytics/consent';
@@ -135,7 +135,7 @@ export default function ProfileAccountScreen() {
     (cc && /^[A-Z]{2}$/.test(cc) ? `${flagEmojiFromIso2(cc)} ` : '') + (displayName.trim() || '—');
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       {!isConfigured ? (
         <Card>
           <Body>{t('errorSupabaseEnvTitle')}</Body>

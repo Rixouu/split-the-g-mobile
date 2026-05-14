@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { fetchCountryStats24h, fetchCountryStatsAllTime, type CountryStatRow } from '@/lib/api/leaderboard';
@@ -61,7 +61,7 @@ export default function CountryStatsLeaderboardScreen() {
   const rows = active.data ?? [];
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.header}>
         <Eyebrow>{t('navLeaderboard')}</Eyebrow>
         <Title>{t('lbCountryStats')}</Title>

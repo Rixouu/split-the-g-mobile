@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { RankedRow } from '@/lib/competition/leaderboard';
@@ -64,7 +64,7 @@ export default function CompetitionDetailScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.header}>
         <Eyebrow>{t('competitionEyebrow')}</Eyebrow>
         {c ? <Title>{c.title}</Title> : <Title>…</Title>}

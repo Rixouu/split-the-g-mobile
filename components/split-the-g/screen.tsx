@@ -1,14 +1,25 @@
 import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 
 const CARD_RADIUS = 14;
 
-export function Screen({ children, contentContainerStyle, ...props }: ScrollViewProps) {
+/**
+ * Pass as `edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}` when this screen is shown
+ * under a native Stack header. The navigator already accounts for top safe area;
+ * including `top` here doubles the spacer (most visible on notch devices).
+ */
+export const UNDER_STACK_HEADER_SAFE_AREA_EDGES: readonly Edge[] = ['bottom', 'left', 'right'];
+
+export type ScreenProps = ScrollViewProps & {
+  edges?: readonly Edge[];
+};
+
+export function Screen({ children, contentContainerStyle, edges, ...props }: ScreenProps) {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} {...(edges != null ? { edges } : {})}>
       <ScrollView
         {...props}
         contentContainerStyle={[styles.content, contentContainerStyle]}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { supabase } from '@/lib/supabase/client';
@@ -40,7 +40,7 @@ export default function ScoreRedirectScreen() {
 
   if (!message) {
     return (
-      <Screen contentContainerStyle={{ flexGrow: 1 }}>
+      <Screen contentContainerStyle={{ flexGrow: 1 }} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <Card>
           <Body>{t('scoreRedirectOpening')}</Body>
         </Card>
@@ -49,7 +49,7 @@ export default function ScoreRedirectScreen() {
   }
 
   return (
-    <Screen contentContainerStyle={{ flexGrow: 1 }}>
+    <Screen contentContainerStyle={{ flexGrow: 1 }} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <Card>
         <Body>{t('scoreRedirectErrorTitle')}</Body>
         <Muted>{message}</Muted>

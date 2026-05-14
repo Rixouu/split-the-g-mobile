@@ -8,7 +8,7 @@ import MapView, { Marker } from 'react-native-maps';
 
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl, fetchPubDetailPage } from '@/lib/api/client';
@@ -251,7 +251,7 @@ export default function PubDetailScreen() {
       : t('pubDetailStatNoRatingsYet');
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.header}>
         <Eyebrow>{t('pubEyebrow')}</Eyebrow>
         {bar ? <Title>{bar.display_name || t('pubTitleFallback')}</Title> : <Title>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>}

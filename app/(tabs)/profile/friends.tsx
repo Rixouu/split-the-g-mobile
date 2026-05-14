@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { AppButton } from '@/components/split-the-g/button';
-import { Screen } from '@/components/split-the-g/screen';
+import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { FriendRequestRow, UserFriendRow } from '@/lib/api/profile';
@@ -119,7 +119,7 @@ export default function ProfileFriendsScreen() {
     });
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       {!user ? (
         <View style={styles.sectionPanel}>
           <Body>{t('signInPrompt')}</Body>

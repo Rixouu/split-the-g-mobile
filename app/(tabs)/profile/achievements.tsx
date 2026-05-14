@@ -15,7 +15,7 @@ import {
 
 import { AchievementStickerGraphic } from '@/components/profile/achievement-sticker-graphic';
 import { AppButton } from '@/components/split-the-g/button';
-import { Screen } from '@/components/split-the-g/screen';
+import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -142,7 +142,7 @@ export default function ProfileAchievementsScreen() {
 
   if (!user) {
     return (
-      <Screen contentContainerStyle={styles.screenContent}>
+      <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <View style={styles.card}>
           <Body>{t('signInPrompt')}</Body>
         </View>
@@ -152,7 +152,7 @@ export default function ProfileAchievementsScreen() {
 
   if (bundle.isLoading) {
     return (
-      <Screen contentContainerStyle={styles.screenContent}>
+      <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <View style={[styles.card, styles.loadingCard]}>
           <ActivityIndicator color={brandColors.gold} />
           <Muted style={styles.loadingText}>{t('commonLoading')}</Muted>
@@ -163,7 +163,7 @@ export default function ProfileAchievementsScreen() {
 
   if (bundle.isError) {
     return (
-      <Screen contentContainerStyle={styles.screenContent}>
+      <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <View style={styles.card}>
           <Body>{t('profileProgressLoadError')}</Body>
           <AppButton label={t('profileHubRetry')} variant="outlineGold" shape="rounded" onPress={() => void bundle.refetch()} />
@@ -173,7 +173,7 @@ export default function ProfileAchievementsScreen() {
   }
 
   return (
-    <Screen contentContainerStyle={styles.screenContent}>
+    <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.hero}>
         <Eyebrow style={styles.heroKicker}>{t('profileAchievementsHeroKicker')}</Eyebrow>
         <Text style={styles.heroCount}>

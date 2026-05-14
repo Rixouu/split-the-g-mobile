@@ -9,7 +9,7 @@ import {
   type CompetitionLocationValue,
 } from '@/components/competition/competition-location-field';
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -162,7 +162,7 @@ export default function CompetitionEditScreen() {
 
   if (compQuery.isLoading || !form) {
     return (
-      <Screen>
+      <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <Card>
           <Body>{t('commonLoading')}</Body>
         </Card>
@@ -172,7 +172,7 @@ export default function CompetitionEditScreen() {
 
   if (compQuery.error || !c) {
     return (
-      <Screen>
+      <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <Card>
           <Body>{t('compEditLoadError')}</Body>
         </Card>
@@ -182,7 +182,7 @@ export default function CompetitionEditScreen() {
 
   if (!canEdit) {
     return (
-      <Screen>
+      <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <Card>
           <Body>{t('compEditNotAllowed')}</Body>
           <AppButton label={t('compEditBack')} variant="secondary" onPress={() => router.back()} />
@@ -192,7 +192,7 @@ export default function CompetitionEditScreen() {
   }
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <Card>
         <Muted>{t('compEditFieldName')}</Muted>
         <TextInput

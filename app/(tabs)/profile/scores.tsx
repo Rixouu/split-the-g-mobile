@@ -1,7 +1,7 @@
 import { Link, Stack } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useMyScores } from '@/components/profile/hooks/use-my-scores';
@@ -18,7 +18,7 @@ export default function ProfileScoresScreen() {
   const hasScores = list.length > 0;
 
   return (
-    <Screen contentContainerStyle={styles.screenContent}>
+    <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <Stack.Screen options={{ title: t('profileNavScores') }} />
 
       {!user ? (

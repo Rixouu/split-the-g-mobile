@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -112,7 +112,7 @@ export default function FaqScreen() {
   }, []);
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <Title>{t('faqPageTitle')}</Title>
       <Muted>{t('faqPageSubtitle')}</Muted>
 

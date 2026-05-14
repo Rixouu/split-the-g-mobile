@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMyScores } from '@/components/profile/hooks/use-my-scores';
-import { Screen } from '@/components/split-the-g/screen';
+import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { MyScoreRow } from '@/lib/api/profile';
@@ -60,7 +60,7 @@ export default function ProfileExpensesScreen() {
   const maxPour = useMemo(() => pickMaxPricedPour(pricedPours), [pricedPours]);
 
   return (
-    <Screen>
+    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       {!user ? (
         <View style={styles.card}>
           <Body>{t('signInPrompt')}</Body>

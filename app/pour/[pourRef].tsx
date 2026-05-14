@@ -10,7 +10,7 @@ import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
 import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl } from '@/lib/api/client';
@@ -115,6 +115,7 @@ export default function PourDetailScreen() {
 
   return (
     <Screen
+      edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
       refreshControl={
         <RefreshControl
           refreshing={query.isRefetching}
