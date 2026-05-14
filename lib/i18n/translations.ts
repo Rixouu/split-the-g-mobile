@@ -42,6 +42,7 @@ export type TranslationKey =
   | 'homeNoGBody'
   | 'homeChangePhoto'
   | 'homeCompetitionBanner'
+  | 'homeSignInEyebrow'
   | 'homeErrGenericPour'
   | 'homeErrFailedProcess'
   | 'homeErrAnalysisTimeout'
@@ -758,6 +759,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Please make sure the G pattern is clearly visible in your image and try again.',
     homeChangePhoto: 'Choose another photo',
     homeCompetitionBanner: 'This pour will open with your competition link after scoring.',
+    homeSignInEyebrow: 'Save your scores',
     homeErrGenericPour: 'Something went wrong processing your pour.',
     homeErrFailedProcess: 'Failed to process image.',
     homeErrAnalysisTimeout: 'Analysis timed out. Try a smaller photo or try again in a moment.',

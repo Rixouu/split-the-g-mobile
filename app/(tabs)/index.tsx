@@ -302,8 +302,11 @@ export default function HomeScreen() {
 
       {!user ? (
         <Card>
-          <Body>{t('signInPrompt')}</Body>
-          <AppButton label={t('signInGoogle')} variant="secondary" onPress={signInWithGoogle} />
+          <Eyebrow style={styles.sectionEyebrow}>{t('homeSignInEyebrow')}</Eyebrow>
+          <Muted style={styles.signInBlurb}>{t('signInPrompt')}</Muted>
+          <View style={styles.signInActions}>
+            <AppButton label={t('signInGoogle')} fullWidth onPress={signInWithGoogle} />
+          </View>
         </Card>
       ) : null}
     </Screen>
@@ -461,5 +464,16 @@ const styles = StyleSheet.create({
   errorText: {
     textAlign: 'center',
     fontSize: 13,
+  },
+  signInBlurb: {
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 21,
+    marginTop: 4,
+    paddingHorizontal: 4,
+  },
+  signInActions: {
+    marginTop: 6,
+    alignSelf: 'stretch',
   },
 });
