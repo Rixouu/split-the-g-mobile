@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 
+import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -245,7 +246,8 @@ export function PourVenueEditor({ pourRef, score, competitionId }: PourVenueEdit
   }
 
   return (
-    <View style={styles.card}>
+    <CompetitionFormInset>
+      <View style={styles.inner}>
       <Body style={styles.title}>{translate(locale, 'pourVenueTitle')}</Body>
 
       <Muted>{translate(locale, 'pourOwnerOnlyHint')}</Muted>
@@ -319,17 +321,14 @@ export function PourVenueEditor({ pourRef, score, competitionId }: PourVenueEdit
         disabled={mutation.isPending}
         onPress={() => mutation.mutate()}
       />
-    </View>
+      </View>
+    </CompetitionFormInset>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  inner: {
     gap: 12,
-    borderWidth: 1,
-    borderColor: brandColors.frame,
-    borderRadius: 14,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
     padding: 18,
   },
   title: {

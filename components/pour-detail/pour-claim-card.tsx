@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -93,13 +94,14 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
   }
 
   return (
-    <View style={styles.card}>
-      <Body style={styles.title}>{translate(locale, 'pourClaimTitle')}</Body>
-      <Muted>{translate(locale, 'pourClaimBody')}</Muted>
+    <CompetitionFormInset>
+      <View style={styles.inner}>
+        <Body style={styles.title}>{translate(locale, 'pourClaimTitle')}</Body>
+        <Muted>{translate(locale, 'pourClaimBody')}</Muted>
 
-      {banner ? <Body style={styles.banner}>{banner}</Body> : null}
+        {banner ? <Body style={styles.banner}>{banner}</Body> : null}
 
-      <View style={styles.actions}>
+        <View style={styles.actions}>
         {claimed ? (
           <>
             <Muted>
@@ -137,18 +139,15 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
             }}
           />
         )}
+        </View>
       </View>
-    </View>
+    </CompetitionFormInset>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  inner: {
     gap: 12,
-    borderWidth: 1,
-    borderColor: brandColors.frame,
-    borderRadius: 14,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
     padding: 18,
   },
   title: {

@@ -16,8 +16,6 @@ import { useLocale } from '@/lib/i18n/locale-context';
 const logoAsset = require('../../assets/images/logo-splittheg.png');
 const BMC_URL = 'https://buymeacoffee.com/rixou';
 
-const stroke = brandColors.pourCardStroke;
-
 interface PourSharePanelProps {
   shareMessage: string;
   webUrl: string;
@@ -270,16 +268,16 @@ function SocialTile({
 const styles = StyleSheet.create({
   panel: {
     borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.12)',
-    backgroundColor: 'rgba(29, 24, 15, 0.2)',
-    paddingHorizontal: 18,
-    paddingVertical: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(29, 24, 15, 0.48)',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
     gap: 16,
   },
   panelHeader: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: stroke,
+    borderBottomColor: brandColors.borderSubtle,
     paddingBottom: 12,
   },
   panelTitle: {
@@ -296,10 +294,10 @@ const styles = StyleSheet.create({
   },
   previewCard: {
     flexDirection: 'row',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#201B10',
-    backgroundColor: 'rgba(11, 11, 11, 0.3)',
+    borderRadius: 14,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(11, 11, 11, 0.42)',
     overflow: 'hidden',
   },
   previewThumb: {
@@ -357,8 +355,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   gridWrap: {
-    borderRadius: 12,
-    backgroundColor: 'rgba(11, 11, 11, 0.15)',
+    borderRadius: 14,
+    backgroundColor: 'rgba(11, 11, 11, 0.22)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
     padding: 8,
   },
   grid: {
@@ -375,8 +375,8 @@ const styles = StyleSheet.create({
     minHeight: 76,
     borderRadius: 12,
     backgroundColor: 'rgba(11, 11, 11, 0.45)',
-    borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.12)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
@@ -448,7 +448,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: 'rgba(179, 139, 45, 0.12)',
+    borderTopColor: brandColors.borderSubtle,
     paddingTop: 14,
     marginTop: 4,
   },

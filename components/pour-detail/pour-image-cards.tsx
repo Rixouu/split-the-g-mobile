@@ -1,42 +1,35 @@
 import { Image } from 'expo-image';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { DiscoverSectionTitle, discoverChromeStyles } from '@/components/split-the-g/discover-feed-chrome';
 import { Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
-
-const stroke = brandColors.pourCardStroke;
 
 interface PourImageCardsProps {
   closeupUrl: string | null;
   annotatedUrl: string | null;
 }
 
-function ImageCard({
+function ImageSection({
   title,
   badge,
   hint,
   uri,
   emptyLabel,
+  spaced,
 }: {
   title: string;
   badge: string;
   hint: string;
   uri: string | null;
   emptyLabel: string;
+  spaced?: boolean;
 }) {
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.titleRow}>
-          <Text style={styles.cardTitle}>{title}</Text>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{badge}</Text>
-          </View>
-        </View>
-        <Muted style={styles.hint}>{hint}</Muted>
-      </View>
-      <View style={styles.imageFrame}>
+    <View style={styles.section}>
+      <DiscoverSectionTitle style={spaced ? discoverChromeStyles.sectionSpaced : undefined}>{title}</DiscoverSectionTitle>
+      <View style={styles.imageShell}>
         {uri ? (
           <Image
             source={{ uri }}
@@ -49,7 +42,11 @@ function ImageCard({
         ) : (
           <Muted style={styles.empty}>{emptyLabel}</Muted>
         )}
+        <View style={styles.badgePill}>
+          <Text style={styles.badgeText}>{badge}</Text>
+        </View>
       </View>
+      <Muted style={styles.hint}>{hint}</Muted>
     </View>
   );
 }
@@ -62,7 +59,7 @@ export function PourImageCards({ closeupUrl, annotatedUrl }: PourImageCardsProps
 
   if (sameFrame) {
     return (
-      <ImageCard
+      <ImageSection
         title={t('pourOriginalPourTitle')}
         badge={t('pourFullFrameBadge')}
         hint={t('pourAnnotatedHint')}
@@ -74,14 +71,15 @@ export function PourImageCards({ closeupUrl, annotatedUrl }: PourImageCardsProps
 
   return (
     <View style={styles.stack}>
-      <ImageCard
+      <ImageSection
         title={t('pourSplitGTitle')}
         badge={t('pourCloseupBadge')}
         hint={t('pourCloseupHint')}
         uri={closeupUrl}
         emptyLabel={empty}
       />
-      <ImageCard
+      <ImageSection
+        spaced
         title={t('pourOriginalPourTitle')}
         badge={t('pourFullFrameBadge')}
         hint={t('pourAnnotatedHint')}
@@ -93,77 +91,55 @@ export function PourImageCards({ closeupUrl, annotatedUrl }: PourImageCardsProps
 }
 
 const styles = StyleSheet.create({
-  stack: {
-    gap: 14,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: stroke,
-    borderRadius: 16,
-    backgroundColor: 'rgba(29, 24, 15, 0.3)',
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.2,
-    shadowRadius: 0,
-  },
-  cardHeader: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: stroke,
-    paddingBottom: 12,
-    marginBottom: 12,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: 10,
-  },
-  cardTitle: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '800',
-    color: brandColors.gold,
-    letterSpacing: -0.2,
-  },
-  badge: {
-    borderWidth: 1,
-    borderColor: stroke,
-    backgroundColor: 'rgba(11, 11, 11, 0.45)',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  badgeText: {
-    fontSize: 9,
-    fontWeight: '800',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    color: 'rgba(212, 183, 143, 0.72)',
-  },
-  hint: {
-    marginTop: 8,
-    fontSize: 13,
-    lineHeight: 18,
-    color: 'rgba(212, 183, 143, 0.68)',
-  },
-  imageFrame: {
+  stack: {},
+  section: {},
+  imageShell: {
+    position: 'relative',
     aspectRatio: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: stroke,
-    backgroundColor: 'rgba(11, 11, 11, 0.55)',
+    width: '100%',
+    borderRadius: 18,
     overflow: 'hidden',
+    backgroundColor: 'rgba(11, 11, 11, 0.55)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   image: {
     width: '100%',
     height: '100%',
   },
+  badgePill: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(11, 11, 11, 0.78)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(197, 160, 89, 0.35)',
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.85,
+    textTransform: 'uppercase',
+    color: brandColors.goldBright,
+  },
+  hint: {
+    marginTop: 10,
+    fontSize: 13,
+    lineHeight: 18,
+    paddingHorizontal: 2,
+    color: 'rgba(212, 183, 143, 0.68)',
+  },
   empty: {
     textAlign: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(212, 183, 143, 0.62)',
   },
 });

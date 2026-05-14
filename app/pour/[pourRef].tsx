@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { RefreshControl } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
+import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { PourClaimCard } from '@/components/pour-detail/pour-claim-card';
 import { PourImageCards } from '@/components/pour-detail/pour-image-cards';
 import { PourResultsHeader } from '@/components/pour-detail/pour-results-header';
@@ -9,8 +11,7 @@ import { PourScoreSummary } from '@/components/pour-detail/pour-score-summary';
 import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
-import { AppButton } from '@/components/split-the-g/button';
-import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl } from '@/lib/api/client';
@@ -116,6 +117,7 @@ export default function PourDetailScreen() {
   return (
     <Screen
       edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
+      contentContainerStyle={styles.screenBody}
       refreshControl={
         <RefreshControl
           refreshing={query.isRefetching}
@@ -126,27 +128,39 @@ export default function PourDetailScreen() {
       <PourResultsHeader />
 
       {query.isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
+        <CompetitionFormInset>
+          <View style={styles.statePad}>
+            <Body>{t('commonLoading')}</Body>
+          </View>
+        </CompetitionFormInset>
       ) : null}
 
       {query.error ? (
-        <Card>
-          <Body>{t('pourLoadError')}</Body>
-          <Muted>{query.error.message}</Muted>
-        </Card>
+        <CompetitionFormInset>
+          <View style={styles.statePad}>
+            <Body>{t('pourLoadError')}</Body>
+            <Muted>{query.error.message}</Muted>
+          </View>
+        </CompetitionFormInset>
       ) : null}
 
       {competitionValid ? (
-        <Card>
-          <Muted>{t('pourCompBanner')}</Muted>
-          <AppButton
-            label={t('pourOpenCompetition')}
-            variant="secondary"
-            onPress={() => router.push(`/competition/${encodeURIComponent(competitionId)}`)}
-          />
-        </Card>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('pourOpenCompetition')}
+          android_ripple={{ color: 'rgba(197, 160, 89, 0.12)' }}
+          onPress={() => router.push(`/competition/${encodeURIComponent(competitionId)}`)}
+          style={({ pressed }) => [styles.compRowWrap, pressed && styles.compRowPressed]}>
+          <CompetitionFormInset>
+            <View style={styles.compRow}>
+              <View style={styles.compCopy}>
+                <Muted style={styles.compEyebrow}>{t('pourCompBanner')}</Muted>
+                <Body style={styles.compTapHint}>{t('pourOpenCompetition')}</Body>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="rgba(197, 160, 89, 0.45)" />
+            </View>
+          </CompetitionFormInset>
+        </Pressable>
       ) : null}
 
       {d ? (
@@ -169,9 +183,11 @@ export default function PourDetailScreen() {
               <PourClaimCard pourRef={pourRef} score={d} competitionId={competitionParam} />
               <PourVenueEditor pourRef={pourRef} score={d} competitionId={competitionParam} />
               {d.created_at ? (
-                <Card>
-                  <Muted>{formatWhen(d.created_at)}</Muted>
-                </Card>
+                <CompetitionFormInset>
+                  <View style={styles.statePad}>
+                    <Muted>{formatWhen(d.created_at)}</Muted>
+                  </View>
+                </CompetitionFormInset>
               ) : null}
             </>
           ) : null}
@@ -190,3 +206,42 @@ export default function PourDetailScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  screenBody: {
+    gap: 14,
+  },
+  statePad: {
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    gap: 10,
+  },
+  compRowWrap: {
+    alignSelf: 'stretch',
+  },
+  compRowPressed: {
+    opacity: 0.94,
+  },
+  compRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    gap: 14,
+  },
+  compCopy: {
+    flex: 1,
+    minWidth: 0,
+    gap: 6,
+  },
+  compEyebrow: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'rgba(212, 183, 143, 0.65)',
+  },
+  compTapHint: {
+    fontWeight: '700',
+    fontSize: 16,
+    color: brandColors.goldBright,
+  },
+});

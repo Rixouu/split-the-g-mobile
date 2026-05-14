@@ -1,7 +1,7 @@
 import { Image } from 'expo-image';
 import { StyleSheet, View } from 'react-native';
 
-import { Tagline } from '@/components/split-the-g/typography';
+import { Eyebrow, Tagline } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
 
@@ -12,6 +12,7 @@ export function PourResultsHeader() {
 
   return (
     <View style={styles.wrap}>
+      <Eyebrow style={styles.eyebrow}>{t('pourResultsEyebrow')}</Eyebrow>
       <Image
         source={logoAsset}
         style={styles.logo}
@@ -27,20 +28,28 @@ export function PourResultsHeader() {
 const styles = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    gap: 10,
-    paddingTop: 4,
-    paddingBottom: 4,
+    gap: 6,
+    paddingTop: 2,
+    paddingBottom: 6,
+    marginBottom: 2,
+  },
+  eyebrow: {
+    color: brandColors.goldBright,
+    opacity: 0.82,
+    letterSpacing: 1.5,
   },
   logo: {
-    width: 200,
-    height: 40,
+    width: 168,
+    height: 34,
     opacity: 0.95,
+    marginVertical: 2,
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '800',
-    letterSpacing: -0.4,
-    color: brandColors.gold,
+    letterSpacing: -0.35,
+    color: brandColors.goldBright,
     textAlign: 'center',
+    marginTop: 2,
   },
 });
