@@ -109,9 +109,9 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: brandColors.pourCardStroke,
+    borderColor: brandColors.frame,
     borderRadius: 14,
-    backgroundColor: 'rgba(29, 24, 15, 0.72)',
+    backgroundColor: 'rgba(29, 24, 15, 0.35)',
   },
   avatar: {
     width: 52,

@@ -319,7 +319,8 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
   );
 }
 
-function HubRow({
+/** Shared hub menu row — used under Profile for Language and other shortcuts. */
+export function HubRow({
   icon,
   title,
   subtitle,

@@ -38,15 +38,13 @@ export function PourScoreSummary({
       ? ('map-marker-radius' as const)
       : ('map-marker-off-outline' as const);
 
-  const locationPlate = (
-    <View style={styles.locationPlate}>
-      <View style={styles.locationIconGlow}>
-        <MaterialCommunityIcons name={locationIcon} size={28} color={brandColors.goldBright} />
+  const locationRow = (
+    <View style={styles.locationRow}>
+      <View style={styles.locationIconWrap}>
+        <MaterialCommunityIcons name={locationIcon} size={22} color="rgba(197, 160, 89, 0.82)" />
       </View>
       <View style={styles.locationCopy}>
-        <View style={styles.labelCapsule}>
-          <Text style={styles.labelCapsuleText}>{isPub ? t('pourVenueLabel') : t('pourLocationLabel')}</Text>
-        </View>
+        <Text style={styles.locationEyebrow}>{isPub ? t('pourVenueLabel') : t('pourLocationLabel')}</Text>
 
         {isPub ? (
           <>
@@ -69,7 +67,7 @@ export function PourScoreSummary({
         )}
       </View>
       {canOpenPub ? (
-        <Ionicons name="chevron-forward" size={22} color="rgba(197, 160, 89, 0.55)" />
+        <Ionicons name="chevron-forward" size={18} color="rgba(197, 160, 89, 0.38)" style={styles.locationChevron} />
       ) : null}
     </View>
   );
@@ -111,10 +109,10 @@ export function PourScoreSummary({
             android_ripple={{ color: 'rgba(197, 160, 89, 0.14)' }}
             onPress={() => onPressPub!(pubPageBarKey!)}
             style={({ pressed }) => [styles.locationPressable, pressed && styles.locationPressed]}>
-            {locationPlate}
+            {locationRow}
           </Pressable>
         ) : (
-          locationPlate
+          locationRow
         )}
 
         {celebration ? (
@@ -143,17 +141,6 @@ export function PourScoreSummary({
     </CompetitionFormInset>
   );
 }
-
-const glowShadow = Platform.select({
-  ios: {
-    shadowColor: brandColors.gold,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.28,
-    shadowRadius: 10,
-  },
-  android: { elevation: 6 },
-  default: {},
-});
 
 const verdictShadow = Platform.select({
   ios: {
@@ -246,76 +233,66 @@ const styles = StyleSheet.create({
     marginHorizontal: -4,
   },
   locationPressable: {
-    borderRadius: 18,
-    marginHorizontal: -4,
+    marginHorizontal: -10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   locationPressed: {
-    opacity: 0.94,
-    transform: [{ scale: 0.995 }],
+    backgroundColor: 'rgba(197, 160, 89, 0.06)',
   },
-  locationPlate: {
+  locationRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    borderRadius: 18,
-    backgroundColor: 'rgba(22, 19, 14, 0.88)',
-    borderWidth: 1,
-    borderColor: 'rgba(197, 160, 89, 0.32)',
+    alignItems: 'flex-start',
+    gap: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 0,
   },
-  locationIconGlow: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: 'rgba(8, 8, 8, 0.65)',
-    borderWidth: 2,
-    borderColor: 'rgba(197, 160, 89, 0.48)',
+  locationIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginTop: 2,
     alignItems: 'center',
     justifyContent: 'center',
-    ...glowShadow,
+    backgroundColor: 'rgba(197, 160, 89, 0.07)',
   },
   locationCopy: {
     flex: 1,
     minWidth: 0,
-    gap: 8,
+    gap: 5,
   },
-  labelCapsule: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: 'rgba(179, 139, 45, 0.2)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(197, 160, 89, 0.38)',
-  },
-  labelCapsuleText: {
+  locationEyebrow: {
     fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 1.15,
+    fontWeight: '800',
+    letterSpacing: 1.1,
     textTransform: 'uppercase',
-    color: brandColors.goldBright,
+    color: 'rgba(212, 183, 143, 0.48)',
+  },
+  locationChevron: {
+    marginTop: 14,
+    alignSelf: 'flex-start',
   },
   pubTitleLink: {
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: -0.25,
-    color: brandColors.goldBright,
-    textDecorationLine: 'underline',
-    textDecorationColor: 'rgba(197, 160, 89, 0.42)',
-    lineHeight: 24,
-  },
-  pubTitlePlain: {
-    fontSize: 18,
-    fontWeight: '700',
-    lineHeight: 24,
-  },
-  geoPrimary: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '700',
     letterSpacing: -0.2,
-    color: brandColors.cream,
-    lineHeight: 25,
+    color: brandColors.goldBright,
+    textDecorationLine: 'underline',
+    textDecorationColor: 'rgba(197, 160, 89, 0.35)',
+    lineHeight: 23,
+  },
+  pubTitlePlain: {
+    fontSize: 17,
+    fontWeight: '600',
+    lineHeight: 23,
+  },
+  geoPrimary: {
+    fontSize: 17,
+    fontWeight: '600',
+    letterSpacing: -0.15,
+    color: 'rgba(253, 251, 243, 0.88)',
+    lineHeight: 23,
   },
   address: {
     fontSize: 13,

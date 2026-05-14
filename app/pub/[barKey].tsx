@@ -253,10 +253,47 @@ export default function PubDetailScreen() {
   return (
     <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
       <View style={styles.header}>
-        <Eyebrow>{t('pubEyebrow')}</Eyebrow>
-        {bar ? <Title>{bar.display_name || t('pubTitleFallback')}</Title> : <Title>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>}
+        <View style={styles.heroTopRow}>
+          <View style={styles.heroTitleColumn}>
+            <Eyebrow>{t('pubEyebrow')}</Eyebrow>
+            {bar ? <Title>{bar.display_name || t('pubTitleFallback')}</Title> : <Title>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>}
+          </View>
+          {bar && user && page ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                favMutation.isPending
+                  ? t('pubDetailFavoriteBusy')
+                  : page.favId
+                    ? t('pubDetailSaved')
+                    : t('pubDetailFavorite')
+              }
+              disabled={favMutation.isPending}
+              onPress={() => favMutation.mutate()}
+              hitSlop={10}
+              style={({ pressed }) => [
+                styles.favIconButton,
+                page.favId ? styles.favIconButtonOn : null,
+                pressed && styles.favIconButtonPressed,
+              ]}>
+              {favMutation.isPending ? (
+                <ActivityIndicator color={brandColors.goldBright} size="small" />
+              ) : (
+                <MaterialCommunityIcons
+                  name={page.favId ? 'heart' : 'heart-outline'}
+                  size={26}
+                  color={page.favId ? brandColors.goldBright : brandColors.cream}
+                />
+              )}
+            </Pressable>
+          ) : null}
+        </View>
         {bar ? <Muted>{t('pubPageTagline')}</Muted> : null}
-        {bar?.sample_address ? <Muted>{bar.sample_address}</Muted> : null}
+        {bar?.sample_address ? (
+          <Muted style={styles.heroAddress} numberOfLines={4}>
+            {bar.sample_address}
+          </Muted>
+        ) : null}
       </View>
 
       {q.isLoading ? (
@@ -287,7 +324,7 @@ export default function PubDetailScreen() {
 
       {bar ? (
         <>
-          <Card>
+          <View style={styles.section}>
             <View style={styles.mapShell}>
               <MapView
                 key={mapKey}
@@ -320,41 +357,15 @@ export default function PubDetailScreen() {
                 </View>
               </Pressable>
             </View>
+            {!user ? <Muted style={styles.mapSignInHint}>{t('pubDetailSignInForFavorite')}</Muted> : null}
+          </View>
 
-            <View style={styles.heroActions}>
-              {user ? (
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={favMutation.isPending}
-                  onPress={() => favMutation.mutate()}
-                  style={({ pressed }) => [
-                    styles.favButton,
-                    page?.favId ? styles.favButtonOn : null,
-                    pressed && styles.favButtonPressed,
-                  ]}>
-                  <MaterialCommunityIcons
-                    name={page?.favId ? 'heart' : 'heart-outline'}
-                    size={22}
-                    color={page?.favId ? brandColors.goldBright : brandColors.cream}
-                  />
-                  <Text style={[styles.favLabel, page?.favId && styles.favLabelOn]}>
-                    {favMutation.isPending ? t('pubDetailFavoriteBusy') : page?.favId ? t('pubDetailSaved') : t('pubDetailFavorite')}
-                  </Text>
-                </Pressable>
-              ) : (
-                <Muted>{t('pubDetailSignInForFavorite')}</Muted>
-              )}
-            </View>
-          </Card>
+          <View style={styles.sectionDivider} />
 
-          <Card>
+          <View style={styles.section}>
             <SectionHeading>{t('pubDetailLocationTitle')}</SectionHeading>
             <Muted>{t('pubDetailLocationBlurb')}</Muted>
-            {bar.sample_address ? (
-              <Body style={styles.addr}>{bar.sample_address}</Body>
-            ) : (
-              <Muted>{t('pubDetailNoAddressYet')}</Muted>
-            )}
+            {!bar.sample_address ? <Muted>{t('pubDetailNoAddressYet')}</Muted> : null}
             <AppButton label={t('pourOpenInMaps')} variant="secondary" onPress={() => void openInGoogleMaps()} />
             {page?.placeDetails?.maps_place_url?.trim() ? (
               <AppButton
@@ -367,9 +378,11 @@ export default function PubDetailScreen() {
                 }}
               />
             ) : null}
-          </Card>
+          </View>
 
-          <Card>
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.section}>
             <SectionHeading>{t('pubDetailOpeningHoursTitle')}</SectionHeading>
             <Muted>{t('pubDetailOpeningHoursBlurb')}</Muted>
             {openingLines.length > 0 ? (
@@ -379,9 +392,11 @@ export default function PubDetailScreen() {
                 <Muted>{t('pubDetailHoursEmpty')}</Muted>
               </View>
             )}
-          </Card>
+          </View>
 
-          <Card>
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.section}>
             <SectionHeading>{t('pubDetailPourActivityTitle')}</SectionHeading>
             <Muted>{t('pubDetailPourActivityBlurb')}</Muted>
             <View style={styles.statGrid}>
@@ -411,15 +426,19 @@ export default function PubDetailScreen() {
                 </Text>
               </View>
             </View>
-          </Card>
+          </View>
 
-          <Card>
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.section}>
             <SectionHeading>{t('pubDetailAdvertiseTitle')}</SectionHeading>
             <Muted>{t('pubDetailAdvertiseBody')}</Muted>
             <AppButton label={t('pubDetailAdvertiseCta')} variant="secondary" onPress={() => void Linking.openURL(MAIL_ADS)} />
-          </Card>
+          </View>
 
-          <Card>
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.section}>
             <View style={styles.tabBar} accessibilityRole="tablist">
               {(
                 [
@@ -486,9 +505,11 @@ export default function PubDetailScreen() {
             ) : null}
 
             <AppButton label={t('pubDetailOpenFullPageWeb')} variant="primary" onPress={() => void openWebDetail()} />
-          </Card>
+          </View>
 
-          <Card>
+          <View style={styles.sectionDivider} />
+
+          <View style={styles.section}>
             <SectionHeading>{t('pubDetailVenueOwnersTitle')}</SectionHeading>
             <Muted>{t('pubDetailVenueOwnersBody')}</Muted>
             <Muted style={styles.toolsHint}>{t('pubDetailWebToolsHint')}</Muted>
@@ -497,7 +518,7 @@ export default function PubDetailScreen() {
               variant="secondary"
               onPress={() => void Linking.openURL(absoluteWebUrl('/pubs'))}
             />
-          </Card>
+          </View>
         </>
       ) : null}
 
@@ -510,36 +531,52 @@ const styles = StyleSheet.create({
   header: {
     gap: 10,
     paddingTop: 16,
+    marginBottom: 2,
   },
-  heroActions: {
-    gap: 10,
-  },
-  favButton: {
+  heroTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  heroTitleColumn: {
+    flex: 1,
+    minWidth: 0,
     gap: 10,
-    alignSelf: 'flex-start',
-    borderWidth: 2,
-    borderColor: 'rgba(179, 139, 45, 0.45)',
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+  },
+  heroAddress: {
+    marginTop: 4,
+    lineHeight: 20,
+  },
+  favIconButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    marginTop: -2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.42)',
     backgroundColor: 'rgba(11, 11, 11, 0.5)',
   },
-  favButtonOn: {
-    borderColor: 'rgba(179, 139, 45, 0.72)',
-    backgroundColor: 'rgba(179, 139, 45, 0.18)',
+  favIconButtonOn: {
+    borderColor: 'rgba(197, 160, 89, 0.55)',
+    backgroundColor: 'rgba(179, 139, 45, 0.14)',
   },
-  favButtonPressed: {
+  favIconButtonPressed: {
     opacity: 0.88,
   },
-  favLabel: {
-    color: brandColors.cream,
-    fontSize: 15,
-    fontWeight: '700',
+  mapSignInHint: {
+    marginTop: 10,
+    fontSize: 13,
+    lineHeight: 18,
   },
-  favLabelOn: {
-    color: brandColors.goldBright,
+  section: {
+    gap: 12,
+  },
+  sectionDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: brandColors.borderSubtle,
+    alignSelf: 'stretch',
   },
   sectionHeading: {
     color: brandColors.goldBright,
@@ -550,7 +587,7 @@ const styles = StyleSheet.create({
   },
   mapShell: {
     overflow: 'hidden',
-    height: 220,
+    height: 200,
     borderWidth: 1,
     borderColor: brandColors.frame,
     borderRadius: 14,
@@ -591,9 +628,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     letterSpacing: 0.2,
-  },
-  addr: {
-    marginTop: 6,
   },
   statGrid: {
     flexDirection: 'row',

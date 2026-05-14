@@ -106,8 +106,8 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(29, 24, 15, 0.55)',
+    borderColor: brandColors.frame,
+    backgroundColor: 'rgba(29, 24, 15, 0.35)',
     overflow: 'hidden',
   },
   mediaTap: {

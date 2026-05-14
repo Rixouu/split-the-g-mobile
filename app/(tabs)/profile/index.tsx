@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
-import { SignedInProfileHub } from '@/components/profile/signed-in-profile-hub';
+import { HubRow, SignedInProfileHub } from '@/components/profile/signed-in-profile-hub';
 import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
@@ -16,7 +16,7 @@ const HUB_STROKE = brandColors.hubStroke;
 export default function ProfileHubScreen() {
   const router = useRouter();
   const { isConfigured, isLoading, signInWithGoogle, user } = useAuth();
-  const { t, tVars } = useLocale();
+  const { locale, t, tVars } = useLocale();
   const hubQuery = useProfileHubData();
 
   return (
@@ -80,16 +80,21 @@ export default function ProfileHubScreen() {
       ) : null}
 
       {user?.email?.trim() && hubQuery.data ? (
-        <View style={styles.shortcuts}>
-          <Eyebrow style={styles.shortcutsEyebrow}>{t('navLang')}</Eyebrow>
-          <Pressable
+        <View style={styles.langSection}>
+          <Eyebrow style={styles.langSectionEyebrow}>{t('navLang')}</Eyebrow>
+          <HubRow
+            icon={<Ionicons name="globe-outline" size={20} color={brandColors.gold} />}
+            title={t('languageTitle')}
+            subtitle={t('languageSubtitle')}
+            trailing={
+              <Text style={styles.languageCurrent} numberOfLines={1}>
+                {typeof Intl !== 'undefined' && 'DisplayNames' in Intl
+                  ? new Intl.DisplayNames([locale], { type: 'language' }).of(locale) ?? locale
+                  : locale}
+              </Text>
+            }
             onPress={() => router.push('/language')}
-            style={({ pressed }) => [styles.shortcutRow, pressed && styles.shortcutRowPressed]}
-            accessibilityRole="button">
-            <Ionicons name="globe-outline" size={20} color={brandColors.gold} />
-            <Body style={styles.shortcutLabel}>{t('languageTitle')}</Body>
-            <Ionicons name="chevron-forward" size={18} color={brandColors.tanMuted} />
-          </Pressable>
+          />
         </View>
       ) : null}
     </Screen>
@@ -146,27 +151,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 12,
   },
-  shortcuts: {
+  langSection: {
     marginTop: 4,
     paddingTop: 8,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: HUB_STROKE,
-    gap: 10,
+    gap: 0,
   },
-  shortcutsEyebrow: {
-    marginBottom: 4,
+  langSectionEyebrow: {
+    marginBottom: 10,
   },
-  shortcutRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-  },
-  shortcutRowPressed: {
-    opacity: 0.85,
-  },
-  shortcutLabel: {
-    flex: 1,
+  languageCurrent: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: brandColors.gold,
+    maxWidth: 120,
   },
 });

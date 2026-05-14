@@ -482,10 +482,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   gridRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
     gap: 10,
   },
   gridCell: {
     flex: 1,
+    minWidth: 0,
   },
   pager: {
     flexDirection: 'row',
