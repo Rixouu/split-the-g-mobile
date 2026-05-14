@@ -62,8 +62,8 @@
       "@react-native-community/datetimepicker"
     ],
     "extra": {
-      "siteUrl": "https://split-the-g.vercel.app",
-      "apiBaseUrl": "https://split-the-g.vercel.app",
+      "siteUrl": "https://www.split-the-g.app",
+      "apiBaseUrl": "https://www.split-the-g.app",
       "supabaseUrl": "",
       "supabaseAnonKey": "",
       "googleMapsApiKey": "",

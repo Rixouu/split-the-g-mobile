@@ -99,8 +99,8 @@ Create a **`.env`** in the project root (do not commit; it is gitignored). Only 
 #### Required (minimal)
 
 ```env
-EXPO_PUBLIC_SITE_URL=https://split-the-g.vercel.app
-EXPO_PUBLIC_API_BASE_URL=https://split-the-g.vercel.app
+EXPO_PUBLIC_SITE_URL=https://www.split-the-g.app
+EXPO_PUBLIC_API_BASE_URL=https://www.split-the-g.app
 EXPO_PUBLIC_SUPABASE_URL=your-supabase-url
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
@@ -155,7 +155,7 @@ npm run generate-assets  # re-gen app icon / splash / favicon from assets/images
 
 ### Supabase redirect URLs (return to app after Google)
 
-If **`redirectTo`** is not allowlisted **exactly**, Supabase sends users to the **Site URL** (e.g. `https://split-the-g.app/`) — you stay **in the browser**, signed in on the website, not the app.
+If **`redirectTo`** is not allowlisted **exactly**, Supabase sends users to the **Site URL** (e.g. `https://www.split-the-g.app/`) — you stay **in the browser**, signed in on the website, not the app.
 
 The app builds `redirectTo` in **`lib/auth/oauth-redirect.ts`**:
 

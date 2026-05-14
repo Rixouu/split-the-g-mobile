@@ -893,7 +893,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionLeave: 'Leave',
     competitionRosterFull: 'Roster full',
     competitionSignInToJoin: 'Sign in to join this competition.',
-    competitionWebHintLess: 'Invites and some organizer tools are also on split-the-g.app.',
+    competitionWebHintLess: 'Invites and some organizer tools are also on www.split-the-g.app.',
     languageTitle: 'Language',
     languageSubtitle: 'Choose your display language.',
     pourResultsEyebrow: 'Pour result',

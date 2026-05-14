@@ -15,9 +15,11 @@ interface AppExtraConfig {
 
 const extra = (Constants.expoConfig?.extra ?? {}) as AppExtraConfig;
 
-function valueFromEnv(key: string, fallback = ''): string {
-  return process.env[key] ?? fallback;
-}
+/**
+ * Expo / Metro only inlines EXPO_PUBLIC_* when accessed as literals, e.g.
+ * `process.env.EXPO_PUBLIC_FOO`. Dynamic `process.env[key]` survives bundling but
+ * is empty in release builds — EAS dashboard vars still won't show up via helpers.
+ */
 
 function normalizeUrl(url: string): string {
   return url.trim().replace(/\/$/, '');
@@ -25,41 +27,33 @@ function normalizeUrl(url: string): string {
 
 export const appConfig = {
   siteUrl: normalizeUrl(
-    valueFromEnv('EXPO_PUBLIC_SITE_URL', extra.siteUrl ?? 'https://split-the-g.vercel.app'),
+    process.env.EXPO_PUBLIC_SITE_URL ?? extra.siteUrl ?? 'https://www.split-the-g.app',
   ),
   apiBaseUrl: normalizeUrl(
-    valueFromEnv(
-      'EXPO_PUBLIC_API_BASE_URL',
-      extra.apiBaseUrl ?? extra.siteUrl ?? 'https://split-the-g.vercel.app',
-    ),
+    process.env.EXPO_PUBLIC_API_BASE_URL ??
+      extra.apiBaseUrl ??
+      extra.siteUrl ??
+      'https://www.split-the-g.app',
   ),
-  supabaseUrl: valueFromEnv('EXPO_PUBLIC_SUPABASE_URL', extra.supabaseUrl ?? ''),
-  supabaseAnonKey: valueFromEnv(
-    'EXPO_PUBLIC_SUPABASE_ANON_KEY',
-    extra.supabaseAnonKey ?? '',
-  ),
-  googleMapsApiKey: valueFromEnv(
-    'EXPO_PUBLIC_GOOGLE_MAPS_API_KEY',
-    extra.googleMapsApiKey ?? '',
-  ),
-  posthogKey: valueFromEnv('EXPO_PUBLIC_POSTHOG_KEY', extra.posthogKey ?? ''),
-  posthogHost: valueFromEnv(
-    'EXPO_PUBLIC_POSTHOG_HOST',
-    extra.posthogHost ?? 'https://us.i.posthog.com',
-  ),
+  supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? extra.supabaseUrl ?? '',
+  supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? extra.supabaseAnonKey ?? '',
+  googleMapsApiKey:
+    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ?? extra.googleMapsApiKey ?? '',
+  posthogKey: process.env.EXPO_PUBLIC_POSTHOG_KEY ?? extra.posthogKey ?? '',
+  posthogHost:
+    process.env.EXPO_PUBLIC_POSTHOG_HOST ?? extra.posthogHost ?? 'https://us.i.posthog.com',
   /** Same defaults as web `useHomePourClient` (`VITE_ROBOFLOW_*`). */
-  roboflowPublishableKey: valueFromEnv(
-    'EXPO_PUBLIC_ROBOFLOW_PUBLISHABLE_KEY',
-    valueFromEnv('EXPO_PUBLIC_ROBOFLOW_API_KEY', extra.roboflowPublishableKey ?? ''),
-  ),
-  roboflowInferenceModel: valueFromEnv(
-    'EXPO_PUBLIC_ROBOFLOW_INFERENCE_MODEL',
-    extra.roboflowInferenceModel ?? 'split-g-label-experiment',
-  ),
-  roboflowInferenceVersion: valueFromEnv(
-    'EXPO_PUBLIC_ROBOFLOW_INFERENCE_VERSION',
-    extra.roboflowInferenceVersion ?? '8',
-  ),
+  roboflowPublishableKey:
+    process.env.EXPO_PUBLIC_ROBOFLOW_PUBLISHABLE_KEY ??
+    process.env.EXPO_PUBLIC_ROBOFLOW_API_KEY ??
+    extra.roboflowPublishableKey ??
+    '',
+  roboflowInferenceModel:
+    process.env.EXPO_PUBLIC_ROBOFLOW_INFERENCE_MODEL ??
+    extra.roboflowInferenceModel ??
+    'split-g-label-experiment',
+  roboflowInferenceVersion:
+    process.env.EXPO_PUBLIC_ROBOFLOW_INFERENCE_VERSION ?? extra.roboflowInferenceVersion ?? '8',
   appScheme: 'splittheg',
 };
 

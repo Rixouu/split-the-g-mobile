@@ -7,7 +7,7 @@ import { appConfig } from '@/lib/config';
 
 /**
  * OAuth `redirectTo` passed to Supabase — must match **Authentication → URL Configuration → Redirect URLs** exactly.
- * If it does not, Supabase redirects to **Site URL** (e.g. https://split-the-g.app/) and the session opens in the browser instead of the app.
+ * If it does not, Supabase redirects to **Site URL** (e.g. https://www.split-the-g.app/) and the session opens in the browser instead of the app.
  *
  * - **Dev client / standalone / EAS builds:** stable `splittheg://auth/callback` (add once in Supabase).
  * - **Expo Go:** `Linking.createURL('auth/callback')` → `exp://…:8081/--/auth/callback`. **Important:** Supabase GoTrue rejects redirect URLs whose hostname is a **non-loopback IP** before the allowlist is checked, so `exp://192.168.x.x/...` and `exp://10.0.2.2/...` do **not** work even if you add them in the dashboard. On **simulators** this app rewrites those to `127.0.0.1` (loopback, accepted by GoTrue). On a **physical device** use **`npx expo start --tunnel`** (then add the logged `exp://…` host to Supabase) or a **development build** with `splittheg://auth/callback`.
