@@ -1,11 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 
+import {
+  DiscoverSegmentHeader,
+  DiscoverSectionTitle,
+  discoverChromeStyles,
+} from '@/components/split-the-g/discover-feed-chrome';
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { PourListRow } from '@/components/split-the-g/pour-list-row';
 import { Card } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 import { fetchRecentScores } from '@/lib/api/client';
@@ -35,8 +46,15 @@ function chunkPairs<T>(items: T[]): T[][] {
   return rows;
 }
 
+function WallInsetList({ children }: { children: React.ReactNode }) {
+  return <View style={styles.insetList}>{children}</View>;
+}
+
+const CAROUSEL_GAP = 12;
+
 export function WallFeedBody() {
   const { t } = useLocale();
+  const { width: windowWidth } = useWindowDimensions();
   const scores = useQuery({
     queryKey: ['scores', 'wall'],
     queryFn: () => fetchRecentScores(80),
@@ -57,6 +75,12 @@ export function WallFeedBody() {
 
   const archiveRows = useMemo(() => chunkPairs(archive), [archive]);
 
+  const carouselTileWidth = Math.min(168, Math.round(windowWidth * 0.44));
+  const carouselSnapOffsets = useMemo(
+    () => last24.map((_, i) => i * (carouselTileWidth + CAROUSEL_GAP)),
+    [carouselTileWidth, last24.length],
+  );
+
   const empty = !scores.isLoading && !scores.error && (scores.data?.length ?? 0) === 0;
 
   return (
@@ -70,11 +94,7 @@ export function WallFeedBody() {
           tintColor={brandColors.gold}
         />
       }>
-      <View style={styles.header}>
-        <Eyebrow>{t('wallEyebrow')}</Eyebrow>
-        <Title>{t('wallTitle')}</Title>
-        <Muted>{t('wallSubtitle')}</Muted>
-      </View>
+      <DiscoverSegmentHeader eyebrow={t('wallEyebrow')} title={t('wallTitle')} subtitle={t('wallSubtitle')} />
 
       {scores.isLoading ? (
         <Card>
@@ -91,34 +111,59 @@ export function WallFeedBody() {
         </Card>
       ) : (
         <>
-          <Text style={styles.sectionTitle}>{t('wallLast24')}</Text>
+          <DiscoverSectionTitle>{t('wallLast24')}</DiscoverSectionTitle>
           {last24.length === 0 ? (
             <Muted style={styles.emptyHint}>{t('wallEmptyDay')}</Muted>
           ) : (
-            <View style={styles.gridBlock}>
-              {chunkPairs(last24).map((pair, rowIdx) => (
-                <View key={`d-${rowIdx}`} style={styles.columnWrap}>
-                  {pair.map((item) => (
-                    <View key={item.id} style={styles.gridCell}>
-                      <PourGridCard score={item} />
-                    </View>
-                  ))}
-                  {pair.length === 1 ? <View style={styles.gridCell} /> : null}
-                </View>
-              ))}
+            <View style={styles.carouselBleed}>
+              <ScrollView
+                horizontal
+                nestedScrollEnabled
+                showsHorizontalScrollIndicator={false}
+                decelerationRate="fast"
+                snapToOffsets={carouselSnapOffsets}
+                snapToAlignment="start"
+                disableIntervalMomentum
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={styles.carouselContent}>
+                {last24.map((item, index) => (
+                  <View
+                    key={item.id}
+                    style={[
+                      styles.carouselTileWrap,
+                      index === last24.length - 1 && styles.carouselTileWrapLast,
+                    ]}>
+                    <PourGridCard
+                      score={item}
+                      hideVenueRow
+                      tileWidth={carouselTileWidth}
+                    />
+                  </View>
+                ))}
+              </ScrollView>
             </View>
           )}
 
-          <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallTopWeek')}</Text>
-          <View style={styles.listPanel}>
+          <DiscoverSectionTitle style={discoverChromeStyles.sectionSpaced}>
+            {t('wallTopWeek')}
+          </DiscoverSectionTitle>
+          <WallInsetList>
             {weekTop.length === 0 ? (
               <Muted style={styles.panelEmpty}>{t('wallTopWeekEmpty')}</Muted>
             ) : (
-              weekTop.map((item) => <PourListRow key={item.id} score={item} />)
+              weekTop.map((item, index) => (
+                <PourListRow
+                  key={item.id}
+                  score={item}
+                  showSeparatorBelow={index < weekTop.length - 1}
+                />
+              ))
             )}
-          </View>
+          </WallInsetList>
 
-          <Text style={[styles.sectionTitle, styles.sectionSpaced]}>{t('wallEarlier')}</Text>
+          <DiscoverSectionTitle style={discoverChromeStyles.sectionSpaced}>
+            {t('wallEarlier')}
+          </DiscoverSectionTitle>
           <View style={styles.gridBlock}>
             {archiveRows.length === 0 ? (
               <Muted style={styles.emptyHint}>{t('wallArchiveEmpty')}</Muted>
@@ -148,22 +193,28 @@ const styles = StyleSheet.create({
     paddingTop: 4,
     paddingBottom: 132,
   },
-  header: {
-    marginBottom: 18,
-    gap: 10,
-    paddingTop: 16,
+  carouselBleed: {
+    marginHorizontal: -SCREEN_EDGE_GUTTER,
   },
-  sectionTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 1.2,
-    textTransform: 'uppercase',
-    color: brandColors.goldBright,
-    marginBottom: 10,
-    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  carouselContent: {
+    paddingHorizontal: SCREEN_EDGE_GUTTER,
+    paddingVertical: 2,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
-  sectionSpaced: {
-    marginTop: 22,
+  carouselTileWrap: {
+    marginRight: CAROUSEL_GAP,
+  },
+  carouselTileWrapLast: {
+    marginRight: 0,
+  },
+  insetList: {
+    borderRadius: 16,
+    backgroundColor: 'rgba(29, 24, 15, 0.5)',
+    paddingHorizontal: 14,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
   },
   gridBlock: {
     marginBottom: 4,
@@ -177,18 +228,9 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  listPanel: {
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    gap: 8,
-  },
   panelEmpty: {
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 2,
   },
   emptyHint: {
     marginBottom: 8,

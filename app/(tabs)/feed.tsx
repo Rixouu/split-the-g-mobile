@@ -13,9 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
+import { DiscoverSegmentHeader, DiscoverSectionTitle } from '@/components/split-the-g/discover-feed-chrome';
 import { WallFeedBody } from '@/components/split-the-g/wall-feed-body';
 import { Card } from '@/components/split-the-g/screen';
-import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
@@ -81,25 +82,26 @@ export default function FeedScreen() {
           columnWrapperStyle={styles.columnWrap}
           renderItem={renderItem}
           ListHeaderComponent={
-            <View style={styles.header}>
-              <Eyebrow>{t('feedEyebrow')}</Eyebrow>
-              <Title>{t('feedTitle')}</Title>
-              <Muted>{t('feedSubtitle')}</Muted>
+            <DiscoverSegmentHeader
+              eyebrow={t('feedEyebrow')}
+              title={t('feedTitle')}
+              subtitle={t('feedSubtitle')}>
               <Link href="/" asChild>
                 <Pressable
+                  android_ripple={{ color: 'rgba(197, 160, 89, 0.14)', borderless: false }}
                   style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
                   accessibilityRole="button">
                   <Text style={styles.ctaLabel}>{t('homeScorePour')}</Text>
                 </Pressable>
               </Link>
               {!scores.isLoading && !scores.error && pourCount > 0 ? (
-                <View style={styles.gridIntro}>
-                  <Eyebrow style={styles.gridIntroEyebrow}>
-                    {pourCount === 1 ? t('feedGridIntroOne') : tVars('feedGridIntroMany', { count: pourCount })}
-                  </Eyebrow>
-                </View>
+                <DiscoverSectionTitle style={styles.gridSectionTitle}>
+                  {pourCount === 1
+                    ? t('feedGridIntroOne')
+                    : tVars('feedGridIntroMany', { count: pourCount })}
+                </DiscoverSectionTitle>
               ) : null}
-            </View>
+            </DiscoverSegmentHeader>
           }
           ListEmptyComponent={
             scores.isLoading ? (
@@ -137,8 +139,8 @@ const styles = StyleSheet.create({
   },
   discoverTabChrome: {
     paddingHorizontal: SCREEN_EDGE_GUTTER,
-    paddingTop: 10,
-    marginBottom: 6,
+    paddingTop: 8,
+    marginBottom: 4,
   },
   list: { flex: 1 },
   content: {
@@ -155,20 +157,12 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  header: {
-    marginBottom: 16,
-    gap: 10,
-    paddingTop: 16,
-  },
-  gridIntro: {
-    marginTop: 2,
-    marginBottom: -2,
-  },
-  gridIntroEyebrow: {
-    letterSpacing: 1.8,
+  /** Space above the grid intros — aligns with inset between header actions and sections on Wall. */
+  gridSectionTitle: {
+    marginTop: 12,
   },
   cta: {
-    marginTop: 6,
+    marginTop: 10,
     alignSelf: 'flex-start',
     borderRadius: 999,
     borderWidth: 2,

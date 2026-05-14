@@ -30,9 +30,11 @@ interface PourGridCardProps {
   score: PourScore;
   /** Pub wall: same venue for every row — hide the venue link row. */
   hideVenueRow?: boolean;
+  /** Fixed width (e.g. horizontal carousel tiles). Height follows the 3:4 media ratio. */
+  tileWidth?: number;
 }
 
-export function PourGridCard({ score, hideVenueRow }: PourGridCardProps) {
+export function PourGridCard({ score, hideVenueRow, tileWidth }: PourGridCardProps) {
   const { t } = useLocale();
   const pourRef = score.slug || score.id;
   const uri = score.pint_image_url?.trim() || null;
@@ -43,7 +45,7 @@ export function PourGridCard({ score, hideVenueRow }: PourGridCardProps) {
   const bk = barKeyFromName(barName);
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, tileWidth != null ? { width: tileWidth, borderRadius: 14 } : null]}>
       <Link href={`/pour/${pourRef}`} asChild>
         <Pressable style={styles.mediaTap} accessibilityRole="button">
           <View style={styles.media}>
