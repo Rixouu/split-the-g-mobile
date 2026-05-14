@@ -1,4 +1,5 @@
 import type { PubWallScoreRow } from '@/lib/api/types';
+import { countryNameEn } from '@/lib/utils/country-options';
 
 export type PubWallSort = 'newest' | 'oldest' | 'score_high' | 'score_low';
 
@@ -68,16 +69,10 @@ export function wallCountryCodesFromRows(items: PubWallScoreRow[]): { code: stri
     const c = s.country_code?.trim().toUpperCase();
     if (c && /^[A-Z]{2}$/.test(c)) codes.add(c);
   }
-  let displayNames: Intl.DisplayNames;
-  try {
-    displayNames = new Intl.DisplayNames(undefined, { type: 'region' });
-  } catch {
-    displayNames = new Intl.DisplayNames('en', { type: 'region' });
-  }
   return [...codes]
     .sort()
     .map((code) => ({
       code,
-      name: displayNames.of(code) ?? code,
+      name: countryNameEn(code),
     }));
 }

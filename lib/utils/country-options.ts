@@ -20,3 +20,10 @@ export function getCountryOptions(): CountryOption[] {
     .sort((a, b) => a.name.localeCompare(b.name));
   return cached;
 }
+
+/** ISO alpha-2 → English display name. Safe on Hermes where `Intl.DisplayNames` is missing. */
+export function countryNameEn(alpha2: string): string {
+  const code = alpha2.trim().toUpperCase();
+  const name = countries.getName(code, 'en', { select: 'official' });
+  return name ?? code;
+}

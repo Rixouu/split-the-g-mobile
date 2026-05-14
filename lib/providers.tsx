@@ -16,7 +16,10 @@ export function AppProviders({ children }: PropsWithChildren) {
         defaultOptions: {
           queries: {
             retry: 1,
-            staleTime: 30_000,
+            /** Tabs feel sluggish if every visit refetches while data is still fine to show. */
+            staleTime: 120_000,
+            gcTime: 1_800_000,
+            refetchOnWindowFocus: false,
           },
         },
       }),

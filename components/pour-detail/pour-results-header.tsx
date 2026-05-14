@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, View } from 'react-native';
 
 import { Tagline } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -14,7 +15,7 @@ export function PourResultsHeader() {
       <Image
         source={logoAsset}
         style={styles.logo}
-        resizeMode="contain"
+        contentFit="contain"
         accessibilityRole="image"
         accessibilityLabel={t('appName')}
       />

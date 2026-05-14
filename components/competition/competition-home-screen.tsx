@@ -61,6 +61,7 @@ export default function CompetitionHomeScreen() {
   const catalogQuery = useQuery({
     queryKey: ['competitions', 'catalog'],
     queryFn: () => fetchCompetitionsCatalog(40),
+    staleTime: 180_000,
   });
 
   const tToast = useCallback(
@@ -220,7 +221,7 @@ export default function CompetitionHomeScreen() {
     ],
   );
 
-  const renderItem: ListRenderItem<CompetitionDetail> = ({ item: c }) => {
+  const renderItem = useCallback<ListRenderItem<CompetitionDetail>>(({ item: c }) => {
     const count = counts[c.id] ?? 0;
     const isOwner = userId === c.created_by;
     const isJoined = joinedIds.has(c.id);
@@ -413,7 +414,30 @@ export default function CompetitionHomeScreen() {
         ) : null}
       </View>
     );
-  };
+  }, [
+    counts,
+    expandedInvitesId,
+    invitesByComp,
+    inviteBusy,
+    inviteInputs,
+    joinedIds,
+    listingsTab,
+    myFriends,
+    pastWinnerByCompId,
+    requestDeleteCompetition,
+    router,
+    t,
+    addEmailInvite,
+    addFriendParticipant,
+    handleJoin,
+    handleLeave,
+    removeInvite,
+    setExpandedInvitesId,
+    setInviteInputs,
+    userId,
+  ]);
+
+  const keyExtractorRow = useCallback((item: CompetitionDetail) => item.id, []);
 
   const listEmpty = useMemo(() => {
     if (catalogQuery.isLoading && !catalogQuery.data) {
@@ -504,10 +528,14 @@ export default function CompetitionHomeScreen() {
           visibleCompetitions.length === 0 ? styles.contentWhenEmpty : null,
         ]}
         data={visibleCompetitions}
-        keyExtractor={(item) => item.id}
+        keyExtractor={keyExtractorRow}
         renderItem={renderItem}
         ListHeaderComponent={header}
         ListEmptyComponent={listEmpty}
+        removeClippedSubviews={Platform.OS === 'android'}
+        windowSize={7}
+        maxToRenderPerBatch={4}
+        initialNumToRender={4}
         refreshControl={
           <RefreshControl
             refreshing={catalogQuery.isRefetching}

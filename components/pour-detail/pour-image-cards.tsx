@@ -1,4 +1,5 @@
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -37,7 +38,14 @@ function ImageCard({
       </View>
       <View style={styles.imageFrame}>
         {uri ? (
-          <Image source={{ uri }} style={styles.image} resizeMode="cover" />
+          <Image
+            source={{ uri }}
+            style={styles.image}
+            contentFit="cover"
+            cachePolicy="disk"
+            recyclingKey={uri}
+            transition={200}
+          />
         ) : (
           <Muted style={styles.empty}>{emptyLabel}</Muted>
         )}

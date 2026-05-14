@@ -45,6 +45,7 @@ export default function FeedScreen() {
     queryKey: ['scores', 'recent'],
     queryFn: () => fetchRecentScores(36),
     enabled: segment === 'feed',
+    staleTime: 180_000,
   });
 
   const pourCount = scores.data?.length ?? 0;

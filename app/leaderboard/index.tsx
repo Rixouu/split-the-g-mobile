@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -25,6 +26,11 @@ function titleKeyForTab(tab: LeaderTab): TranslationKey {
   if (tab === 'friends') return 'lbTitleFriendsWeek';
   return 'lbTitleGlobalWeek';
 }
+
+type HintKind =
+  | { kind: 'signIn' }
+  | { kind: 'country' }
+  | { kind: 'friendsSolo' };
 
 export default function LeaderboardScreen() {
   const router = useRouter();
@@ -57,110 +63,200 @@ export default function LeaderboardScreen() {
       (tab === 'friends' && Boolean(user?.id)),
   });
 
-  const hint = useMemo(() => {
-    if (tab === 'friends' && !user) return t('lbHintSignIn');
-    if (tab === 'local' && !user) return t('lbHintSignIn');
-    if (tab === 'local' && user && countryQuery.isFetched && !countryCode) return t('lbHintCountry');
-    if (tab === 'friends' && user && listQuery.isFetched && listQuery.data?.length === 0)
-      return t('lbHintFriendsSolo');
+  const hintKind = useMemo((): HintKind | null => {
+    if ((tab === 'friends' || tab === 'local') && !user) return { kind: 'signIn' };
+    if (tab === 'local' && user && countryQuery.isFetched && !countryCode) return { kind: 'country' };
+    if (
+      tab === 'friends' &&
+      user &&
+      listQuery.isFetched &&
+      listQuery.data &&
+      listQuery.data.length === 0
+    )
+      return { kind: 'friendsSolo' };
     return null;
-  }, [tab, user, countryCode, countryQuery.isFetched, listQuery.isFetched, listQuery.data?.length, t]);
+  }, [
+    tab,
+    user,
+    countryCode,
+    countryQuery.isFetched,
+    listQuery.isFetched,
+    listQuery.data,
+  ]);
+
+  const hintText = useMemo(() => {
+    if (!hintKind) return null;
+    if (hintKind.kind === 'signIn') return t('lbHintSignIn');
+    if (hintKind.kind === 'country') return t('lbHintCountry');
+    return t('lbHintFriendsSolo');
+  }, [hintKind, t]);
 
   const titleKey = titleKeyForTab(tab);
 
+  const isLoadingBlock =
+    listQuery.isLoading || (tab === 'local' && countryQuery.isLoading && Boolean(user?.id));
+
+  const listRows = listQuery.data ?? [];
+  const showList =
+    Boolean(user || tab === 'global') &&
+    !hintKind &&
+    !listQuery.error &&
+    !isLoadingBlock &&
+    listRows.length > 0;
+
   return (
-    <Screen>
-      <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <Text style={styles.pageTitle}>{t(titleKey)}</Text>
-          <Pressable onPress={() => router.push('/faq')} style={styles.faqBtn} accessibilityRole="button">
-            <Muted style={styles.faqBtnLabel}>{t('faqLink')}</Muted>
-          </Pressable>
-        </View>
-        <Muted style={styles.subtitle}>{t('lbSubtitle')}</Muted>
+    <Screen contentContainerStyle={styles.scrollInner}>
+      <View style={styles.constrain}>
+        <View style={styles.header}>
+          <View style={styles.titleRow}>
+            <Text style={styles.pageTitle}>{t(titleKey)}</Text>
+            <Pressable onPress={() => router.push('/faq')} style={styles.faqBtn} accessibilityRole="button">
+              <Muted style={styles.faqBtnLabel}>{t('faqLink')}</Muted>
+            </Pressable>
+          </View>
+          <Muted style={styles.subtitle}>{t('lbSubtitle')}</Muted>
 
-        <View style={styles.inlineLinks}>
-          <Pressable onPress={() => router.push('/leaderboard/country-stats')} accessibilityRole="button">
-            <Muted style={styles.linkText}>{t('lbCountryStatsLink')}</Muted>
-          </Pressable>
+          <View style={styles.inlineLinks}>
+            <Pressable onPress={() => router.push('/leaderboard/country-stats')} accessibilityRole="button">
+              <Muted style={styles.linkText}>{t('lbCountryStatsLink')}</Muted>
+            </Pressable>
+          </View>
+
+          <AppButton
+            label={t('lbViewSubmissions')}
+            variant="primary"
+            onPress={() => router.push('/feed?tab=wall')}
+            style={styles.primaryCta}
+          />
         </View>
 
+        {/* Inset segmented control: avoids “square” active tab tearing outer rounded corners */}
+        <View style={styles.segmentOuter} accessibilityRole="tablist">
+          {(['global', 'local', 'friends'] as const).map((k) => {
+            const active = tab === k;
+            const label =
+              k === 'global' ? t('lbTabGlobal') : k === 'local' ? t('lbTabLocal') : t('lbTabFriends');
+            return (
+              <Pressable
+                key={k}
+                onPress={() => setTab(k)}
+                style={[styles.segmentChip, active && styles.segmentChipActive]}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}>
+                <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]} numberOfLines={1}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {isLoadingBlock ? (
+          <Card>
+            <Body>{t('commonLoading')}</Body>
+          </Card>
+        ) : null}
+
+        {listQuery.error ? (
+          <Card>
+            <Body>{t('lbError')}</Body>
+            <Muted>{listQuery.error.message}</Muted>
+          </Card>
+        ) : null}
+
+        {hintKind && hintText ? (
+          <View style={styles.stateCard}>
+            <View style={styles.stateIconWrap} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              {hintKind.kind === 'signIn' ? (
+                <Ionicons name="log-in-outline" size={28} color={brandColors.goldBright} />
+              ) : hintKind.kind === 'country' ? (
+                <Ionicons name="flag-outline" size={28} color={brandColors.goldBright} />
+              ) : (
+                <Ionicons name="people-outline" size={28} color={brandColors.goldBright} />
+              )}
+            </View>
+            <Body style={styles.stateTitle}>{hintText}</Body>
+            {hintKind.kind === 'signIn' ? (
+              <AppButton
+                label={t('lbCtaOpenProfile')}
+                variant="outlineGold"
+                shape="pill"
+                onPress={() => router.push('/profile')}
+              />
+            ) : hintKind.kind === 'country' ? (
+              <AppButton
+                label={t('profileNavAccount')}
+                variant="outlineGold"
+                shape="pill"
+                onPress={() => router.push('/profile/account')}
+              />
+            ) : (
+              <AppButton
+                label={t('profileNavFriends')}
+                variant="outlineGold"
+                shape="pill"
+                onPress={() => router.push('/profile/friends')}
+              />
+            )}
+          </View>
+        ) : null}
+
+        {!isLoadingBlock && !listQuery.error && !hintKind && listRows.length === 0 ? (
+          <View style={styles.stateCard}>
+            <View style={styles.stateIconWrap} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+              <Ionicons name="trophy-outline" size={28} color={brandColors.goldBright} />
+            </View>
+            <Body style={styles.stateTitle}>{t('lbEmpty')}</Body>
+            <Muted style={styles.stateMuted}>{t('lbEmptySubtitle')}</Muted>
+            <Pressable style={styles.wallTap} onPress={() => router.push('/feed?tab=wall')} accessibilityRole="button">
+              <Text style={styles.wallTapText}>{t('navWall')} →</Text>
+            </Pressable>
+          </View>
+        ) : null}
+
+        {showList ? (
+          <View style={styles.list}>
+            {listRows.map((entry, index) => (
+              <LeaderboardEntryRow key={entry.id} entry={entry} rank={index + 1} locale={locale} />
+            ))}
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.footerWrap}>
         <AppButton
-          label={t('lbViewSubmissions')}
-          variant="primary"
-          onPress={() => router.push('/feed?tab=wall')}
-          style={styles.primaryCta}
+          label={t('lbNewSplit')}
+          variant="outlineGold"
+          onPress={() => router.push('/')}
+          style={styles.footerCta}
         />
       </View>
-
-      <View style={styles.segment} accessibilityRole="tablist">
-        {(['global', 'local', 'friends'] as const).map((k) => {
-          const active = tab === k;
-          const label =
-            k === 'global' ? t('lbTabGlobal') : k === 'local' ? t('lbTabLocal') : t('lbTabFriends');
-          return (
-            <Pressable
-              key={k}
-              onPress={() => setTab(k)}
-              style={[styles.segmentTab, active && styles.segmentTabActive]}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}>
-              <Text style={[styles.segmentLabel, active && styles.segmentLabelActive]}>{label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {hint ? (
-        <View style={styles.hintBanner}>
-          <Text style={styles.hintText}>{hint}</Text>
-        </View>
-      ) : null}
-
-      {listQuery.isLoading || (tab === 'local' && countryQuery.isLoading) ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
-      ) : null}
-
-      {listQuery.error ? (
-        <Card>
-          <Body>{t('lbError')}</Body>
-          <Muted>{listQuery.error.message}</Muted>
-        </Card>
-      ) : null}
-
-      {!listQuery.isLoading && !listQuery.error && (listQuery.data?.length ?? 0) === 0 && !hint ? (
-        <View style={styles.emptyBanner}>
-          <Text style={styles.emptyText}>{t('lbEmpty')}</Text>
-        </View>
-      ) : null}
-
-      <View style={styles.list}>
-        {listQuery.data?.map((entry, index) => (
-          <LeaderboardEntryRow key={entry.id} entry={entry} rank={index + 1} locale={locale} />
-        ))}
-      </View>
-
-      <AppButton
-        label={t('lbNewSplit')}
-        variant="outlineGold"
-        onPress={() => router.push('/')}
-        style={styles.footerCta}
-      />
     </Screen>
   );
 }
 
+const CONTENT_MAX_WIDTH = 520;
+
 const styles = StyleSheet.create({
+  scrollInner: {
+    alignItems: 'center',
+  },
+  constrain: {
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    gap: 16,
+    paddingBottom: 8,
+  },
   header: {
     gap: 12,
     paddingTop: 8,
+    width: '100%',
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
+    width: '100%',
   },
   pageTitle: {
     flex: 1,
@@ -198,67 +294,99 @@ const styles = StyleSheet.create({
   primaryCta: {
     alignSelf: 'stretch',
   },
-  segment: {
+  segmentOuter: {
     flexDirection: 'row',
-    borderRadius: 12,
+    alignItems: 'stretch',
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(11, 11, 11, 0.45)',
-    overflow: 'hidden',
-    minHeight: 48,
+    backgroundColor: 'rgba(11, 11, 11, 0.55)',
+    padding: 4,
+    gap: 6,
+    minHeight: 52,
   },
-  segmentTab: {
+  segmentChip: {
     flex: 1,
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    paddingHorizontal: 6,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
   },
-  segmentTabActive: {
+  segmentChipActive: {
     backgroundColor: brandColors.gold,
   },
   segmentLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: 'rgba(212, 183, 143, 0.85)',
+    color: 'rgba(212, 183, 143, 0.88)',
     textAlign: 'center',
+    letterSpacing: 0.02,
   },
   segmentLabelActive: {
     color: brandColors.black,
   },
-  hintBanner: {
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.22)',
-    backgroundColor: 'rgba(29, 24, 15, 0.4)',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  hintText: {
-    fontSize: 13,
-    lineHeight: 18,
-    color: 'rgba(253, 251, 243, 0.88)',
-  },
-  emptyBanner: {
+  stateCard: {
     borderRadius: 16,
     borderWidth: 1,
     borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(29, 24, 15, 0.3)',
-    paddingVertical: 28,
+    backgroundColor: 'rgba(29, 24, 15, 0.45)',
+    paddingVertical: 22,
     paddingHorizontal: 16,
     alignItems: 'center',
+    gap: 12,
   },
-  emptyText: {
-    fontSize: 14,
+  stateIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.25)',
+    backgroundColor: 'rgba(212, 183, 143, 0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stateTitle: {
     textAlign: 'center',
-    color: 'rgba(212, 183, 143, 0.72)',
-    lineHeight: 20,
+    color: brandColors.cream,
+    lineHeight: 22,
+    fontWeight: '600',
+  },
+  stateMuted: {
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(212, 183, 143, 0.65)',
+    paddingHorizontal: 4,
+  },
+  wallTap: {
+    marginTop: 2,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.35)',
+  },
+  wallTapText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: brandColors.gold,
+    letterSpacing: 0.3,
+    textAlign: 'center',
   },
   list: {
-    gap: 16,
+    gap: 14,
+    alignSelf: 'stretch',
+  },
+  footerWrap: {
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    marginTop: 12,
+    alignSelf: 'center',
   },
   footerCta: {
     alignSelf: 'stretch',
-    marginTop: 8,
   },
 });

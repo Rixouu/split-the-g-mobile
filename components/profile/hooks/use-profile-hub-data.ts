@@ -10,5 +10,6 @@ export function useProfileHubData() {
     queryKey: ['profileHub', user?.id],
     queryFn: () => fetchProfileHubBundle(user as User),
     enabled: Boolean(user?.id && user.email?.trim()),
+    staleTime: 120_000,
   });
 }

@@ -40,6 +40,7 @@ export function WallFeedBody() {
   const scores = useQuery({
     queryKey: ['scores', 'wall'],
     queryFn: () => fetchRecentScores(80),
+    staleTime: 180_000,
   });
 
   const { last24, weekTop, archive } = useMemo(() => {

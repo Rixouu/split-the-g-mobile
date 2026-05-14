@@ -1,4 +1,4 @@
-import { mobilePathFromWebPath } from '@/lib/routing/paths';
+import { safeNotificationNavigatePath } from '@/lib/routing/paths';
 
 let removeListeners: (() => void) | undefined;
 let listenersSetup: Promise<void> | null = null;
@@ -20,7 +20,8 @@ async function registerExpoNotificationListenersInner(): Promise<() => void> {
   const sub = Notifications.addNotificationResponseReceivedListener((response) => {
     const raw = response.notification.request.content.data?.path;
     if (typeof raw !== 'string' || !raw.trim()) return;
-    const path = mobilePathFromWebPath(raw);
+    const path = safeNotificationNavigatePath(raw);
+    if (!path) return;
     router.push(path as never);
   });
 

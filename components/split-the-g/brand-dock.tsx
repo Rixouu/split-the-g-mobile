@@ -2,7 +2,7 @@ import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /**
@@ -24,6 +24,15 @@ const DOCK_CENTER_GAP = 72;
 /** Web: `MobileNavIcon` pour uses `h-8 w-8` (32 CSS px). */
 const POUR_FAB_GLYPH = 32;
 const DOCK_TAB_ICON = 20;
+
+/**
+ * With Android edge-to-edge (see app.json `edgeToEdgeEnabled`), OEMs occasionally
+ * report `insets.bottom === 0` while a 3-button or gesture navigation bar still
+ * steals touches. Without a minimum, the dock sits flush on the nav bar and taps
+ * on Pubs/read-out look like hardware back/home.
+ */
+const DOCK_PADDING_BOTTOM_IOS = 12;
+const DOCK_PADDING_BOTTOM_ANDROID_MIN_TOTAL = 40;
 
 const dockIconIdle = 'rgba(212, 183, 143, 0.45)';
 
@@ -64,6 +73,11 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { t } = useLocale();
 
+  const dockPaddingBottom =
+    Platform.OS === 'android'
+      ? Math.max(insets.bottom + 6, DOCK_PADDING_BOTTOM_ANDROID_MIN_TOTAL)
+      : Math.max(insets.bottom, DOCK_PADDING_BOTTOM_IOS);
+
   const current = state.routes[state.index]?.name;
 
   function go(routeName: string) {
@@ -73,12 +87,7 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
 
   return (
     <View
-      style={[
-        styles.wrapper,
-        {
-          paddingBottom: Math.max(insets.bottom, 10),
-        },
-      ]}
+      style={[styles.wrapper, { paddingBottom: dockPaddingBottom }]}
       accessibilityRole="tablist">
       <View style={styles.dockWrap}>
         <View style={styles.panel}>

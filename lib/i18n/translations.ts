@@ -308,6 +308,8 @@ export type TranslationKey =
   | 'lbHintCountry'
   | 'lbHintFriendsSolo'
   | 'lbEmpty'
+  | 'lbEmptySubtitle'
+  | 'lbCtaOpenProfile'
   | 'lbCountryStats'
   | 'lbCountryStatsAllTime'
   | 'lbCountryStats24h'
@@ -1031,6 +1033,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     lbHintCountry: 'Add your country in Profile → Account to see pours from your region.',
     lbHintFriendsSolo: 'Add a friend by email in Profile → Friends to compare scores here.',
     lbEmpty: 'No pours in this view for the last 7 days yet.',
+    lbEmptySubtitle: 'Scores refresh as the wall grows. Try another tab or split a new pint.',
+    lbCtaOpenProfile: 'Open Profile',
     lbCountryStats: 'Country leaderboard',
     lbCountryStatsAllTime: 'All-time',
     lbCountryStats24h: 'Past 24 hours',

@@ -1,5 +1,6 @@
 import { Link } from 'expo-router';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { brandColors } from '@/constants/theme';
 import type { LeaderboardEntry } from '@/lib/api/leaderboard';
@@ -14,12 +15,15 @@ interface LeaderboardEntryRowProps {
   locale: SupportedLocale;
 }
 
+const THUMB_SIZE = 64;
+
 export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRowProps) {
   const pourRef = entry.slug?.trim() || entry.id;
   const uri = entry.split_image_url?.trim() || null;
   const flag = flagEmojiFromIso2(entry.country_code);
   const dateLabel = new Date(entry.created_at).toLocaleDateString(locale);
   const outOf = translate(locale, 'pourOutOfFive');
+  const displayUsername = entry.username?.trim().length ? entry.username.trim() : translate(locale, 'pourAnonymousDisplay');
 
   return (
     <Link href={`/pour/${pourRef}`} asChild>
@@ -28,21 +32,28 @@ export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRow
           <Text style={styles.rankText}>#{rank}</Text>
         </View>
 
-        {uri ? (
-          <Image source={{ uri }} style={styles.thumb} accessibilityIgnoresInvertColors />
-        ) : (
-          <View style={[styles.thumb, styles.thumbFallback]} />
-        )}
+        <View style={styles.thumbSlot}>
+          {uri ? (
+            <Image
+              source={{ uri }}
+              style={styles.thumbImg}
+              contentFit="cover"
+              cachePolicy="memory-disk"
+              recyclingKey={`${pourRef}-${rank}`}
+              accessibilityIgnoresInvertColors
+            />
+          ) : (
+            <View style={[styles.thumbImg, styles.thumbFallback]} accessibilityRole="image" />
+          )}
+        </View>
 
         <View style={styles.middle}>
           <View style={styles.middleRow}>
             <View style={styles.nameBlock}>
               <View style={styles.nameRow}>
                 {flag ? <Text style={styles.flag}>{flag}</Text> : null}
-                <Text
-                  style={[styles.username, flag ? styles.usernameBesideFlag : null]}
-                  numberOfLines={2}>
-                  {entry.username}
+                <Text style={[styles.username, flag ? styles.usernameBesideFlag : null]} numberOfLines={2}>
+                  {displayUsername}
                 </Text>
               </View>
               <Text style={styles.date}>{dateLabel}</Text>
@@ -76,7 +87,7 @@ const styles = StyleSheet.create({
   },
   rankColumn: {
     minWidth: 36,
-    alignSelf: 'stretch',
+    flexShrink: 0,
     justifyContent: 'center',
   },
   rankText: {
@@ -85,11 +96,21 @@ const styles = StyleSheet.create({
     color: brandColors.gold,
     fontVariant: ['tabular-nums'],
   },
-  thumb: {
-    width: 64,
-    height: 64,
+  thumbSlot: {
+    flexShrink: 0,
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
     borderRadius: 12,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'rgba(11, 11, 11, 0.5)',
+  },
+  thumbImg: {
+    width: THUMB_SIZE,
+    height: THUMB_SIZE,
+    flexShrink: 0,
+    borderRadius: 12,
   },
   thumbFallback: {
     borderWidth: 1,
@@ -98,6 +119,8 @@ const styles = StyleSheet.create({
   middle: {
     flex: 1,
     minWidth: 0,
+    minHeight: THUMB_SIZE,
+    justifyContent: 'center',
   },
   middleRow: {
     flexDirection: 'row',
@@ -117,6 +140,7 @@ const styles = StyleSheet.create({
     fontSize: 17,
     lineHeight: 22,
     fontWeight: '700',
+    flexShrink: 0,
   },
   username: {
     flex: 1,
@@ -136,6 +160,7 @@ const styles = StyleSheet.create({
     color: 'rgba(212, 183, 143, 0.7)',
   },
   scoreBlock: {
+    flexShrink: 0,
     alignItems: 'flex-end',
   },
   score: {
