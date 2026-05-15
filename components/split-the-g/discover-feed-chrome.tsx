@@ -8,6 +8,7 @@ export function DiscoverSegmentHeader({
   eyebrow,
   title,
   subtitle,
+  titleTrailing,
   children,
   style,
   ...rest
@@ -15,12 +16,23 @@ export function DiscoverSegmentHeader({
   eyebrow: string;
   title: string;
   subtitle: string;
+  /** Renders on the same row as the title (e.g. outline pill CTA), aligned to the trailing edge. */
+  titleTrailing?: ReactNode;
   children?: ReactNode;
 }) {
   return (
     <View style={[styles.header, style]} {...rest}>
       <Eyebrow style={styles.headerEyebrow}>{eyebrow}</Eyebrow>
-      <Title style={styles.headerTitle}>{title}</Title>
+      {titleTrailing ? (
+        <View style={styles.titleRow}>
+          <View style={styles.titleWrap}>
+            <Title style={styles.headerTitle}>{title}</Title>
+          </View>
+          {titleTrailing}
+        </View>
+      ) : (
+        <Title style={styles.headerTitle}>{title}</Title>
+      )}
       <Muted style={styles.headerSubtitle} numberOfLines={2}>
         {subtitle}
       </Muted>
@@ -39,6 +51,18 @@ export const discoverChromeStyles = StyleSheet.create({
     gap: 6,
     paddingTop: 6,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 14,
+    marginTop: 2,
+  },
+  titleWrap: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: 4,
+  },
   headerEyebrow: {
     letterSpacing: 1.6,
     color: brandColors.goldBright,
@@ -48,6 +72,7 @@ export const discoverChromeStyles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 34,
     letterSpacing: -0.45,
+    flexShrink: 1,
   },
   headerSubtitle: {
     fontSize: 13,

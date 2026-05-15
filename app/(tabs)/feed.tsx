@@ -1,17 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import {
-  FlatList,
-  type ListRenderItem,
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, type ListRenderItem, RefreshControl, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppButton } from '@/components/split-the-g/button';
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { DiscoverSegmentHeader, DiscoverSectionTitle } from '@/components/split-the-g/discover-feed-chrome';
 import { WallFeedBody } from '@/components/split-the-g/wall-feed-body';
@@ -33,6 +26,7 @@ function normalizeTabParam(raw: string | string[] | undefined): DiscoverSegment 
 }
 
 export default function FeedScreen() {
+  const router = useRouter();
   const { t, tVars } = useLocale();
   const { tab: tabParam } = useLocalSearchParams<{ tab?: string | string[] }>();
   const tabFromUrl = normalizeTabParam(tabParam);
@@ -85,15 +79,17 @@ export default function FeedScreen() {
             <DiscoverSegmentHeader
               eyebrow={t('feedEyebrow')}
               title={t('feedTitle')}
-              subtitle={t('feedSubtitle')}>
-              <Link href="/" asChild>
-                <Pressable
-                  android_ripple={{ color: 'rgba(197, 160, 89, 0.14)', borderless: false }}
-                  style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
-                  accessibilityRole="button">
-                  <Text style={styles.ctaLabel}>{t('homeScorePour')}</Text>
-                </Pressable>
-              </Link>
+              subtitle={t('feedSubtitle')}
+              titleTrailing={
+                <AppButton
+                  label={t('homeScorePour')}
+                  variant="outlineGold"
+                  shape="pill"
+                  accessibilityLabel={t('homeScorePour')}
+                  onPress={() => router.push('/')}
+                  style={styles.scorePourBtn}
+                />
+              }>
               {!scores.isLoading && !scores.error && pourCount > 0 ? (
                 <DiscoverSectionTitle style={styles.gridSectionTitle}>
                   {pourCount === 1
@@ -161,26 +157,12 @@ const styles = StyleSheet.create({
   gridSectionTitle: {
     marginTop: 12,
   },
-  cta: {
-    marginTop: 10,
-    alignSelf: 'flex-start',
-    borderRadius: 999,
-    borderWidth: 2,
-    borderColor: 'rgba(179, 139, 45, 0.45)',
-    backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ctaPressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.99 }],
-  },
-  ctaLabel: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: brandColors.gold,
-    letterSpacing: 0.35,
+  /** Matches `heroCreateBtn` on Competitions — compact outline pill on the title row. */
+  scorePourBtn: {
+    flexShrink: 0,
+    alignSelf: 'center',
+    minHeight: 36,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
 });
