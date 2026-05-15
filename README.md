@@ -113,6 +113,24 @@ EXPO_PUBLIC_POSTHOG_KEY=phc_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 EXPO_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 ```
 
+#### Firebase Android (`google-services.json`) — do **not** commit
+
+Firebase downloads include keys GitHub treats as secrets if checked into git.
+
+1. In [Firebase Console](https://console.firebase.google.com/) → your Android app → download **`google-services.json`**.
+2. Save it at the **repo root** as **`google-services.json`** (the filename is gitignored).
+3. For **EAS Build**, add the same file as a project [**Environment variable**](https://expo.dev) named **`GOOGLE_SERVICES_JSON`**, type **File**, visibility **Secret**, for **`development`**, **`preview`**, and **`production`** (to match `eas.json` profiles). `app.config.ts` reads `GOOGLE_SERVICES_JSON` on the build runner when present.
+
+CLI example (from this repo root, path must exist):
+
+```bash
+eas env:create --name GOOGLE_SERVICES_JSON --type file --value ./google-services.json --visibility secret --environment development --environment preview --environment production
+```
+
+Keep **`firebase-adminsdk*.json`** (FCM server credentials) out of git as well — upload those only via **`eas credentials`** for FCM V1.
+
+If `google-services.json` was ever committed: **rotate** the exposed Android/Google keys in Google Cloud Console, regenerate the Firebase client file, and replace copies locally and in EAS.
+
 **Do not** add Roboflow private keys, Resend keys, Supabase **service role**, OAuth **client secrets**, or other server secrets — pour scoring and privileged work stay on the **web** deployment.
 
 Full web **`VITE_*`** / server env documentation: [split-the-g README — Environment Variables](https://github.com/Rixouu/split-the-g/blob/main/README.md#environment-variables).

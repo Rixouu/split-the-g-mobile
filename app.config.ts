@@ -8,16 +8,27 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
  * not from JS. EXPO_PUBLIC_* alone does not inject it — wire it here + rebuild.
  * @see https://docs.expo.dev/versions/latest/sdk/map-view/#deploy-app-with-google-maps
  *
- * Android FCM / Expo Push: add `google-services.json` from Firebase (Android app)
- * and upload the Service Account JSON to EAS — see Expo FCM credentials guide.
+ * Android FCM: `google-services.json` must NOT live in git (GitHub secret scanning).
+ * - Local / CI: place `google-services.json` at the repo root (gitignored).
+ * - EAS Build: create a **File** env var `GOOGLE_SERVICES_JSON` per environment;
+ *   the runner exposes it as a filesystem path in `process.env.GOOGLE_SERVICES_JSON`.
+ * Also upload the Service Account JSON for FCM V1 in EAS credentials.
  * @see https://docs.expo.dev/push-notifications/fcm-credentials/
+ * @see https://docs.expo.dev/eas/environment-variables/
  */
+function resolveGoogleServicesFile(): string | undefined {
+  const envPath = process.env.GOOGLE_SERVICES_JSON?.trim();
+  if (envPath && fs.existsSync(envPath)) return envPath;
+
+  const localPath = path.join(__dirname, 'google-services.json');
+  if (fs.existsSync(localPath)) return './google-services.json';
+
+  return undefined;
+}
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? '';
-  const googleServicesPath = path.join(__dirname, 'google-services.json');
-  const googleServicesFile = fs.existsSync(googleServicesPath)
-    ? './google-services.json'
-    : undefined;
+  const googleServicesFile = resolveGoogleServicesFile();
 
   return {
     ...config,
