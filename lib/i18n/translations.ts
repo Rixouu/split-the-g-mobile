@@ -1,3 +1,10 @@
+import deWebPatch from './web-locale-patches/de.json';
+import esWebPatch from './web-locale-patches/es.json';
+import frWebPatch from './web-locale-patches/fr.json';
+import itWebPatch from './web-locale-patches/it.json';
+import jaWebPatch from './web-locale-patches/ja.json';
+import thWebPatch from './web-locale-patches/th.json';
+
 export const supportedLocales = ['en', 'th', 'fr', 'es', 'de', 'it', 'ja'] as const;
 
 export type SupportedLocale = (typeof supportedLocales)[number];
@@ -1488,12 +1495,12 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubDetailWebToolsHint:
       'Google import, merge duplicates, and directory edits stay on the web app (admin only).',
   },
-  th: {},
-  fr: {},
-  es: {},
-  de: {},
-  it: {},
-  ja: {},
+  th: thWebPatch as Partial<Record<TranslationKey, string>>,
+  fr: frWebPatch as Partial<Record<TranslationKey, string>>,
+  es: esWebPatch as Partial<Record<TranslationKey, string>>,
+  de: deWebPatch as Partial<Record<TranslationKey, string>>,
+  it: itWebPatch as Partial<Record<TranslationKey, string>>,
+  ja: jaWebPatch as Partial<Record<TranslationKey, string>>,
 };
 
 export function translate(locale: SupportedLocale, key: TranslationKey): string {

@@ -9,6 +9,7 @@ import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { useAuth } from '@/lib/auth/auth-context';
+import { formatLocaleBadge } from '@/lib/i18n/locale-display';
 import { useLocale } from '@/lib/i18n/locale-context';
 
 const HUB_STROKE = brandColors.hubStroke;
@@ -88,9 +89,7 @@ export default function ProfileHubScreen() {
             subtitle={t('languageSubtitle')}
             trailing={
               <Text style={styles.languageCurrent} numberOfLines={1}>
-                {typeof Intl !== 'undefined' && 'DisplayNames' in Intl
-                  ? new Intl.DisplayNames([locale], { type: 'language' }).of(locale) ?? locale
-                  : locale}
+                {formatLocaleBadge(locale)}
               </Text>
             }
             onPress={() => router.push('/language')}
@@ -165,6 +164,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: brandColors.gold,
-    maxWidth: 120,
+    maxWidth: 152,
+    letterSpacing: 0.3,
   },
 });
