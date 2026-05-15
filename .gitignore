@@ -30,6 +30,10 @@ yarn-error.*
 .DS_Store
 *.pem
 
+# Firebase — never commit Service Account private keys (FCM V1 for EAS)
+**/firebase-adminsdk*.json
+*-firebase-adminsdk*.json
+
 # local env files
 .env
 .env*.local

@@ -531,6 +531,9 @@ export type TranslationKey =
   | 'lbViewSubmissions'
   | 'lbNewSplit'
   | 'lbCountryStatsLink'
+  | 'lbWeeklyLeaderboardLink'
+  | 'lbCountryStatsEmptyAllTime'
+  | 'lbCountryStatsEmpty24h'
   | 'lbError'
   | 'lbCountryStatsBlurbAllTime'
   | 'lbCountryStatsBlurb24h'
@@ -1323,6 +1326,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     lbViewSubmissions: 'View Submissions',
     lbNewSplit: 'New Split',
     lbCountryStatsLink: 'Country leaderboard',
+    lbWeeklyLeaderboardLink: 'Weekly leaderboard',
+    lbCountryStatsEmptyAllTime: 'No country stats for all-time yet.',
+    lbCountryStatsEmpty24h: 'No country stats in the past 24 hours yet.',
     lbError: 'Leaderboard unavailable',
     lbCountryStatsBlurbAllTime: 'Aggregated pours by country (all-time).',
     lbCountryStatsBlurb24h: 'Aggregated pours by country (past 24 hours).',

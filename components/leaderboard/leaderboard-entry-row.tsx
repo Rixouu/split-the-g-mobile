@@ -1,5 +1,5 @@
-import { Link } from 'expo-router';
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { brandColors } from '@/constants/theme';
@@ -18,6 +18,7 @@ interface LeaderboardEntryRowProps {
 const THUMB_SIZE = 64;
 
 export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRowProps) {
+  const router = useRouter();
   const pourRef = entry.slug?.trim() || entry.id;
   const uri = entry.split_image_url?.trim() || null;
   const flag = flagEmojiFromIso2(entry.country_code);
@@ -26,46 +27,55 @@ export function LeaderboardEntryRow({ entry, rank, locale }: LeaderboardEntryRow
   const displayUsername = entry.username?.trim().length ? entry.username.trim() : translate(locale, 'pourAnonymousDisplay');
 
   return (
-    <Link href={`/pour/${pourRef}`} asChild>
-      <Pressable style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
-        <View style={styles.rankColumn}>
-          <Text style={styles.rankText}>#{rank}</Text>
-        </View>
+    <Pressable
+      accessibilityRole="button"
+      onPress={() =>
+        router.push({
+          pathname: '/pour/[pourRef]',
+          params: { pourRef },
+        })
+      }
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}>
+      <View style={styles.rankColumn}>
+        <Text style={styles.rankText}>#{rank}</Text>
+      </View>
 
-        <View style={styles.thumbSlot}>
-          {uri ? (
-            <Image
-              source={{ uri }}
-              style={styles.thumbImg}
-              contentFit="cover"
-              cachePolicy="memory-disk"
-              recyclingKey={`${pourRef}-${rank}`}
-              accessibilityIgnoresInvertColors
-            />
-          ) : (
-            <View style={[styles.thumbImg, styles.thumbFallback]} accessibilityRole="image" />
-          )}
-        </View>
+      <View style={styles.thumbSlot}>
+        {uri ? (
+          <Image
+            source={{ uri }}
+            style={styles.thumbImg}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            recyclingKey={`${pourRef}-${rank}`}
+            accessibilityIgnoresInvertColors
+          />
+        ) : (
+          <View style={[styles.thumbImg, styles.thumbFallback]} accessibilityRole="image" />
+        )}
+      </View>
 
-        <View style={styles.middle}>
-          <View style={styles.middleRow}>
-            <View style={styles.nameBlock}>
-              <View style={styles.nameRow}>
-                {flag ? <Text style={styles.flag}>{flag}</Text> : null}
-                <Text style={[styles.username, flag ? styles.usernameBesideFlag : null]} numberOfLines={2}>
-                  {displayUsername}
-                </Text>
-              </View>
-              <Text style={styles.date}>{dateLabel}</Text>
+      <View style={styles.middle}>
+        <View style={styles.middleRow}>
+          <View style={styles.nameBlock}>
+            <View style={styles.nameRow}>
+              {flag ? <Text style={styles.flag}>{flag}</Text> : null}
+              <Text
+                style={[styles.username, flag ? styles.usernameBesideFlag : null]}
+                numberOfLines={1}
+                ellipsizeMode="tail">
+                {displayUsername}
+              </Text>
             </View>
-            <View style={styles.scoreBlock}>
-              <Text style={styles.score}>{formatSplitScore(entry.split_score)}</Text>
-              <Text style={styles.outOf}>{outOf}</Text>
-            </View>
+            <Text style={styles.date}>{dateLabel}</Text>
+          </View>
+          <View style={styles.scoreBlock}>
+            <Text style={styles.score}>{formatSplitScore(entry.split_score)}</Text>
+            <Text style={styles.outOf}>{outOf}</Text>
           </View>
         </View>
-      </Pressable>
-    </Link>
+      </View>
+    </Pressable>
   );
 }
 
@@ -73,22 +83,26 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    alignSelf: 'stretch',
+    width: '100%',
+    overflow: 'hidden',
     borderRadius: 16,
     borderWidth: 1,
     borderColor: brandColors.pourCardStroke,
-    backgroundColor: '#121212',
-    paddingVertical: 14,
-    paddingHorizontal: 14,
+    /** Web leaderboard rows: dark grey panel on black */
+    backgroundColor: 'rgba(29, 24, 15, 0.72)',
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   cardPressed: {
     borderColor: 'rgba(179, 139, 45, 0.35)',
-    backgroundColor: '#181818',
+    backgroundColor: 'rgba(29, 24, 15, 0.92)',
   },
   rankColumn: {
-    minWidth: 36,
+    width: 38,
     flexShrink: 0,
     justifyContent: 'center',
+    marginRight: 12,
   },
   rankText: {
     fontSize: 17,
@@ -100,6 +114,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
     width: THUMB_SIZE,
     height: THUMB_SIZE,
+    marginRight: 12,
     borderRadius: 12,
     overflow: 'hidden',
     alignItems: 'center',
@@ -124,17 +139,17 @@ const styles = StyleSheet.create({
   },
   middleRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    gap: 10,
   },
   nameBlock: {
     flex: 1,
     minWidth: 0,
+    paddingRight: 10,
   },
   nameRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
   flag: {
     fontSize: 17,
