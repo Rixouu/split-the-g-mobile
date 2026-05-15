@@ -293,6 +293,13 @@ export type TranslationKey =
   | 'actionConfirm'
   | 'faqPageTitle'
   | 'faqPageSubtitle'
+  | 'faqSearchPlaceholder'
+  | 'faqSearchAccessibilityLabel'
+  | 'faqSearchClear'
+  | 'faqSearchNoResults'
+  | 'faqSectionBasics'
+  | 'faqSectionScoring'
+  | 'faqSectionMore'
   | 'faqQSplitTheG'
   | 'faqASplitTheG'
   | 'faqQWhatAppDoes'
@@ -1021,7 +1028,15 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     actionCancel: 'Cancel',
     actionConfirm: 'Unclaim',
     faqPageTitle: 'Frequently asked questions',
-    faqPageSubtitle: 'Quick answers about scoring, sharing, and the app.',
+    faqPageSubtitle:
+      'Tap any question for plain-English answers on scoring, sharing pours, and getting the most out of the app.',
+    faqSearchPlaceholder: 'Search questions…',
+    faqSearchAccessibilityLabel: 'Search frequently asked questions',
+    faqSearchClear: 'Clear search',
+    faqSearchNoResults: 'No questions match that search. Try another word.',
+    faqSectionBasics: 'Basics',
+    faqSectionScoring: 'Scores & photos',
+    faqSectionMore: 'Sharing & support',
     faqQSplitTheG: 'What is "Split the G"?',
     faqASplitTheG:
       '"Split the G" is the Guinness challenge where you sip your pint so the foam line lands in the middle of the "G" in the harp logo. It\'s part skill, part steady hands, and part luck.',
