@@ -238,6 +238,8 @@ export type TranslationKey =
   | 'pourShareCopyLink'
   | 'pourShareCopied'
   | 'pourShareViaDevice'
+  | 'pourShareMoreOptions'
+  | 'pourShareFewerOptions'
   | 'pourShareSocialBlurb'
   | 'pourTryAgain'
   | 'pourViewTopSplits'
@@ -364,7 +366,21 @@ export type TranslationKey =
   | 'profileFavoritesMaps'
   | 'profileFavoritesRemove'
   | 'profileFavoritesEmpty'
+  | 'profileFavoritesEmptyHint'
   | 'profileFavoritesPlacesPlaceholder'
+  | 'profileFavoritesIntroBlurb'
+  | 'profileFavoritesListSearchLabel'
+  | 'profileFavoritesListSearchPlaceholder'
+  | 'profileFavoritesListSearchAccessibilityLabel'
+  | 'profileFavoritesSortLabel'
+  | 'profileFavoritesSortRecent'
+  | 'profileFavoritesSortName'
+  | 'profileFavoritesSortPours'
+  | 'profileFavoritesActivityLabel'
+  | 'profileFavoritesActivityAll'
+  | 'profileFavoritesActivityWithPours'
+  | 'profileFavoritesActivityNoPours'
+  | 'profileFavoritesNoMatches'
   | 'pubsCardPourOne'
   | 'pubsCardPourMany'
   | 'pubsCardOutOfFive'
@@ -983,6 +999,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourShareCopyLink: 'Copy link',
     pourShareCopied: 'Copied',
     pourShareViaDevice: 'Share via device',
+    pourShareMoreOptions: 'More apps & sites',
+    pourShareFewerOptions: 'Fewer options',
     pourShareSocialBlurb:
       'Instagram has no web share. Use Copy text or Copy link, then paste in the app.',
     pourTryAgain: 'Try again',
@@ -1243,8 +1261,24 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     profileFavoritesAddressHint: 'Choose a suggestion when possible so we store the full address.',
     profileFavoritesMaps: 'Maps',
     profileFavoritesRemove: 'Remove',
-    profileFavoritesEmpty: 'No favorites yet.',
+    profileFavoritesEmpty: 'No saved pubs yet.',
+    profileFavoritesEmptyHint:
+      'Open any pub and tap Favorite to save it here. You can search and filter your list once you have pubs saved.',
     profileFavoritesPlacesPlaceholder: 'Search for a bar in Thailand or type the name',
+    profileFavoritesIntroBlurb:
+      'Saved from pub pages. Tap a card for full details and activity; use search and chips to narrow the list.',
+    profileFavoritesListSearchLabel: 'Search',
+    profileFavoritesListSearchPlaceholder: 'Search by pub name or address',
+    profileFavoritesListSearchAccessibilityLabel: 'Search your saved pubs by name or address',
+    profileFavoritesSortLabel: 'Sort',
+    profileFavoritesSortRecent: 'Recent',
+    profileFavoritesSortName: 'Name',
+    profileFavoritesSortPours: 'Pours',
+    profileFavoritesActivityLabel: 'Activity',
+    profileFavoritesActivityAll: 'All',
+    profileFavoritesActivityWithPours: 'With pours',
+    profileFavoritesActivityNoPours: 'No pours yet',
+    profileFavoritesNoMatches: 'No pubs match those filters.',
     pubsCardPourOne: '1 pour',
     pubsCardPourMany: '{count} pours',
     pubsCardOutOfFive: '/ 5',
