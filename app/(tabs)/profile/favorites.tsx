@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -13,9 +14,10 @@ import {
 } from 'react-native';
 
 import { FavoriteVenueCard } from '@/components/profile/favorite-venue-card';
-import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted } from '@/components/split-the-g/typography';
+import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import {
   barKey,
@@ -148,22 +150,32 @@ export default function ProfileFavoritesScreen() {
       ) : null}
 
       {showToolbar ? (
-        <View style={styles.filters}>
-          <TextInput
-            value={listSearch}
-            onChangeText={setListSearch}
-            placeholder={t('profileFavoritesListSearchPlaceholder')}
-            placeholderTextColor={brandColors.tanMuted}
-            style={styles.searchInput}
-            autoCorrect={false}
-            autoCapitalize="none"
-            accessibilityLabel={t('profileFavoritesListSearchAccessibilityLabel')}
-          />
+        <Card style={styles.toolbarCard}>
+          <View style={styles.searchField}>
+            <Ionicons
+              name="search-outline"
+              size={18}
+              color={colors.text.mutedMedium}
+              style={styles.searchIcon}
+              accessibilityElementsHidden
+              importantForAccessibility="no"
+            />
+            <TextInput
+              value={listSearch}
+              onChangeText={setListSearch}
+              placeholder={t('profileFavoritesListSearchPlaceholder')}
+              placeholderTextColor={colors.text.mutedWeak}
+              style={styles.searchInput}
+              autoCorrect={false}
+              autoCapitalize="none"
+              accessibilityLabel={t('profileFavoritesListSearchAccessibilityLabel')}
+            />
+          </View>
 
-          <View style={styles.filterLane}>
-            <Muted style={styles.laneHint} accessibilityElementsHidden>
-              {t('profileFavoritesSortLabel')}
-            </Muted>
+          <View style={styles.toolbarDivider} />
+
+          <View style={styles.filterBlock}>
+            <Eyebrow>{t('profileFavoritesSortLabel')}</Eyebrow>
             <ScrollView
               horizontal
               style={styles.chipScroller}
@@ -186,10 +198,8 @@ export default function ProfileFavoritesScreen() {
             </ScrollView>
           </View>
 
-          <View style={styles.filterLane}>
-            <Muted style={styles.laneHint} accessibilityElementsHidden>
-              {t('profileFavoritesActivityLabel')}
-            </Muted>
+          <View style={styles.filterBlock}>
+            <Eyebrow>{t('profileFavoritesActivityLabel')}</Eyebrow>
             <ScrollView
               horizontal
               style={styles.chipScroller}
@@ -213,20 +223,20 @@ export default function ProfileFavoritesScreen() {
               ))}
             </ScrollView>
           </View>
-        </View>
-      ) : null}
 
-      {filteredCount > 0 ? (
-        <View style={styles.listIntro}>
-          <Eyebrow style={styles.listEyebrow}>
-            {filteredCount === 1 ? t('pubsVenueOne') : tVars('pubsVenueMany', { count: filteredCount })}
-          </Eyebrow>
-          {filteredCount !== totalCount ? (
-            <Muted style={styles.filteredHint}>
-              {tVars('pubsVenueFilteredHint', { shown: filteredCount, total: totalCount })}
-            </Muted>
+          {filteredCount > 0 ? (
+            <View style={styles.toolbarFooter}>
+              <Eyebrow style={styles.resultEyebrow}>
+                {filteredCount === 1 ? t('pubsVenueOne') : tVars('pubsVenueMany', { count: filteredCount })}
+              </Eyebrow>
+              {filteredCount !== totalCount ? (
+                <Muted style={styles.filteredHint}>
+                  {tVars('pubsVenueFilteredHint', { shown: filteredCount, total: totalCount })}
+                </Muted>
+              ) : null}
+            </View>
           ) : null}
-        </View>
+        </Card>
       ) : null}
 
       {user && listQuery.isLoading ? (
@@ -298,84 +308,88 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(29, 24, 15, 0.42)',
     padding: 16,
   },
-  filters: {
-    gap: 10,
-    marginTop: -4,
-    marginBottom: -2,
+  toolbarCard: {
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
   },
-  filterLane: {
+  searchField: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    minHeight: 34,
+    borderWidth: 1,
+    borderColor: colors.stroke.subtle,
+    borderRadius: radii.pill,
+    backgroundColor: colors.surface.inkTranslucent,
+    paddingLeft: spacing.md,
+    paddingRight: spacing.md,
+    minHeight: 44,
   },
-  chipScroller: {
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
     flex: 1,
     minWidth: 0,
+    paddingVertical: Platform.select({ ios: 10, default: 8 }),
+    paddingRight: spacing.xs,
+    color: colors.text.primary,
+    fontSize: 15,
   },
-  laneHint: {
-    flexShrink: 0,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-    color: 'rgba(212, 183, 143, 0.55)',
+  toolbarDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: colors.stroke.subtle,
+  },
+  filterBlock: {
+    gap: spacing.sm,
+  },
+  chipScroller: {
+    marginHorizontal: -spacing.xs,
   },
   chipScroll: {
     alignItems: 'center',
-    gap: 8,
-    paddingRight: 2,
-    paddingVertical: 2,
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.22)',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: Platform.select({ ios: 10, default: 8 }),
-    color: brandColors.cream,
-    fontSize: 15,
-    backgroundColor: 'rgba(11, 11, 11, 0.28)',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xs,
+    paddingVertical: spacing.xs,
   },
   chip: {
     flexShrink: 0,
-    paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 999,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.pill,
     borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.22)',
-    backgroundColor: 'rgba(11, 11, 11, 0.2)',
+    borderColor: colors.stroke.ctaSecondary,
+    backgroundColor: colors.surface.inkTranslucent,
   },
   chipActive: {
-    borderColor: brandColors.goldBright,
-    backgroundColor: 'rgba(179, 139, 45, 0.12)',
+    borderColor: colors.text.accentBright,
+    backgroundColor: colors.surface.favOnTint,
   },
   chipLabel: {
-    color: brandColors.tanMuted,
+    color: colors.text.mutedMedium,
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.35,
     textTransform: 'uppercase',
   },
   chipLabelActive: {
-    color: brandColors.goldBright,
+    color: colors.text.accentBright,
   },
-  listIntro: {
-    gap: 6,
-    marginTop: -4,
-    marginBottom: -4,
+  toolbarFooter: {
+    gap: spacing.xs,
+    paddingTop: spacing.sm,
+    marginTop: spacing.xs,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.stroke.subtle,
   },
-  listEyebrow: {
-    letterSpacing: 1.8,
+  resultEyebrow: {
+    letterSpacing: 1.6,
+    color: colors.text.accent,
   },
   filteredHint: {
     fontSize: 13,
     lineHeight: 18,
-    marginTop: 2,
   },
   listBlock: {
     gap: 12,
-    marginTop: 2,
   },
   centerNote: {
     paddingVertical: 8,

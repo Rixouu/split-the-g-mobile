@@ -8,6 +8,7 @@ import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native'
 
 import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
+import { colors, layout, radii } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import type { PourRankContext } from '@/lib/api/types';
 import { buildPourTelegramBlurb, buildPourTweetText, getPourShareHookLine } from '@/lib/i18n/translations';
@@ -42,6 +43,7 @@ export function PourSharePanel({
   const router = useRouter();
   const { t, tVars, locale } = useLocale();
   const [copied, setCopied] = useState<'text' | 'link' | null>(null);
+  const [moreSocialOpen, setMoreSocialOpen] = useState(false);
 
   useEffect(() => {
     if (!copied) return;
@@ -152,59 +154,101 @@ export function PourSharePanel({
         </View>
       </View>
 
-      {socialLinks ? (
-        <View style={styles.gridWrap}>
-          <View style={styles.grid}>
-            <SocialTile
-              icon="whatsapp"
-              label="WhatsApp"
-              onPress={() => void openUrl(socialLinks.whatsapp)}
-            />
-            <SocialTile
-              icon="send"
-              label="Telegram"
-              onPress={() => void openUrl(socialLinks.telegram)}
-            />
-            <SocialTile icon="twitter" label="X" onPress={() => void openUrl(socialLinks.x)} />
-            <SocialTile
-              icon="facebook"
-              label="Facebook"
-              onPress={() => void openUrl(socialLinks.facebook)}
-            />
-            <SocialTile icon="reddit" label="Reddit" onPress={() => void openUrl(socialLinks.reddit)} />
-            <SocialTile icon="email-outline" label={t('pourShareEmail')} onPress={() => void openUrl(mailtoHref)} />
-            <SocialTile
-              icon="content-copy"
-              label={copied === 'text' ? t('pourShareCopied') : t('pourShareCopyText')}
-              onPress={() => void onCopyText()}
-            />
-            <SocialTile
-              icon="link-variant"
-              label={copied === 'link' ? t('pourShareCopied') : t('pourShareCopyLink')}
-              onPress={() => void onCopyLink()}
-            />
-          </View>
-        </View>
-      ) : null}
-
       <Pressable
         onPress={() => void onNativeShare()}
         style={({ pressed }) => [styles.deviceShare, pressed && styles.deviceSharePressed]}
         accessibilityRole="button"
         accessibilityLabel={t('pourShareViaDevice')}>
-        <MaterialCommunityIcons name="share-variant" size={20} color={brandColors.gold} />
+        <MaterialCommunityIcons name="share-variant" size={20} color={colors.cta.secondaryFg} />
         <Text style={styles.deviceShareLabel}>{t('pourShareViaDevice')}</Text>
       </Pressable>
 
-      {pubPageBarKey ? (
-        <AppButton
-          label={t('pourViewPub')}
-          variant="secondary"
-          onPress={() => router.push(`/pub/${encodeURIComponent(pubPageBarKey)}`)}
-        />
+      {socialLinks ? (
+        <>
+          <View style={styles.quickRow}>
+            <QuickShareButton
+              icon="content-copy"
+              label={copied === 'text' ? t('pourShareCopied') : t('pourShareCopyText')}
+              onPress={() => void onCopyText()}
+            />
+            <QuickShareButton
+              icon="link-variant"
+              label={copied === 'link' ? t('pourShareCopied') : t('pourShareCopyLink')}
+              onPress={() => void onCopyLink()}
+            />
+            <QuickShareButton
+              icon="email-outline"
+              label={t('pourShareEmail')}
+              onPress={() => void openUrl(mailtoHref)}
+            />
+          </View>
+
+          <Pressable
+            onPress={() => {
+              void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setMoreSocialOpen((v) => !v);
+            }}
+            style={({ pressed }) => [styles.moreToggle, pressed && styles.moreTogglePressed]}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: moreSocialOpen }}
+            accessibilityLabel={moreSocialOpen ? t('pourShareFewerOptions') : t('pourShareMoreOptions')}>
+            <Text style={styles.moreToggleLabel}>
+              {moreSocialOpen ? t('pourShareFewerOptions') : t('pourShareMoreOptions')}
+            </Text>
+            <MaterialCommunityIcons
+              name={moreSocialOpen ? 'chevron-up' : 'chevron-down'}
+              size={22}
+              color={colors.cta.secondaryFg}
+            />
+          </Pressable>
+
+          {moreSocialOpen ? (
+            <View style={styles.gridWrap}>
+              <View style={styles.grid}>
+                <SocialTile
+                  icon="whatsapp"
+                  label="WhatsApp"
+                  onPress={() => void openUrl(socialLinks.whatsapp)}
+                />
+                <SocialTile
+                  icon="send"
+                  label="Telegram"
+                  onPress={() => void openUrl(socialLinks.telegram)}
+                />
+                <SocialTile icon="twitter" label="X" onPress={() => void openUrl(socialLinks.x)} />
+                <SocialTile
+                  icon="facebook"
+                  label="Facebook"
+                  onPress={() => void openUrl(socialLinks.facebook)}
+                />
+                <SocialTile icon="reddit" label="Reddit" onPress={() => void openUrl(socialLinks.reddit)} />
+              </View>
+            </View>
+          ) : null}
+        </>
       ) : null}
-      {googlePlaceId ? (
-        <AppButton label={t('pourOpenInMaps')} variant="secondary" onPress={() => void onMaps()} />
+
+      {pubPageBarKey || googlePlaceId ? (
+        <View style={styles.venueRow}>
+          {pubPageBarKey ? (
+            <AppButton
+              label={t('pourViewPub')}
+              variant="secondary"
+              shape="rounded"
+              onPress={() => router.push(`/pub/${encodeURIComponent(pubPageBarKey)}`)}
+              style={styles.venueButton}
+            />
+          ) : null}
+          {googlePlaceId ? (
+            <AppButton
+              label={t('pourOpenInMaps')}
+              variant="secondary"
+              shape="rounded"
+              onPress={() => void onMaps()}
+              style={styles.venueButton}
+            />
+          ) : null}
+        </View>
       ) : null}
 
       <View style={styles.ctaRow}>
@@ -241,6 +285,29 @@ export function PourSharePanel({
         </Pressable>
       </View>
     </View>
+  );
+}
+
+function QuickShareButton({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof MaterialCommunityIcons.glyphMap;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.quickButton, pressed && styles.quickButtonPressed]}
+      accessibilityRole="button"
+      accessibilityLabel={label}>
+      <MaterialCommunityIcons name={icon} size={20} color={brandColors.gold} />
+      <Text style={styles.quickButtonLabel} numberOfLines={2}>
+        {label}
+      </Text>
+    </Pressable>
   );
 }
 
@@ -373,7 +440,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     flexBasis: '47%',
     minHeight: 76,
-    borderRadius: 12,
+    borderRadius: radii.buttonRounded,
     backgroundColor: 'rgba(11, 11, 11, 0.45)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: brandColors.borderSubtle,
@@ -395,24 +462,79 @@ const styles = StyleSheet.create({
     color: brandColors.cream,
     textAlign: 'center',
   },
+  quickRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  quickButton: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 72,
+    borderRadius: radii.buttonRounded,
+    backgroundColor: 'rgba(11, 11, 11, 0.45)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: brandColors.borderSubtle,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  quickButtonPressed: {
+    backgroundColor: 'rgba(179, 139, 45, 0.12)',
+    borderColor: 'rgba(179, 139, 45, 0.28)',
+  },
+  quickButtonLabel: {
+    fontSize: 8,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    color: brandColors.cream,
+    textAlign: 'center',
+  },
+  moreToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 44,
+    paddingVertical: 6,
+    borderRadius: radii.buttonRounded,
+  },
+  moreTogglePressed: {
+    opacity: colors.cta.pressedOpacity,
+  },
+  moreToggleLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.cta.secondaryFg,
+  },
+  venueRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  venueButton: {
+    flex: 1,
+    minWidth: 0,
+  },
   deviceShare: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
-    minHeight: 48,
-    borderRadius: 12,
+    minHeight: layout.buttonMinHeight.rounded,
+    borderRadius: radii.buttonRounded,
     borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.28)',
-    backgroundColor: 'rgba(179, 139, 45, 0.1)',
+    borderColor: colors.cta.secondaryBorder,
+    backgroundColor: colors.cta.secondaryBg,
   },
   deviceSharePressed: {
-    backgroundColor: 'rgba(179, 139, 45, 0.16)',
+    opacity: colors.cta.pressedOpacity,
   },
   deviceShareLabel: {
     fontSize: 14,
     fontWeight: '800',
-    color: brandColors.gold,
+    color: colors.cta.secondaryFg,
   },
   ctaRow: {
     flexDirection: 'row',
@@ -421,8 +543,8 @@ const styles = StyleSheet.create({
   },
   ctaGold: {
     flex: 1,
-    minHeight: 50,
-    borderRadius: 12,
+    minHeight: layout.buttonMinHeight.rounded,
+    borderRadius: radii.buttonRounded,
     backgroundColor: brandColors.gold,
     alignItems: 'center',
     justifyContent: 'center',
