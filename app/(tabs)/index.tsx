@@ -16,6 +16,7 @@ import {
 import { LivePourCameraModal } from '@/components/pour/live-pour-camera-modal';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
+import { TextLink } from '@/components/split-the-g/text-link';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted, Tagline, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -270,37 +271,50 @@ export default function HomeScreen() {
         <Eyebrow style={styles.sectionEyebrow}>{t('homeScorePour')}</Eyebrow>
         {selectedImageUri ? (
           <RNImage source={{ uri: selectedImageUri }} style={styles.preview} />
-        ) : null}
-        <View style={styles.actions}>
-          <AppButton
-            label={t('homeStartAnalysis')}
-            disabled={isSubmitting}
-            onPress={() => {
-              setMessage(null);
-              setLivePourOpen(true);
-            }}
-          />
-          <Muted style={styles.hint}>{t('homeStartHint')}</Muted>
-          <AppButton
-            label={t('homeUploadPhoto')}
-            variant="secondary"
-            disabled={isSubmitting}
-            onPress={() => void pickImage('library')}
-          />
-          {selectedImageUri && !isSubmitting ? (
+        ) : (
+          <View
+            style={styles.previewPlaceholder}
+            accessible
+            accessibilityLabel={t('homeStartHint')}>
+            <Muted style={styles.previewPlaceholderMuted} importantForAccessibility="no">
+              {t('homeStartHint')}
+            </Muted>
+          </View>
+        )}
+        {!selectedImageUri ? (
+          <View style={styles.actionsFresh}>
+            <AppButton
+              label={t('homeStartAnalysis')}
+              disabled={isSubmitting}
+              fullWidth
+              onPress={() => {
+                setMessage(null);
+                setLivePourOpen(true);
+              }}
+            />
+            <TextLink label={t('homeUploadPhoto')} onPress={() => void pickImage('library')} />
+          </View>
+        ) : !isSubmitting ? (
+          <View style={styles.actionsAfterPick}>
             <View style={styles.retryRow}>
               <AppButton
                 label={t('pourTryAgain')}
                 variant="secondary"
+                compact
+                style={styles.retryBtn}
                 disabled={!selectedImageUri}
-                onPress={() =>
-                  void submitPourFromUri(selectedImageUri, lastPickSourceRef.current)
-                }
+                onPress={() => void submitPourFromUri(selectedImageUri, lastPickSourceRef.current)}
               />
-              <AppButton label={t('homeChangePhoto')} variant="secondary" onPress={clearPourSelection} />
+              <AppButton
+                label={t('homeChangePhoto')}
+                variant="secondary"
+                compact
+                style={styles.retryBtn}
+                onPress={clearPourSelection}
+              />
             </View>
-          ) : null}
-        </View>
+          </View>
+        ) : null}
         {message ? <Muted style={styles.errorText}>{message}</Muted> : null}
       </Card>
 
@@ -450,15 +464,40 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: 'rgba(29, 24, 15, 0.5)',
   },
-  actions: {
-    gap: 12,
+  previewPlaceholder: {
+    width: '100%',
+    height: 300,
+    borderRadius: 12,
+    backgroundColor: 'rgba(29, 24, 15, 0.5)',
+    borderWidth: 1,
+    borderColor: brandColors.frame,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
   },
-  hint: {
+  previewPlaceholderMuted: {
     textAlign: 'center',
     fontSize: 13,
+    lineHeight: 19,
+  },
+  actionsFresh: {
+    marginTop: 14,
+    gap: 10,
+    alignItems: 'stretch',
+  },
+  actionsAfterPick: {
+    marginTop: 14,
+    gap: 10,
+    alignSelf: 'stretch',
   },
   retryRow: {
+    flexDirection: 'row',
     gap: 10,
+    alignSelf: 'stretch',
+    alignItems: 'stretch',
+  },
+  retryBtn: {
+    flex: 1,
   },
   errorText: {
     textAlign: 'center',
