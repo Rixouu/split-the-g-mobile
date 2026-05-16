@@ -12,7 +12,7 @@ import {
   View,
   type ListRenderItem,
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
@@ -24,6 +24,7 @@ import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubs } from '@/lib/api/client';
+import { appConfig } from '@/lib/config';
 import type { PubSummary } from '@/lib/api/types';
 import { resolvePubMapCoords } from '@/lib/pub/resolve-pub-map-coords';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -81,6 +82,7 @@ export default function PubsScreen() {
   const [pubSearch, setPubSearch] = useState('');
   const [sortMode, setSortMode] = useState<PubsSortMode>('recommended');
   const mapRef = useRef<MapView>(null);
+  const useGoogleMaps = Boolean(appConfig.googleMapsApiKey.trim());
 
   const pubs = useQuery({
     queryKey: ['pubs'],
@@ -150,31 +152,33 @@ export default function PubsScreen() {
     return out;
   }, [filteredRows, coordQueries]);
 
-  useEffect(() => {
+  const fitMapToMarkers = useCallback(() => {
     if (!mapMounted || markerCoords.length === 0) return;
     const coords = markerCoords.map((m) => ({ latitude: m.lat, longitude: m.lng }));
-    const frame = requestAnimationFrame(() => {
-      const mv = mapRef.current;
-      if (!mv) return;
-      if (coords.length === 1) {
-        void mv.animateToRegion(
-          {
-            latitude: coords[0].latitude,
-            longitude: coords[0].longitude,
-            latitudeDelta: 0.07,
-            longitudeDelta: 0.07,
-          },
-          380,
-        );
-      } else {
-        mv.fitToCoordinates(coords, {
-          edgePadding: { top: 32, right: 24, bottom: 38, left: 24 },
-          animated: true,
-        });
-      }
+    const mv = mapRef.current;
+    if (!mv) return;
+    if (coords.length === 1) {
+      void mv.animateToRegion(
+        {
+          latitude: coords[0].latitude,
+          longitude: coords[0].longitude,
+          latitudeDelta: 0.07,
+          longitudeDelta: 0.07,
+        },
+        380,
+      );
+      return;
+    }
+    mv.fitToCoordinates(coords, {
+      edgePadding: { top: 32, right: 24, bottom: 38, left: 24 },
+      animated: true,
     });
-    return () => cancelAnimationFrame(frame);
   }, [mapMounted, markerCoords]);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => fitMapToMarkers());
+    return () => cancelAnimationFrame(id);
+  }, [fitMapToMarkers]);
 
   const navigateToPub = useCallback(
     (barKey: string) => {
@@ -215,12 +219,16 @@ export default function PubsScreen() {
           {mapMounted ? (
             <MapView
               ref={mapRef}
+              provider={useGoogleMaps ? PROVIDER_GOOGLE : undefined}
               style={styles.map}
-              mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-              customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
+              mapType={useGoogleMaps ? 'standard' : Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+              customMapStyle={
+                Platform.OS === 'android' || useGoogleMaps ? GOOGLE_MAP_DARK_STYLE : undefined
+              }
               pitchEnabled={false}
               toolbarEnabled={false}
               showsPointsOfInterest={false}
+              onMapReady={fitMapToMarkers}
               initialRegion={{
                 latitude: 13.7563,
                 longitude: 100.5018,
@@ -229,10 +237,10 @@ export default function PubsScreen() {
               }}>
               {markerCoords.map((m) => (
                 <Marker
-                  key={m.barKey}
+                  key={`${m.barKey}:${m.lat}:${m.lng}`}
                   coordinate={{ latitude: m.lat, longitude: m.lng }}
                   anchor={{ x: 0.5, y: 0.5 }}
-                  tracksViewChanges={false}
+                  tracksViewChanges
                   onPress={() => navigateToPub(m.barKey)}>
                   <PubGoldMapPin />
                 </Marker>
@@ -308,7 +316,9 @@ export default function PubsScreen() {
   }, [
     directoryCount,
     filteredCount,
+    fitMapToMarkers,
     mapMounted,
+    useGoogleMaps,
     markerCoords,
     navigateToPub,
     pubSearch,

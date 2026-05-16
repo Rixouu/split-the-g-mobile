@@ -810,12 +810,12 @@ export async function fetchPubs(limit = 50): Promise<PubSummary[]> {
         maps_place_url: string | null;
         google_place_id: string | null;
       };
-      return [row.bar_key, row] as const;
+      return [row.bar_key.trim().toLowerCase(), row] as const;
     }),
   );
 
   return rows.map((r) => {
-    const extra = byKey.get(r.bar_key);
+    const extra = byKey.get(r.bar_key.trim().toLowerCase());
     if (!extra) return r;
     const pair = coordPairFromDb(extra.latitude, extra.longitude);
     const placeId = (r.google_place_id ?? '').trim() || (extra.google_place_id ?? '').trim() || null;

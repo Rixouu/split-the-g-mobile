@@ -20,6 +20,7 @@ import { Card } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
+import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
 import { fetchCompetitionsCatalog } from '@/lib/api/client';
@@ -143,25 +144,30 @@ export default function CompetitionHomeScreen() {
           </View>
         ) : null}
 
-        <View style={styles.mineHeader}>
-          <Eyebrow style={styles.mineEyebrow}>{t('competeMineHeading')}</Eyebrow>
-          <Muted style={styles.countsMeta}>
-            {tVars('competeOpenPastCounts', {
-              open: String(openCompetitions.length),
-              past: String(pastCompetitions.length),
-            })}
-          </Muted>
-        </View>
-
-        <View style={styles.listingsTabChrome} accessibilityRole="tablist">
-          <UnderlineTabRow<'open' | 'past'>
-            tabs={[
-              { key: 'open', label: t('competeTabOpen') },
-              { key: 'past', label: t('competeTabPast') },
-            ]}
-            active={listingsTab}
-            onChange={setListingsTab}
-          />
+        <View style={styles.minePanel}>
+          <View style={styles.minePanelTop}>
+            <Eyebrow style={styles.mineEyebrow}>{t('competeMineHeading')}</Eyebrow>
+            <View style={styles.mineStatRow}>
+              <View style={[styles.mineStatPill, listingsTab === 'open' ? styles.mineStatPillActive : null]}>
+                <Text style={styles.mineStatLabel}>{t('competeTabOpen')}</Text>
+                <Text style={styles.mineStatValue}>{openCompetitions.length}</Text>
+              </View>
+              <View style={[styles.mineStatPill, listingsTab === 'past' ? styles.mineStatPillActive : null]}>
+                <Text style={styles.mineStatLabel}>{t('competeTabPast')}</Text>
+                <Text style={styles.mineStatValue}>{pastCompetitions.length}</Text>
+              </View>
+            </View>
+          </View>
+          <View style={styles.mineTabBar} accessibilityRole="tablist">
+            <UnderlineTabRow<'open' | 'past'>
+              tabs={[
+                { key: 'open', label: t('competeTabOpen') },
+                { key: 'past', label: t('competeTabPast') },
+              ]}
+              active={listingsTab}
+              onChange={setListingsTab}
+            />
+          </View>
         </View>
 
         {listError ? (
@@ -597,13 +603,68 @@ const styles = StyleSheet.create({
   invitedWrap: { marginTop: -2 },
   invitedTitle: { fontWeight: '800', color: brandColors.goldBright },
   invitedHint: { marginTop: 4 },
-  mineHeader: { gap: 8, marginTop: 10 },
-  mineEyebrow: { letterSpacing: 1.8 },
-  listingsTabChrome: {
-    marginTop: 6,
-    marginBottom: 6,
+  minePanel: {
+    marginTop: 10,
+    borderRadius: radii.dockPanel,
+    borderWidth: 1,
+    borderColor: colors.stroke.frame,
+    backgroundColor: colors.surface.panelTranslucent,
+    overflow: 'hidden',
   },
-  countsMeta: { opacity: 0.82 },
+  minePanelTop: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
+  },
+  mineEyebrow: {
+    alignSelf: 'flex-start',
+    letterSpacing: 1.8,
+  },
+  mineStatRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  mineStatPill: {
+    flex: 1,
+    minWidth: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.buttonRounded,
+    borderWidth: 1,
+    borderColor: colors.stroke.subtle,
+    backgroundColor: colors.surface.inkTranslucent,
+  },
+  mineStatPillActive: {
+    borderColor: colors.stroke.ctaSecondaryBold,
+    backgroundColor: colors.surface.favOnTint,
+  },
+  mineStatLabel: {
+    ...typeScale.overline,
+    fontSize: 9,
+    letterSpacing: 1.2,
+    color: colors.text.mutedMedium,
+    flexShrink: 1,
+    marginRight: spacing.sm,
+  },
+  mineStatValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: colors.text.accentBright,
+    letterSpacing: -0.6,
+    ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
+  },
+  mineTabBar: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.xs,
+    paddingBottom: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.stroke.subtle,
+    backgroundColor: colors.surface.inkTranslucent,
+  },
   feedbackBanner: {
     borderWidth: 1,
     borderColor: brandColors.gold,
@@ -616,14 +677,14 @@ const styles = StyleSheet.create({
   dismissHint: { fontSize: 11, opacity: 0.7 },
 
   emptyStateCard: {
-    borderRadius: 14,
+    borderRadius: radii.dockPanel,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
-    paddingVertical: 28,
-    paddingHorizontal: 22,
+    borderColor: colors.stroke.frame,
+    backgroundColor: colors.surface.panelTranslucent,
+    paddingVertical: spacing.xl + 8,
+    paddingHorizontal: spacing.lg + 6,
     alignItems: 'center',
-    gap: 14,
+    gap: spacing.md,
     alignSelf: 'stretch',
   },
   emptyIconRing: {

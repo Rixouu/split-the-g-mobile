@@ -27,11 +27,19 @@ function resolveGoogleServicesFile(): string | undefined {
 }
 
 export default ({ config }: ConfigContext): ExpoConfig => {
+  const name = config.name;
+  const slug = config.slug;
+  if (typeof name !== 'string' || typeof slug !== 'string') {
+    throw new Error('Expo static config must define expo.name and expo.slug (see app.json).');
+  }
+
   const googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY?.trim() ?? '';
   const googleServicesFile = resolveGoogleServicesFile();
 
   return {
     ...config,
+    name,
+    slug,
     android: {
       ...config.android,
       ...(googleServicesFile ? { googleServicesFile } : {}),
