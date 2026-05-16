@@ -9,7 +9,9 @@ import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
 import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { TextLink } from '@/components/split-the-g/text-link';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
+import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import { fetchPubDetailPage } from '@/lib/api/client';
 import type { PubLinkedCompetitionRow } from '@/lib/api/types';
@@ -493,32 +495,26 @@ export default function PubDetailScreen() {
         </>
       ) : null}
 
-      <AppButton
-        label={t('actionBack')}
-        variant="outlineGold"
-        shape="rounded"
-        fullWidth
-        onPress={() => router.back()}
-      />
+      <TextLink label={t('actionBack')} onPress={() => router.back()} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   header: {
-    gap: 10,
-    paddingTop: 16,
+    gap: spacing.md,
+    paddingTop: spacing.lg,
     marginBottom: 2,
   },
   heroTopRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    gap: 12,
+    gap: spacing.md,
   },
   heroTitleColumn: {
     flex: 1,
     minWidth: 0,
-    gap: 10,
+    gap: spacing.sm + spacing.xs / 2,
   },
   heroAddress: {
     marginTop: 4,
@@ -527,17 +523,17 @@ const styles = StyleSheet.create({
   favIconButton: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: radii.card,
     marginTop: -2,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.42)',
-    backgroundColor: 'rgba(11, 11, 11, 0.5)',
+    borderColor: colors.stroke.ctaSecondary,
+    backgroundColor: colors.surface.inkTranslucent,
   },
   favIconButtonOn: {
-    borderColor: 'rgba(197, 160, 89, 0.55)',
-    backgroundColor: 'rgba(179, 139, 45, 0.14)',
+    borderColor: colors.stroke.favActive,
+    backgroundColor: colors.surface.favOnTint,
   },
   favIconButtonPressed: {
     opacity: 0.88,
@@ -556,19 +552,15 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   sectionHeading: {
-    color: brandColors.goldBright,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
+    ...typeScale.pubSectionHeading,
   },
   mapShell: {
     overflow: 'hidden',
     height: 200,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    borderRadius: 14,
-    backgroundColor: brandColors.panel,
+    borderColor: colors.stroke.frame,
+    borderRadius: radii.card,
+    backgroundColor: colors.surface.panel,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
@@ -733,26 +725,26 @@ const styles = StyleSheet.create({
   tab: {
     flex: 1,
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: radii.buttonRounded,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    backgroundColor: 'rgba(11, 11, 11, 0.35)',
+    borderColor: colors.cta.secondaryBorder,
+    backgroundColor: colors.cta.secondaryBg,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 6,
+    paddingHorizontal: spacing.sm,
   },
   tabActive: {
-    backgroundColor: brandColors.gold,
-    borderColor: 'rgba(212, 175, 55, 0.45)',
+    backgroundColor: colors.cta.primaryBg,
+    borderColor: colors.cta.secondaryBorder,
   },
   tabLabel: {
     fontSize: 12,
     fontWeight: '700',
-    color: 'rgba(212, 183, 143, 0.92)',
+    color: colors.cta.secondaryFg,
     textAlign: 'center',
   },
   tabLabelActive: {
-    color: brandColors.black,
+    color: colors.cta.primaryFg,
   },
   tabPanel: {
     gap: 12,

@@ -2,7 +2,7 @@ import { type ReactNode } from 'react';
 import { Platform, StyleSheet, Text, type TextProps, View, type ViewProps } from 'react-native';
 
 import { Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
-import { brandColors } from '@/constants/theme';
+import { colors, spacing, typeScale } from '@/constants/design-tokens';
 
 export function DiscoverSegmentHeader({
   eyebrow,
@@ -16,7 +16,7 @@ export function DiscoverSegmentHeader({
   eyebrow: string;
   title: string;
   subtitle: string;
-  /** Renders on the same row as the title (e.g. outline pill CTA), aligned to the trailing edge. */
+  /** Renders on the same row as the title (e.g. secondary pill CTA), aligned to the trailing edge. */
   titleTrailing?: ReactNode;
   children?: ReactNode;
 }) {
@@ -48,8 +48,8 @@ export function DiscoverSectionTitle({ style, ...props }: TextProps) {
 export const discoverChromeStyles = StyleSheet.create({
   header: {
     marginBottom: 14,
-    gap: 6,
-    paddingTop: 6,
+    gap: spacing.sm,
+    paddingTop: spacing.sm,
   },
   titleRow: {
     flexDirection: 'row',
@@ -61,37 +61,24 @@ export const discoverChromeStyles = StyleSheet.create({
   titleWrap: {
     flex: 1,
     minWidth: 0,
-    paddingRight: 4,
+    paddingRight: spacing.xs,
   },
   headerEyebrow: {
     letterSpacing: 1.6,
-    color: brandColors.goldBright,
+    color: colors.text.accentBright,
     opacity: 0.85,
   },
   headerTitle: {
-    fontSize: 28,
-    lineHeight: 34,
-    letterSpacing: -0.45,
+    ...typeScale.titleCompact,
     flexShrink: 1,
   },
-  headerSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 2,
-    color: 'rgba(212, 183, 143, 0.62)',
-  },
+  headerSubtitle: typeScale.discoverMuted,
   sectionTitle: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 1.35,
-    textTransform: 'uppercase',
-    color: brandColors.goldBright,
-    marginBottom: 8,
-    opacity: 0.92,
+    ...typeScale.sectionTitle,
     ...(Platform.OS === 'android' ? { includeFontPadding: false } : {}),
   },
   sectionSpaced: {
-    marginTop: 24,
+    marginTop: spacing.xxl,
   },
 });
 

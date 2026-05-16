@@ -83,7 +83,7 @@ export default function FeedScreen() {
               titleTrailing={
                 <AppButton
                   label={t('homeScorePour')}
-                  variant="outlineGold"
+                  variant="secondary"
                   shape="pill"
                   accessibilityLabel={t('homeScorePour')}
                   onPress={() => router.push('/')}

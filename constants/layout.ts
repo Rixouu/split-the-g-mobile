@@ -1,5 +1,2 @@
-/**
- * Horizontal inset for tab headers, lists, and `Screen` scroll content.
- * Keep feed / wall / compete / pubs visually aligned.
- */
-export const SCREEN_EDGE_GUTTER = 20;
+/** Re-export gutter from design tokens — single source of truth. */
+export { SCREEN_EDGE_GUTTER } from '@/constants/design-tokens';

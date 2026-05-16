@@ -1,10 +1,9 @@
-import { ScrollView, StyleSheet, View, type ScrollViewProps } from 'react-native';
+import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewStyle } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
+import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
-
-const CARD_RADIUS = 14;
 
 /**
  * Pass as `edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}` when this screen is shown
@@ -30,8 +29,14 @@ export function Screen({ children, contentContainerStyle, edges, ...props }: Scr
   );
 }
 
-export function Card({ children }: { children: React.ReactNode }) {
-  return <View style={styles.card}>{children}</View>;
+export function Card({
+  children,
+  style,
+}: {
+  children: React.ReactNode;
+  style?: ViewStyle;
+}) {
+  return <View style={[styles.card, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
@@ -40,17 +45,17 @@ const styles = StyleSheet.create({
     backgroundColor: brandColors.black,
   },
   content: {
-    gap: 18,
+    gap: spacing.sectionGap,
     paddingHorizontal: SCREEN_EDGE_GUTTER,
-    paddingTop: 12,
-    paddingBottom: 132,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.contentBottomInset,
   },
   card: {
-    gap: 14,
+    gap: spacing.cardInnerGap,
     borderWidth: 1,
-    borderColor: brandColors.frame,
-    borderRadius: CARD_RADIUS,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
-    padding: 18,
+    borderColor: colors.stroke.frame,
+    borderRadius: radii.card,
+    backgroundColor: colors.surface.card,
+    padding: spacing.cardPadding,
   },
 });

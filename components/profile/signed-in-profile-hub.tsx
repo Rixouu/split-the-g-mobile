@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ProfileTierAvatar } from '@/components/profile/profile-tier-avatar';
 import { AppButton } from '@/components/split-the-g/button';
 import { Eyebrow, Muted } from '@/components/split-the-g/typography';
+import { colors } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import type { ProfileHubBundle } from '@/lib/api/profile-hub-data';
 import { achievementHubSummaryFromSnapshot } from '@/lib/profile/profile-achievements';
@@ -18,8 +19,6 @@ import {
 import type { TranslationKey } from '@/lib/i18n/translations';
 import { emailDisplayName, normalizeEmail } from '@/lib/utils/profile-email';
 import { flagEmojiFromIso2 } from '@/lib/utils/country-display';
-
-const HUB_STROKE = brandColors.hubStroke;
 
 function formatCompactNumber(n: number): string {
   if (!Number.isFinite(n)) return '0';
@@ -218,7 +217,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
       <View accessibilityRole="text">
         <Eyebrow style={styles.sectionEyebrow}>{t('profileHubActivitySection')}</Eyebrow>
         <HubRow
-          icon={<Ionicons name="stats-chart" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="stats-chart" size={20} color={colors.text.accent} />}
           title={t('profileNavProgress')}
           subtitle={
             streak > 0
@@ -228,7 +227,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
           onPress={() => router.push('/profile/progress')}
         />
         <HubRow
-          icon={<Ionicons name="trophy-outline" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="trophy-outline" size={20} color={colors.text.accent} />}
           title={t('profileNavAchievements')}
           subtitle={tVars('profileHubAchievementsRatio', {
             unlocked: achievementSummary.unlockedCount,
@@ -241,7 +240,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
             flagEmoji ? (
               <Text style={styles.rowFlag}>{flagEmoji}</Text>
             ) : (
-              <Ionicons name="flag-outline" size={20} color={brandColors.gold} />
+              <Ionicons name="flag-outline" size={20} color={colors.text.accent} />
             )
           }
           title={t('profileNavScores')}
@@ -264,7 +263,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
           accessibilityHint={!flagEmoji ? t('profileHubScoresFlagHint') : undefined}
         />
         <HubRow
-          icon={<Ionicons name="star-outline" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="star-outline" size={20} color={colors.text.accent} />}
           title={t('profileNavFavorites')}
           subtitle={
             hub.favorites.length > 0 && lastFavLabel
@@ -278,7 +277,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
       <View>
         <Eyebrow style={styles.sectionEyebrow}>{t('profileHubAccountSection')}</Eyebrow>
         <HubRow
-          icon={<Ionicons name="wallet-outline" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="wallet-outline" size={20} color={colors.text.accent} />}
           title={t('profileNavExpenses')}
           subtitle={
             priced.length > 0
@@ -298,7 +297,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
           onPress={() => router.push('/profile/expenses')}
         />
         <HubRow
-          icon={<Ionicons name="people-outline" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="people-outline" size={20} color={colors.text.accent} />}
           title={t('profileNavFriends')}
           subtitle={friendsHubSubtitle(
             tVars,
@@ -309,7 +308,7 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
           onPress={() => router.push('/profile/friends')}
         />
         <HubRow
-          icon={<Ionicons name="help-circle-outline" size={20} color={brandColors.gold} />}
+          icon={<Ionicons name="help-circle-outline" size={20} color={colors.text.accent} />}
           title={t('profileNavFaq')}
           subtitle={t('profileHubFaqSub')}
           onPress={() => router.push('/faq')}
@@ -349,7 +348,7 @@ export function HubRow({
         </Muted>
       </View>
       {trailing}
-      <Ionicons name="chevron-forward" size={18} color="rgba(179, 139, 45, 0.7)" />
+      <Ionicons name="chevron-forward" size={18} color={colors.chevron.muted} />
     </Pressable>
   );
 }
@@ -389,7 +388,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: '600',
-    color: brandColors.gold,
+    color: colors.text.accent,
   },
   handleLine: {
     marginTop: 4,
@@ -397,8 +396,8 @@ const styles = StyleSheet.create({
   },
   editBtn: {
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(11, 11, 11, 0.45)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.editButton,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
@@ -407,7 +406,7 @@ const styles = StyleSheet.create({
   editBtnLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: brandColors.gold,
+    color: colors.text.accent,
   },
   pressed: {
     opacity: 0.88,
@@ -423,14 +422,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.panelTranslucent,
   },
   statValue: {
     fontSize: 18,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
-    color: brandColors.gold,
+    color: colors.text.accent,
   },
   statLabel: {
     marginTop: 4,
@@ -438,13 +437,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-    color: 'rgba(212, 183, 143, 0.55)',
+    color: colors.text.mutedMedium,
   },
   weeklyCard: {
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(29, 24, 15, 0.35)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.panelTranslucent,
     overflow: 'hidden',
   },
   weeklyGlow: {
@@ -468,15 +467,15 @@ const styles = StyleSheet.create({
     height: 36,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(11, 11, 11, 0.5)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.inkTranslucent,
     alignItems: 'center',
     justifyContent: 'center',
   },
   rankOrbText: {
     fontSize: 14,
     fontWeight: '700',
-    color: brandColors.gold,
+    color: colors.text.accent,
   },
   weeklyCopy: {
     flex: 1,
@@ -505,16 +504,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(29, 24, 15, 0.3)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.hubRow,
   },
   iconWell: {
     width: 40,
     height: 40,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: HUB_STROKE,
-    backgroundColor: 'rgba(11, 11, 11, 0.4)',
+    borderColor: colors.stroke.hub,
+    backgroundColor: colors.surface.hubIconWell,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -535,6 +534,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
-    color: brandColors.gold,
+    color: colors.text.accent,
   },
 });

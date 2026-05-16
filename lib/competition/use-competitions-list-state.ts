@@ -4,7 +4,6 @@ import type { User } from '@supabase/supabase-js';
 import { trackEvent } from '@/lib/analytics/client';
 import {
   addUserToCompetitionAsParticipant,
-  deleteCompetitionById,
   fetchCompetitionInvitesByCompetitionIds,
   fetchCompetitionScoresJoined,
   fetchInvitedCompetitionTitles,
@@ -63,7 +62,6 @@ export function useCompetitionsListState({
 
   const [formErrorKey, setFormErrorKey] = useState<TranslationKey | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
-  const [deleteTarget, setDeleteTarget] = useState<CompetitionDetail | null>(null);
   const [joinedIds, setJoinedIds] = useState<Set<string>>(new Set());
   const [clientComps, setClientComps] = useState<CompetitionDetail[] | null>(null);
   const [counts, setCounts] = useState<Record<string, number>>({});
@@ -214,31 +212,6 @@ export function useCompetitionsListState({
       setInvitedTitles(titles);
     })();
   }, [userId, userEmail, catalogVersion]);
-
-  const requestDeleteCompetition = useCallback(
-    (c: CompetitionDetail) => {
-      setFormErrorKey(null);
-      if (!user || user.id !== c.created_by) {
-        setFormErrorKey('competeErrDeleteOwn');
-        return;
-      }
-      setDeleteTarget(c);
-    },
-    [user],
-  );
-
-  const confirmDeleteCompetition = useCallback(async () => {
-    if (!deleteTarget) return;
-    const c = deleteTarget;
-    setDeleteTarget(null);
-    try {
-      await deleteCompetitionById(c.id);
-      revalidate();
-      setToast({ key: 'competeToastDeleted' });
-    } catch {
-      setFormErrorKey('competeErrDeleteFailed');
-    }
-  }, [deleteTarget, revalidate]);
 
   const handleJoin = useCallback(
     async (compId: string) => {
@@ -392,7 +365,6 @@ export function useCompetitionsListState({
     formErrorKey,
     toastMessage,
     toastKey: toast?.key ?? null,
-    deleteTarget,
     counts,
     myFriends,
     invitesByComp,
@@ -409,14 +381,11 @@ export function useCompetitionsListState({
     mergedCompetitions,
     visibleCompetitions,
     setInviteInputs,
-    requestDeleteCompetition,
-    confirmDeleteCompetition,
     handleJoin,
     handleLeave,
     addEmailInvite,
     removeInvite,
     addFriendParticipant,
     dismissToast,
-    closeDeleteNotice: () => setDeleteTarget(null),
   };
 }

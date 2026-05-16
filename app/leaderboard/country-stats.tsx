@@ -154,7 +154,7 @@ export default function CountryStatsLeaderboardScreen() {
       <View style={styles.footerWrap}>
         <AppButton
           label={t('lbNewSplit')}
-          variant="outlineGold"
+          variant="secondary"
           onPress={() => router.push('/')}
           style={styles.footerCta}
         />

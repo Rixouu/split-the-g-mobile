@@ -179,21 +179,21 @@ export default function LeaderboardScreen() {
             {hintKind.kind === 'signIn' ? (
               <AppButton
                 label={t('lbCtaOpenProfile')}
-                variant="outlineGold"
+                variant="secondary"
                 shape="pill"
                 onPress={() => router.push('/profile')}
               />
             ) : hintKind.kind === 'country' ? (
               <AppButton
                 label={t('profileNavAccount')}
-                variant="outlineGold"
+                variant="secondary"
                 shape="pill"
                 onPress={() => router.push('/profile/account')}
               />
             ) : (
               <AppButton
                 label={t('profileNavFriends')}
-                variant="outlineGold"
+                variant="secondary"
                 shape="pill"
                 onPress={() => router.push('/profile/friends')}
               />
@@ -226,7 +226,7 @@ export default function LeaderboardScreen() {
       <View style={styles.footerWrap}>
         <AppButton
           label={t('lbNewSplit')}
-          variant="outlineGold"
+          variant="secondary"
           onPress={() => router.push('/')}
           style={styles.footerCta}
         />

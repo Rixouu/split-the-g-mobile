@@ -197,6 +197,8 @@ export type TranslationKey =
   | 'competitionLeaderboardTitle'
   | 'competitionLbRowHint'
   | 'competitionLbEmpty'
+  | 'competitionLbEmptySubtitle'
+  | 'competitionLbEmptyTitle'
   | 'competitionJoin'
   | 'competitionLeave'
   | 'competitionRosterFull'
@@ -563,10 +565,13 @@ export type TranslationKey =
   | 'competitionNotFound'
   | 'competitionRulePrefix'
   | 'competitionMetaLine'
+  | 'competitionDetailRuleEyebrow'
+  | 'competitionDetailVenueEyebrow'
   | 'competitionTargetSegment'
   | 'competitionWebHint'
   | 'competitionEditCTA'
   | 'competitionLinkedPub'
+  | 'competitionLinkedPubCue'
   | 'competitionOpenPub'
   | 'competitionBackToList'
   | 'competitionTabLeaderboard'
@@ -583,6 +588,8 @@ export type TranslationKey =
   | 'competitionPickEnd'
   | 'compVenueNamePlaceholder'
   | 'competitionParticipantsEmpty'
+  | 'competitionParticipantsEmptySubtitle'
+  | 'competitionParticipantsEmptyTitle'
   | 'compEditLoadError'
   | 'compEditNotAllowed'
   | 'compEditFieldName'
@@ -923,6 +930,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionLeaderboardTitle: 'Leaderboard',
     competitionLbRowHint: 'Tap a row to open the pour',
     competitionLbEmpty: 'No scored pours in this competition yet.',
+    competitionLbEmptyTitle: 'No scores yet',
+    competitionLbEmptySubtitle:
+      'Leaderboard fills in after players attach scored pours to this competition. Tap a ranked row anytime to jump to their pour.',
     competitionJoin: 'Join competition',
     competitionLeave: 'Leave',
     competitionRosterFull: 'Roster full',
@@ -1360,6 +1370,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionNotFound:
       'Competition not found, or you do not have access. Private competitions may require the web app and sign-in.',
     competitionRulePrefix: 'Rule:',
+    competitionDetailRuleEyebrow: 'Win rule',
+    competitionDetailVenueEyebrow: 'Venue',
     competitionMetaLine:
       'Visibility: {visibility} · Max participants: {max} · Glasses / person: {glasses}',
     competitionTargetSegment: ' · target {score}',
@@ -1367,7 +1379,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Join, invites, and live in-competition boards may still need the web app depending on your account.',
     competitionEditCTA: 'Edit competition',
     competitionLinkedPub: 'Linked pub',
-    competitionOpenPub: 'Open pub →',
+    competitionLinkedPubCue: 'Listed in the pub directory.',
+    competitionOpenPub: 'Open pub page',
     competitionBackToList: 'Back to competitions list',
     competitionTabLeaderboard: 'Leaderboard',
     competitionTabParticipants: "Who's in",
@@ -1383,6 +1396,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionPickEnd: 'End time',
     compVenueNamePlaceholder: 'Search Google Maps…',
     competitionParticipantsEmpty: 'No one has joined this competition yet.',
+    competitionParticipantsEmptyTitle: 'Nobody in the roster yet',
+    competitionParticipantsEmptySubtitle:
+      'When friends join, or accept an invite, their names show up here so you know who is playing.',
     compEditLoadError: 'Could not load competition.',
     compEditNotAllowed: 'Only the competition creator can edit this event.',
     compEditFieldName: 'Name',

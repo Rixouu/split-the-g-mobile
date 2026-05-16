@@ -48,7 +48,7 @@ export function PromotionSpotCard({
           <Text style={styles.eyebrow}>{eyebrow}</Text>
         </View>
         <Text style={styles.description}>{description}</Text>
-        <AppButton label={actionLabel} variant="outlineGold" fullWidth onPress={onActionPress} />
+        <AppButton label={actionLabel} variant="secondary" fullWidth onPress={onActionPress} />
       </View>
     </View>
   );

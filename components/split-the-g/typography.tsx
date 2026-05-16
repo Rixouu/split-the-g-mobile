@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { brandColors } from '@/constants/theme';
+import { typeScale } from '@/constants/design-tokens';
 
 export function Eyebrow({ style, ...props }: TextProps) {
   return <Text {...props} style={[styles.eyebrow, style]} />;
@@ -28,38 +28,22 @@ const androidText = Platform.OS === 'android' ? { includeFontPadding: false } : 
 const styles = StyleSheet.create({
   eyebrow: {
     ...androidText,
-    color: 'rgba(212, 183, 143, 0.5)',
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.4,
-    textTransform: 'uppercase',
+    ...typeScale.overline,
   },
   title: {
     ...androidText,
-    color: brandColors.cream,
-    fontSize: 32,
-    fontWeight: '800',
-    lineHeight: 38,
-    letterSpacing: -0.5,
+    ...typeScale.title,
   },
   tagline: {
     ...androidText,
-    color: brandColors.gold,
-    fontSize: 16,
-    fontWeight: '600',
-    lineHeight: 22,
-    letterSpacing: -0.2,
+    ...typeScale.tagline,
   },
   body: {
     ...androidText,
-    color: brandColors.cream,
-    fontSize: 16,
-    lineHeight: 24,
+    ...typeScale.body,
   },
   muted: {
     ...androidText,
-    color: 'rgba(212, 183, 143, 0.72)',
-    fontSize: 14,
-    lineHeight: 21,
+    ...typeScale.bodySmall,
   },
 });

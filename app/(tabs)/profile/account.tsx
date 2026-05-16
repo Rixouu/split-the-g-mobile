@@ -276,7 +276,7 @@ export default function ProfileAccountScreen() {
             ) : null}
             <AppButton
               label={pushBusy ? t('profileAccountPushBusy') : t('profileAccountEnablePush')}
-              variant="outlineGold"
+              variant="secondary"
               shape="rounded"
               fullWidth
               disabled={pushBusy}
@@ -299,7 +299,7 @@ export default function ProfileAccountScreen() {
 
           <AppButton
             label={t('profileAccountSignOut')}
-            variant="outlineGold"
+            variant="secondary"
             shape="rounded"
             fullWidth
             onPress={() => {

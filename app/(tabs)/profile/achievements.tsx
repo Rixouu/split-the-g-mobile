@@ -166,7 +166,7 @@ export default function ProfileAchievementsScreen() {
       <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
         <View style={styles.card}>
           <Body>{t('profileProgressLoadError')}</Body>
-          <AppButton label={t('profileHubRetry')} variant="outlineGold" shape="rounded" onPress={() => void bundle.refetch()} />
+          <AppButton label={t('profileHubRetry')} variant="secondary" shape="rounded" onPress={() => void bundle.refetch()} />
         </View>
       </Screen>
     );
@@ -258,7 +258,7 @@ export default function ProfileAchievementsScreen() {
         </View>
       </View>
 
-      <AppButton label={t('actionBack')} variant="outlineGold" shape="rounded" fullWidth onPress={() => router.back()} />
+      <AppButton label={t('actionBack')} variant="secondary" shape="rounded" fullWidth onPress={() => router.back()} />
     </Screen>
   );
 }

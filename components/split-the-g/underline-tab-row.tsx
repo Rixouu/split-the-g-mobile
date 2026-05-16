@@ -2,7 +2,7 @@ import * as Haptics from 'expo-haptics';
 import { Fragment, type ReactElement } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { brandColors } from '@/constants/theme';
+import { colors, spacing, typeScale } from '@/constants/design-tokens';
 
 export interface UnderlineTabItem<K extends string> {
   key: K;
@@ -62,33 +62,27 @@ const styles = StyleSheet.create({
   hairline: {
     marginTop: 10,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: brandColors.borderSubtle,
+    backgroundColor: colors.stroke.subtle,
   },
   hit: {
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: 96,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     paddingHorizontal: 10,
   },
   hitPressed: {
     opacity: 0.82,
   },
   label: {
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.65,
-    textTransform: 'uppercase',
-    textAlign: 'center',
-    paddingBottom: 6,
-    borderBottomWidth: 2,
+    ...typeScale.underlineTab,
   },
   labelActive: {
-    color: brandColors.gold,
-    borderBottomColor: brandColors.gold,
+    color: colors.text.accent,
+    borderBottomColor: colors.text.accent,
   },
   labelIdle: {
-    color: 'rgba(212, 183, 143, 0.45)',
+    color: colors.tab.underlineIdle,
     borderBottomColor: 'transparent',
   },
 });

@@ -1,10 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   ListRenderItem,
   Platform,
@@ -85,7 +84,6 @@ export default function CompetitionHomeScreen() {
     listError,
     formError,
     toastMessage,
-    deleteTarget,
     counts,
     myFriends,
     invitesByComp,
@@ -102,41 +100,15 @@ export default function CompetitionHomeScreen() {
     mergedCompetitions,
     visibleCompetitions,
     setInviteInputs,
-    requestDeleteCompetition,
-    confirmDeleteCompetition,
     handleJoin,
     handleLeave,
     addEmailInvite,
     removeInvite,
     addFriendParticipant,
     dismissToast,
-    closeDeleteNotice,
   } = listState;
 
   const bannerMessage = toastMessage ?? formError;
-
-  useEffect(() => {
-    if (!deleteTarget) return;
-    Alert.alert(
-      t('competeDeleteTitle'),
-      t('competeDeleteMessage'),
-      [
-        {
-          text: t('competeDeleteKeep'),
-          style: 'cancel',
-          onPress: () => closeDeleteNotice(),
-        },
-        {
-          text: t('competeDeleteConfirm'),
-          style: 'destructive',
-          onPress: () => {
-            void confirmDeleteCompetition();
-          },
-        },
-      ],
-      { cancelable: true, onDismiss: () => closeDeleteNotice() },
-    );
-  }, [deleteTarget, t, confirmDeleteCompetition, closeDeleteNotice]);
 
   const header = useMemo(
     () => (
@@ -149,7 +121,7 @@ export default function CompetitionHomeScreen() {
             </View>
             <AppButton
               label={t('competeCreateToolbar')}
-              variant="outlineGold"
+              variant="secondary"
               shape="pill"
               accessibilityLabel={t('competeCreateCta')}
               onPress={() => router.push('/competition/create')}
@@ -300,54 +272,92 @@ export default function CompetitionHomeScreen() {
 
         <View style={styles.cardDivider} />
 
-        <View style={styles.actionsRow}>
-          <AppButton
-            label={t('competeView')}
-            variant="secondary"
-            shape="pill"
-            onPress={() => router.push(`/competition/${ref}`)}
-            style={styles.cardActionBtn}
-          />
+        <View style={styles.actionsBlock}>
           {isOwner ? (
-            <>
-              <AppButton
-                label={t('competeEdit')}
-                variant="secondary"
-                shape="pill"
-                onPress={() => router.push(`/competition/${ref}/edit`)}
-                style={styles.cardActionBtn}
-              />
-              <AppButton
-                label={t('competeDelete')}
-                variant="secondary"
-                shape="pill"
-                onPress={() => void requestDeleteCompetition(c)}
-                style={[styles.cardActionBtn, styles.cardActionDanger]}
-              />
-            </>
+            <AppButton
+              label={t('competeView')}
+              variant="outlineGold"
+              shape="pill"
+              compact
+              fullWidth
+              onPress={() => router.push(`/competition/${ref}`)}
+            />
           ) : userId ? (
             isJoined ? (
-              <AppButton
-                label={t('competeLeave')}
-                variant="secondary"
-                shape="pill"
-                onPress={() => void handleLeave(c.id)}
-                style={styles.cardActionBtn}
-              />
+              <View style={styles.actionsUnifiedRow}>
+                <AppButton
+                  label={t('competeView')}
+                  variant="outlineGold"
+                  shape="pill"
+                  compact
+                  onPress={() => router.push(`/competition/${ref}`)}
+                  style={styles.cardActionGrow}
+                />
+                <AppButton
+                  label={t('competeLeave')}
+                  variant="secondary"
+                  shape="pill"
+                  compact
+                  onPress={() => void handleLeave(c.id)}
+                  style={styles.cardActionFixed}
+                />
+              </View>
             ) : isPastTab ? (
-              <Muted style={styles.actionMuted}>{t('competeClosed')}</Muted>
+              <View style={styles.actionsClosedRow}>
+                <AppButton
+                  label={t('competeView')}
+                  variant="outlineGold"
+                  shape="pill"
+                  compact
+                  onPress={() => router.push(`/competition/${ref}`)}
+                  style={styles.cardActionGrow}
+                />
+                <Muted style={styles.closedHint}>{t('competeClosed')}</Muted>
+              </View>
             ) : (
-              <AppButton
-                label={full ? t('competeFull') : t('competeJoin')}
-                variant={full ? 'secondary' : 'primary'}
-                shape="pill"
-                disabled={full}
-                onPress={() => void handleJoin(c.id)}
-                style={styles.cardActionBtn}
-              />
+              <View style={styles.actionsUnifiedRow}>
+                <AppButton
+                  label={t('competeView')}
+                  variant="outlineGold"
+                  shape="pill"
+                  compact
+                  onPress={() => router.push(`/competition/${ref}`)}
+                  style={styles.cardActionGrow}
+                />
+                <AppButton
+                  label={full ? t('competeFull') : t('competeJoin')}
+                  variant={full ? 'secondary' : 'primary'}
+                  shape="pill"
+                  compact
+                  disabled={full}
+                  onPress={() => void handleJoin(c.id)}
+                  style={styles.cardActionFixedWide}
+                />
+              </View>
             )
-          ) : isPastTab ? null : (
-            <Muted style={styles.actionMuted}>{t('competeSignInJoin')}</Muted>
+          ) : isPastTab ? (
+            <View style={styles.actionsUnifiedRow}>
+              <AppButton
+                label={t('competeView')}
+                variant="outlineGold"
+                shape="pill"
+                compact
+                onPress={() => router.push(`/competition/${ref}`)}
+                style={styles.cardActionGrow}
+              />
+            </View>
+          ) : (
+            <View style={styles.actionsSignInRow}>
+              <AppButton
+                label={t('competeView')}
+                variant="outlineGold"
+                shape="pill"
+                compact
+                onPress={() => router.push(`/competition/${ref}`)}
+                style={styles.cardActionGrow}
+              />
+              <Muted style={styles.signInHint}>{t('competeSignInJoin')}</Muted>
+            </View>
           )}
         </View>
 
@@ -424,7 +434,6 @@ export default function CompetitionHomeScreen() {
     listingsTab,
     myFriends,
     pastWinnerByCompId,
-    requestDeleteCompetition,
     router,
     t,
     addEmailInvite,
@@ -470,7 +479,7 @@ export default function CompetitionHomeScreen() {
           <Muted style={styles.emptyBody}>{t('competeCatalogEmptyBody')}</Muted>
           <AppButton
             label={t('competeCreateCta')}
-            variant="outlineGold"
+            variant="primary"
             shape="pill"
             onPress={() => router.push('/competition/create')}
             style={styles.emptyPrimaryCta}
@@ -488,7 +497,7 @@ export default function CompetitionHomeScreen() {
           <Muted style={styles.emptyBody}>{t('competeOpenEmptyBody')}</Muted>
           <AppButton
             label={t('competeCreateCta')}
-            variant="outlineGold"
+            variant="primary"
             shape="pill"
             onPress={() => router.push('/competition/create')}
             style={styles.emptyPrimaryCta}
@@ -826,17 +835,64 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     alignSelf: 'stretch',
   },
-  actionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' },
-  cardActionBtn: {
-    minHeight: 42,
-    paddingVertical: 0,
-    paddingHorizontal: 16,
+  actionsBlock: { alignSelf: 'stretch' },
+  actionsUnifiedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'stretch',
   },
-  cardActionDanger: {
-    borderColor: 'rgba(216, 74, 58, 0.45)',
-    backgroundColor: 'rgba(216, 74, 58, 0.08)',
+  /** Past competition, signed in but not participating */
+  actionsClosedRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    alignSelf: 'stretch',
   },
-  actionMuted: { alignSelf: 'center', flexShrink: 1 },
+  closedHint: {
+    flex: 1,
+    flexShrink: 1,
+    fontSize: 12,
+    lineHeight: 16,
+    textAlign: 'right',
+    opacity: 0.85,
+  },
+  /** Signed out, open tab */
+  actionsSignInRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
+    rowGap: 8,
+    alignSelf: 'stretch',
+  },
+  signInHint: {
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 0,
+    minWidth: 140,
+    fontSize: 12,
+    lineHeight: 16,
+    opacity: 0.85,
+  },
+  cardActionGrow: {
+    flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 12,
+  },
+  cardActionFixed: {
+    flexShrink: 0,
+    alignSelf: 'stretch',
+    minWidth: 76,
+    paddingHorizontal: 12,
+  },
+  cardActionFixedWide: {
+    flexShrink: 0,
+    alignSelf: 'stretch',
+    minWidth: 86,
+    maxWidth: '42%',
+    paddingHorizontal: 12,
+  },
   invitesWrap: { borderTopWidth: 1, borderTopColor: brandColors.borderSubtle, paddingTop: 14, marginTop: 14 },
   invitesToggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   invitesToggleText: { color: brandColors.gold, fontWeight: '700' },

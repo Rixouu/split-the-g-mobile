@@ -426,7 +426,7 @@ export function ProfileProgressDashboard({
         )}
       </View>
 
-      <AppButton label={t('actionBack')} variant="outlineGold" onPress={() => router.back()} />
+      <AppButton label={t('actionBack')} variant="secondary" onPress={() => router.back()} />
 
       <Modal
         visible={insightsOpen}

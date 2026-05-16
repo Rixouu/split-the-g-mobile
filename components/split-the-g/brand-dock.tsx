@@ -12,18 +12,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * Row: Feed | Compete · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
+import { colors, layout, radii, shadows, spacing, typeScale } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import { useLocale } from '@/lib/i18n/locale-context';
 
-/** Web `h-[3.85rem] w-[3.85rem]` at default 16px root ≈ 61.6 — round for RN layout. */
-const FAB_SIZE = 62;
-/** Web `-translate-y-[38%]` of FAB height — overlap above panel top. */
-const FAB_OVERLAP_UP = FAB_SIZE * 0.38;
-/** Web spacer `<li className="w-[4.5rem] shrink-0" />` between dock halves. */
-const DOCK_CENTER_GAP = 72;
-/** Web: `MobileNavIcon` pour uses `h-8 w-8` (32 CSS px). */
-const POUR_FAB_GLYPH = 32;
-const DOCK_TAB_ICON = 20;
+const FAB_SIZE = layout.dock.fabSize;
+const FAB_OVERLAP_UP = FAB_SIZE * layout.dock.fabOverlapFactor;
+const DOCK_CENTER_GAP = layout.dock.centerGap;
+const POUR_FAB_GLYPH = layout.dock.pourGlyph;
+const DOCK_TAB_ICON = layout.dock.tabIcon;
 
 /**
  * With Android edge-to-edge (see app.json `edgeToEdgeEnabled`), OEMs occasionally
@@ -31,11 +28,6 @@ const DOCK_TAB_ICON = 20;
  * steals touches. Without a minimum, the dock sits flush on the nav bar and taps
  * on Pubs/read-out look like hardware back/home.
  */
-const DOCK_PADDING_BOTTOM_IOS = 12;
-const DOCK_PADDING_BOTTOM_ANDROID_MIN_TOTAL = 40;
-
-const dockIconIdle = 'rgba(212, 183, 143, 0.45)';
-
 function triggerHaptic() {
   void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 }
@@ -52,7 +44,7 @@ function DockTabIcon({
   onPress: () => void;
   renderIcon: (color: string) => ReactNode;
 }) {
-  const color = active ? brandColors.gold : dockIconIdle;
+  const color = active ? colors.text.accent : colors.dock.iconIdle;
   return (
     <Pressable
       accessibilityRole="tab"
@@ -75,8 +67,8 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
 
   const dockPaddingBottom =
     Platform.OS === 'android'
-      ? Math.max(insets.bottom + 6, DOCK_PADDING_BOTTOM_ANDROID_MIN_TOTAL)
-      : Math.max(insets.bottom, DOCK_PADDING_BOTTOM_IOS);
+      ? Math.max(insets.bottom + layout.dock.paddingBottomAndroidExtra, layout.dock.paddingBottomAndroidMinTotal)
+      : Math.max(insets.bottom, layout.dock.paddingBottomIos);
 
   const current = state.routes[state.index]?.name;
 
@@ -141,8 +133,8 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    left: 12,
-    right: 12,
+    left: spacing.dockHorizontalInset,
+    right: spacing.dockHorizontalInset,
     bottom: 0,
     alignItems: 'center',
     overflow: 'visible',
@@ -154,58 +146,47 @@ const styles = StyleSheet.create({
     overflow: 'visible',
   },
   panel: {
-    borderRadius: 16,
+    borderRadius: radii.dockPanel,
     borderWidth: 1,
-    borderColor: brandColors.border,
-    backgroundColor: brandColors.dockBackground,
-    paddingTop: 12,
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.45,
-    shadowRadius: 24,
-    elevation: 16,
+    borderColor: colors.stroke.default,
+    backgroundColor: colors.dock.background,
+    paddingTop: layout.dock.panelPaddingTop,
+    paddingHorizontal: layout.dock.panelPaddingH,
+    paddingBottom: layout.dock.panelPaddingBottom,
+    ...shadows.dockPanel,
   },
   row1: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 52,
+    minHeight: layout.dock.rowMinHeight,
     paddingHorizontal: 2,
   },
   row1Item: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 52,
+    minHeight: layout.dock.rowMinHeight,
   },
   dockTabInner: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
+    gap: spacing.dockTabIconGap,
   },
   row1Spacer: {
     width: DOCK_CENTER_GAP,
     flexShrink: 0,
   },
   dockLabel: {
-    fontSize: 9,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
-    paddingBottom: 3,
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-    textAlign: 'center',
+    ...typeScale.dockLabel,
     includeFontPadding: false,
   },
   dockLabelActive: {
-    color: brandColors.gold,
-    borderBottomColor: brandColors.gold,
+    color: colors.text.accent,
+    borderBottomColor: colors.text.accent,
   },
   dockLabelIdle: {
-    color: dockIconIdle,
+    color: colors.dock.iconIdle,
   },
   fab: {
     position: 'absolute',
@@ -217,16 +198,12 @@ const styles = StyleSheet.create({
     width: FAB_SIZE,
     height: FAB_SIZE,
     borderRadius: FAB_SIZE / 2,
-    backgroundColor: brandColors.gold,
+    backgroundColor: colors.cta.primaryBg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(11, 11, 11, 0.3)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 14,
+    borderColor: colors.dock.fabRingIdle,
+    ...shadows.fab,
   },
   fabActiveRing: {
     borderWidth: 2,
