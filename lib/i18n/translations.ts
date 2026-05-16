@@ -699,6 +699,8 @@ export type TranslationKey =
   | 'pubDetailFavorite'
   | 'pubDetailSaved'
   | 'pubDetailFavoriteBusy'
+  | 'pubDetailFavoriteToastAdded'
+  | 'pubDetailFavoriteToastRemoved'
   | 'pubDetailSignInForFavorite'
   | 'pubDetailAdvertiseTitle'
   | 'pubDetailAdvertiseBody'
@@ -1527,6 +1529,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubDetailFavorite: 'Favorite',
     pubDetailSaved: 'Saved',
     pubDetailFavoriteBusy: '…',
+    pubDetailFavoriteToastAdded: 'Saved to your bars.',
+    pubDetailFavoriteToastRemoved: 'Removed from your bars.',
     pubDetailSignInForFavorite: 'Sign in to save this pub to your favorites.',
     pubDetailAdvertiseTitle: 'Banner ads',
     pubDetailAdvertiseBody:

@@ -405,6 +405,8 @@
   "pubDetailWallNext": "次",
   "pubDetailLinkedCompsEmptyBody": "リンクされた大会はまだありません。主催者がこのパブを大会に紐付けると、ここに表示されます。大会はウェブで管理されます。",
   "pubDetailFavorite": "お気に入り",
+  "pubDetailFavoriteToastAdded": "マイバーに保存しました。",
+  "pubDetailFavoriteToastRemoved": "マイバーから削除しました。",
   "pubDetailSaved": "保存されました",
   "pubDetailAdvertiseTitle": "バナー広告",
   "pubDetailAdvertiseBody": "ブランドや店舗を注ぐユーザーに届けます。掲載位置・フォーマット・料金はお問い合わせください。",

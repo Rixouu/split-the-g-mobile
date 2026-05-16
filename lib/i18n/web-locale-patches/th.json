@@ -404,6 +404,8 @@
   "pubDetailWallNext": "ต่อไป",
   "pubDetailLinkedCompsEmptyBody": "ยังไม่มีการแข่งขันที่เชื่อมไว้ เมื่อผู้จัดเชื่อมผับนี้กับการแข่งขัน จะแสดงที่นี่ การแข่งขันตั้งค่าได้บนเว็บ",
   "pubDetailFavorite": "ที่ชื่นชอบ",
+  "pubDetailFavoriteToastAdded": "บันทึกในรายการบาร์ของคุณแล้ว",
+  "pubDetailFavoriteToastRemoved": "ลบออกจากรายการบาร์ของคุณแล้ว",
   "pubDetailSaved": "บันทึกแล้ว",
   "pubDetailAdvertiseTitle": "โฆษณาแบนเนอร์",
   "pubDetailAdvertiseBody": "ให้แบรนด์หรือร้านของคุณโดดต่อหน้าคนที่เท สอบถามตำแหน่ง รูปแบบ และราคา",

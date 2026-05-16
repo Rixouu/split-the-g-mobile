@@ -31,6 +31,27 @@ import { useLocale } from '@/lib/i18n/locale-context';
 const LIST_BOTTOM_PADDING = 132;
 const ROW_GAP = 20;
 
+function directoryCachedCoords(pub: PubSummary): { lat: number; lng: number } | null {
+  if (
+    pub.directory_latitude == null ||
+    pub.directory_longitude == null ||
+    !Number.isFinite(pub.directory_latitude) ||
+    !Number.isFinite(pub.directory_longitude)
+  ) {
+    return null;
+  }
+  return { lat: pub.directory_latitude, lng: pub.directory_longitude };
+}
+
+function canResolveCoordsWithoutCache(pub: PubSummary): boolean {
+  return (
+    Boolean(pub.google_place_id?.trim()) ||
+    Boolean(pub.maps_place_url?.trim()) ||
+    Boolean(pub.display_name?.trim()) ||
+    Boolean(pub.sample_address?.trim())
+  );
+}
+
 type PubsSortMode = 'recommended' | 'name' | 'pours';
 
 function filterAndSortPubs(directory: PubSummary[], search: string, sort: PubsSortMode): PubSummary[] {
@@ -84,22 +105,46 @@ export default function PubsScreen() {
   const filteredCount = filteredRows.length;
 
   const coordQueries = useQueries({
-    queries: filteredRows.map((pub) => ({
-      queryKey: ['pub-summary-coords', pub.bar_key, pub.google_place_id, pub.display_name, pub.sample_address],
-      queryFn: () =>
-        resolvePubMapCoords(pub.google_place_id ?? null, pub.display_name.trim(), pub.sample_address ?? null),
-      staleTime: 86_400_000,
-      enabled: mapMounted && filteredRows.length > 0 && Boolean(pub.display_name?.trim()),
-    })),
+    queries: filteredRows.map((pub) => {
+      const cached = directoryCachedCoords(pub);
+      return {
+        queryKey: [
+          'pub-summary-coords',
+          pub.bar_key,
+          pub.google_place_id,
+          pub.display_name,
+          pub.sample_address,
+          pub.maps_place_url,
+          pub.directory_latitude,
+          pub.directory_longitude,
+        ],
+        queryFn: () =>
+          resolvePubMapCoords(
+            pub.google_place_id ?? null,
+            pub.display_name?.trim() ?? '',
+            pub.sample_address ?? null,
+            pub.maps_place_url ?? null,
+            cached,
+          ),
+        staleTime: 86_400_000,
+        enabled:
+          mapMounted &&
+          filteredRows.length > 0 &&
+          cached == null &&
+          canResolveCoordsWithoutCache(pub),
+      };
+    }),
   });
 
   const markerCoords = useMemo(() => {
     const out: { barKey: string; lat: number; lng: number }[] = [];
     for (let i = 0; i < filteredRows.length; i++) {
-      const d = coordQueries[i]?.data;
       const pub = filteredRows[i];
-      if (d != null && Number.isFinite(d.lat) && Number.isFinite(d.lng)) {
-        out.push({ barKey: pub.bar_key, lat: d.lat, lng: d.lng });
+      const fromQuery = coordQueries[i]?.data;
+      const fromDirectory = directoryCachedCoords(pub);
+      const coords = fromQuery ?? fromDirectory;
+      if (coords != null && Number.isFinite(coords.lat) && Number.isFinite(coords.lng)) {
+        out.push({ barKey: pub.bar_key, lat: coords.lat, lng: coords.lng });
       }
     }
     return out;
@@ -187,6 +232,7 @@ export default function PubsScreen() {
                   key={m.barKey}
                   coordinate={{ latitude: m.lat, longitude: m.lng }}
                   anchor={{ x: 0.5, y: 0.5 }}
+                  tracksViewChanges={false}
                   onPress={() => navigateToPub(m.barKey)}>
                   <PubGoldMapPin />
                 </Marker>

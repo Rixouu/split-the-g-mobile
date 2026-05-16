@@ -80,6 +80,10 @@ export interface PubSummary {
   avg_pour_rating: number | null;
   rating_count: number;
   submission_count: number;
+  /** From `pub_place_details` when joined in `fetchPubs` — cached map pin. */
+  maps_place_url?: string | null;
+  directory_latitude?: number | null;
+  directory_longitude?: number | null;
 }
 
 /** Row shape from `pub_wall_scores` RPC — matches web `PubWallRow`. */
@@ -113,6 +117,9 @@ export interface PubPlaceDetailsRow {
   alcohol_promotions: string | null;
   maps_place_url: string | null;
   google_place_id: string | null;
+  /** Optional cached coordinates (WGS84); set via migration / admin / batch job. */
+  latitude: number | null;
+  longitude: number | null;
   updated_at: string;
   updated_by: string | null;
 }

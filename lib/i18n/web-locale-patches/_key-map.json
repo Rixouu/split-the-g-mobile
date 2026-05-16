@@ -461,6 +461,8 @@
     "pubDetailFavorite": "pages.pubDetail.favorite",
     "pubDetailSaved": "pages.pubDetail.saved",
     "pubDetailFavoriteBusy": "pages.pubDetail.favoriteBusy",
+    "pubDetailFavoriteToastAdded": "pages.pubDetail.favoriteToastAdded",
+    "pubDetailFavoriteToastRemoved": "pages.pubDetail.favoriteToastRemoved",
     "pubDetailAdvertiseTitle": "pages.pubDetail.advertiseBannerTitle",
     "pubDetailAdvertiseBody": "pages.pubDetail.advertiseBannerBody",
     "pubDetailAdvertiseCta": "pages.pubDetail.advertiseBannerCta"

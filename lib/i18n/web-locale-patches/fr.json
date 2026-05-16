@@ -403,6 +403,8 @@
   "pubDetailWallNext": "Suivant",
   "pubDetailLinkedCompsEmptyBody": "Aucune compétition liée pour l’instant. Quand un organisateur associe ce pub à une compétition, elle apparaîtra ici. Les compétitions se gèrent sur le web.",
   "pubDetailFavorite": "Préféré",
+  "pubDetailFavoriteToastAdded": "Enregistré dans vos bars.",
+  "pubDetailFavoriteToastRemoved": "Retiré de vos bars.",
   "pubDetailSaved": "Enregistré",
   "pubDetailAdvertiseTitle": "Bannières publicitaires",
   "pubDetailAdvertiseBody": "Exposez marque ou établissement aux buveurs. Demandez les emplacements, formats et tarifs."

@@ -401,6 +401,8 @@
   "pubDetailWallNext": "Nächste",
   "pubDetailLinkedCompsEmptyBody": "Noch kein Wettbewerb verknüpft. Sobald ein Organisator diesen Pub mit einem Wettbewerb verknüpft, erscheint er hier. Wettbewerbe werden im Web verwaltet.",
   "pubDetailFavorite": "Favorit",
+  "pubDetailFavoriteToastAdded": "Zu deinen Bars gespeichert.",
+  "pubDetailFavoriteToastRemoved": "Aus deinen Bars entfernt.",
   "pubDetailSaved": "Gespeichert",
   "pubDetailAdvertiseTitle": "Banner-Werbung",
   "pubDetailAdvertiseBody": "Platzieren Sie Marke oder Lokal vor Gießern. Fragen Sie nach Formaten, Plätzen und Konditionen.",

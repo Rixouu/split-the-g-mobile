@@ -652,6 +652,14 @@ function numFromDb(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function coordPairFromDb(lat: unknown, lng: unknown): { lat: number; lng: number } | null {
+  if (lat == null || lng == null) return null;
+  const a = typeof lat === 'number' ? lat : Number.parseFloat(String(lat));
+  const b = typeof lng === 'number' ? lng : Number.parseFloat(String(lng));
+  if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+  return { lat: a, lng: b };
+}
+
 /** Match web `pubs.$barKey.loader`: prefer `bar_pub_stats_mv`, then `bar_pub_stats`. */
 export async function fetchPubByBarKey(barKey: string): Promise<PubSummary | null> {
   const key = barKey.trim().toLowerCase();
@@ -684,7 +692,7 @@ export async function fetchPubDetailPage(barKey: string, userId: string | null):
     supabase
       .from('pub_place_details')
       .select(
-        'bar_key, opening_hours, guinness_info, alcohol_promotions, maps_place_url, google_place_id, updated_at, updated_by',
+        'bar_key, opening_hours, guinness_info, alcohol_promotions, maps_place_url, google_place_id, latitude, longitude, updated_at, updated_by',
       )
       .eq('bar_key', key)
       .maybeSingle(),
@@ -783,7 +791,42 @@ export async function fetchPubs(limit = 50): Promise<PubSummary[]> {
       .limit(limit);
   }
   if (q.error) throw q.error;
-  return (q.data ?? []) as PubSummary[];
+  const rows = (q.data ?? []) as PubSummary[];
+  if (rows.length === 0) return rows;
+
+  const keys = rows.map((r) => r.bar_key);
+  const det = await supabase
+    .from('pub_place_details')
+    .select('bar_key, latitude, longitude, maps_place_url, google_place_id')
+    .in('bar_key', keys);
+  if (det.error) return rows;
+
+  const byKey = new Map(
+    (det.data ?? []).map((d) => {
+      const row = d as {
+        bar_key: string;
+        latitude: unknown;
+        longitude: unknown;
+        maps_place_url: string | null;
+        google_place_id: string | null;
+      };
+      return [row.bar_key, row] as const;
+    }),
+  );
+
+  return rows.map((r) => {
+    const extra = byKey.get(r.bar_key);
+    if (!extra) return r;
+    const pair = coordPairFromDb(extra.latitude, extra.longitude);
+    const placeId = (r.google_place_id ?? '').trim() || (extra.google_place_id ?? '').trim() || null;
+    return {
+      ...r,
+      maps_place_url: extra.maps_place_url ?? null,
+      directory_latitude: pair?.lat ?? null,
+      directory_longitude: pair?.lng ?? null,
+      google_place_id: placeId,
+    };
+  });
 }
 
 export function absoluteWebUrl(path: string): string {

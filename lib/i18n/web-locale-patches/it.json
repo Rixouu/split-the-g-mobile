@@ -403,6 +403,8 @@
   "pubDetailWallNext": "Prossimo",
   "pubDetailLinkedCompsEmptyBody": "Nessuna gara collegata per ora. Quando un organizzatore collega questo pub a una gara, la vedrai qui. Le gare si gestiscono sul web.",
   "pubDetailFavorite": "Preferito",
+  "pubDetailFavoriteToastAdded": "Salvato tra i tuoi bar.",
+  "pubDetailFavoriteToastRemoved": "Rimosso dai tuoi bar.",
   "pubDetailSaved": "Salvato",
   "pubDetailAdvertiseTitle": "Banner pubblicitari",
   "pubDetailAdvertiseBody": "Mostra brand o locale a chi versa. Chiedi posizionamenti, formati e tariffe.",

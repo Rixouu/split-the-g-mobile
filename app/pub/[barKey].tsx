@@ -1,7 +1,8 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
@@ -70,10 +71,19 @@ function PubDetailEmptyCallout({
   const isPanel = variant === 'panel';
   return (
     <View
-      style={[styles.emptyCallout, !isPanel && styles.emptyCalloutInline]}
+      style={[
+        styles.emptyCallout,
+        !isPanel && styles.emptyCalloutInline,
+        !isPanel && styles.emptyCalloutInlineAlign,
+      ]}
       accessibilityRole="text"
       accessibilityLabel={title ? `${title}. ${body}` : body}>
-      <View style={[styles.emptyCalloutIconWrap, !isPanel && styles.emptyCalloutIconWrapInline]}>
+      <View
+        style={[
+          styles.emptyCalloutIconWrap,
+          !isPanel && styles.emptyCalloutIconWrapInline,
+          !isPanel && styles.emptyCalloutIconWrapInlineAlign,
+        ]}>
         <MaterialCommunityIcons
           name={icon}
           size={isPanel ? 28 : 22}
@@ -83,7 +93,7 @@ function PubDetailEmptyCallout({
       {title ? (
         <Text style={[styles.emptyCalloutTitle, !isPanel && styles.emptyCalloutTitleInline]}>{title}</Text>
       ) : null}
-      <Text style={styles.emptyCalloutBody}>{body}</Text>
+      <Text style={[styles.emptyCalloutBody, !isPanel && styles.emptyCalloutBodyInline]}>{body}</Text>
     </View>
   );
 }
@@ -171,6 +181,13 @@ export default function PubDetailScreen() {
     ).trim() || '';
 
   const [pubTab, setPubTab] = useState<PubTab>('wall');
+  const [favoriteToast, setFavoriteToast] = useState<'added' | 'removed' | null>(null);
+
+  useEffect(() => {
+    if (!favoriteToast) return;
+    const id = setTimeout(() => setFavoriteToast(null), 2800);
+    return () => clearTimeout(id);
+  }, [favoriteToast]);
 
   const q = useQuery({
     queryKey: ['pub-detail', barKey, user?.id ?? 'anon'],
@@ -206,10 +223,37 @@ export default function PubDetailScreen() {
     };
   }, [page?.placeDetails?.guinness_info, page?.placeDetails?.alcohol_promotions]);
 
+  const mapsPlaceUrl = page?.placeDetails?.maps_place_url ?? null;
+
+  const cachedFromDirectory = useMemo((): { lat: number; lng: number } | null => {
+    const lat = page?.placeDetails?.latitude;
+    const lng = page?.placeDetails?.longitude;
+    if (lat == null || lng == null) return null;
+    const a = typeof lat === 'number' ? lat : Number.parseFloat(String(lat));
+    const b = typeof lng === 'number' ? lng : Number.parseFloat(String(lng));
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return null;
+    return { lat: a, lng: b };
+  }, [page?.placeDetails?.latitude, page?.placeDetails?.longitude]);
+
   const mapCoordsQuery = useQuery({
-    queryKey: ['pub-map-coords', barKey, resolvedPlaceId, bar?.display_name, bar?.sample_address],
+    queryKey: [
+      'pub-map-coords',
+      barKey,
+      resolvedPlaceId,
+      bar?.display_name,
+      bar?.sample_address,
+      mapsPlaceUrl,
+      cachedFromDirectory?.lat,
+      cachedFromDirectory?.lng,
+    ],
     queryFn: () =>
-      resolvePubMapCoords(resolvedPlaceId, bar!.display_name || '', bar!.sample_address ?? null),
+      resolvePubMapCoords(
+        resolvedPlaceId,
+        bar!.display_name || '',
+        bar!.sample_address ?? null,
+        mapsPlaceUrl,
+        cachedFromDirectory,
+      ),
     enabled: Boolean(bar),
     staleTime: 86_400_000,
   });
@@ -239,9 +283,24 @@ export default function PubDetailScreen() {
       if (page.favId) await deleteFavoriteBar(page.favId);
       else await insertFavoriteBar(user.id, page.bar.bar_key, page.bar.sample_address);
     },
-    onSuccess: () => {
+    onMutate: async () => ({ wasFavorite: Boolean(page?.favId) }),
+    onSuccess: async (_data, _variables, context) => {
       void qc.invalidateQueries({ queryKey: ['pub-detail', barKey, user?.id ?? 'anon'] });
       if (user?.id) void qc.invalidateQueries({ queryKey: ['favorites', user.id] });
+      if (context?.wasFavorite) {
+        setFavoriteToast('removed');
+      } else {
+        setFavoriteToast('added');
+      }
+      try {
+        if (context?.wasFavorite) {
+          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        } else {
+          await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        }
+      } catch {
+        /* haptics unavailable (e.g. web) */
+      }
     },
   });
 
@@ -328,6 +387,17 @@ export default function PubDetailScreen() {
         ) : null}
       </View>
 
+      {favoriteToast ? (
+        <Pressable
+          accessibilityRole="alert"
+          onPress={() => setFavoriteToast(null)}
+          style={({ pressed }) => [styles.favoriteToast, pressed && styles.favoriteToastPressed]}>
+          <Body style={styles.favoriteToastText}>
+            {favoriteToast === 'added' ? t('pubDetailFavoriteToastAdded') : t('pubDetailFavoriteToastRemoved')}
+          </Body>
+        </Pressable>
+      ) : null}
+
       {q.isLoading ? <ScreenLoadingBlock /> : null}
 
       {q.error ? (
@@ -352,12 +422,12 @@ export default function PubDetailScreen() {
 
       {bar ? (
         <>
-          <View style={styles.section}>
+          <Card style={styles.mapCard}>
             <View style={styles.mapShell}>
               <MapView
                 key={mapKey}
                 style={styles.map}
-                initialRegion={mapRegion}
+                region={mapRegion}
                 mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
                 customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
                 showsPointsOfInterest={false}
@@ -390,22 +460,20 @@ export default function PubDetailScreen() {
                 </View>
               </Pressable>
             </View>
-            {!user ? <Muted style={styles.mapSignInHint}>{t('pubDetailSignInForFavorite')}</Muted> : null}
-          </View>
+            {!user ? (
+              <Muted style={styles.mapSignInHint}>{t('pubDetailSignInForFavorite')}</Muted>
+            ) : null}
+          </Card>
 
-          <View style={styles.sectionDivider} />
-
-          <View style={styles.section}>
-            <SectionHeading>{t('pubDetailLocationTitle')}</SectionHeading>
+          <Card style={styles.sheetCard}>
+            <CardSectionHeading>{t('pubDetailLocationTitle')}</CardSectionHeading>
             <Muted>{t('pubDetailLocationBlurb')}</Muted>
             {!bar.sample_address ? <Muted>{t('pubDetailNoAddressYet')}</Muted> : null}
             <AppButton label={t('pourOpenInMaps')} variant="secondary" onPress={() => void openInGoogleMaps()} />
-          </View>
+          </Card>
 
-          <View style={styles.sectionDivider} />
-
-          <View style={styles.section}>
-            <SectionHeading>{t('pubDetailOpeningHoursTitle')}</SectionHeading>
+          <Card style={styles.sheetCard}>
+            <CardSectionHeading>{t('pubDetailOpeningHoursTitle')}</CardSectionHeading>
             <Muted>{t('pubDetailOpeningHoursBlurb')}</Muted>
             {openingLines.length > 0 ? (
               <OpeningHoursLines lines={openingLines} todayBadge={t('pubDetailHoursTodayBadge')} />
@@ -414,12 +482,10 @@ export default function PubDetailScreen() {
                 <Muted>{t('pubDetailHoursEmpty')}</Muted>
               </View>
             )}
-          </View>
+          </Card>
 
-          <View style={styles.sectionDivider} />
-
-          <View style={styles.section}>
-            <SectionHeading>{t('pubDetailPourActivityTitle')}</SectionHeading>
+          <Card style={styles.sheetCard}>
+            <CardSectionHeading>{t('pubDetailPourActivityTitle')}</CardSectionHeading>
             <Muted>{t('pubDetailPourActivityBlurb')}</Muted>
             <View style={styles.statGrid}>
               <StatMini label={t('pubDetailStatAvgPourRating')} value={avgBlock} hint={ratedHint} />
@@ -448,9 +514,7 @@ export default function PubDetailScreen() {
                 </Text>
               </View>
             </View>
-          </View>
-
-          <View style={styles.sectionDivider} />
+          </Card>
 
           <PromotionSpotCard
             eyebrow={t('pubDetailAdvertiseTitle')}
@@ -459,10 +523,7 @@ export default function PubDetailScreen() {
             onActionPress={() => void Linking.openURL(MAIL_ADS)}
           />
 
-          <View style={styles.sectionDivider} />
-
-          <View style={styles.section}>
-            {/* Inset segmented control (same pattern as leaderboard) */}
+          <Card style={styles.tabSheetCard}>
             <View style={styles.segmentOuter} accessibilityRole="tablist">
               {(
                 [
@@ -491,7 +552,7 @@ export default function PubDetailScreen() {
 
             {pubTab === 'promos' ? (
               <View style={styles.tabPanel}>
-                <SectionHeading>{t('pubDetailGuinnessPromosTitle')}</SectionHeading>
+                <CardSectionHeading>{t('pubDetailGuinnessPromosTitle')}</CardSectionHeading>
                 <Muted style={styles.tabBlurb}>{t('pubDetailDirectoryBlurbViewer')}</Muted>
                 {promosContentFlags.promosTabFullyEmpty ? (
                   <PubDetailEmptyCallout
@@ -531,7 +592,7 @@ export default function PubDetailScreen() {
 
             {pubTab === 'competitions' ? (
               <View style={styles.tabPanel}>
-                <SectionHeading>{t('pubDetailLinkedCompsTitle')}</SectionHeading>
+                <CardSectionHeading>{t('pubDetailLinkedCompsTitle')}</CardSectionHeading>
                 {!page?.linkedCompetitions.length ? (
                   <PubDetailEmptyCallout
                     icon="trophy-outline"
@@ -559,21 +620,37 @@ export default function PubDetailScreen() {
                 <PubWallPanel items={page?.wallPours ?? []} wallError={page?.wallError ?? null} />
               </View>
             ) : null}
-          </View>
-
+          </Card>
         </>
       ) : null}
-
-      <TextLink label={t('actionBack')} onPress={() => router.back()} />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  header: {
+  pubScrollContent: {
     gap: spacing.md,
-    paddingTop: spacing.lg,
-    marginBottom: 2,
+  },
+  favoriteToast: {
+    borderWidth: 1,
+    borderColor: brandColors.gold,
+    backgroundColor: 'rgba(212, 183, 143, 0.12)',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.cardPadding,
+    borderRadius: radii.buttonRounded,
+    gap: 4,
+  },
+  favoriteToastPressed: {
+    opacity: colors.cta.pressedOpacity,
+  },
+  favoriteToastText: {
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  header: {
+    gap: spacing.sm + 2,
+    paddingTop: spacing.xs,
+    marginBottom: spacing.xs,
   },
   heroTopRow: {
     flexDirection: 'row',
@@ -608,27 +685,33 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   mapSignInHint: {
-    marginTop: 10,
+    marginTop: 0,
+    paddingHorizontal: spacing.cardPadding,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
     fontSize: 13,
     lineHeight: 18,
   },
-  section: {
-    gap: 12,
+  cardSectionHeading: {
+    ...typeScale.sectionTitle,
+    marginBottom: 0,
   },
-  sectionDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: brandColors.borderSubtle,
-    alignSelf: 'stretch',
+  mapCard: {
+    padding: 0,
+    gap: 0,
+    overflow: 'hidden',
   },
-  sectionHeading: {
-    ...typeScale.pubSectionHeading,
+  sheetCard: {
+    gap: spacing.sm + 2,
+  },
+  tabSheetCard: {
+    gap: spacing.md,
   },
   mapShell: {
     overflow: 'hidden',
-    height: 200,
-    borderWidth: 1,
-    borderColor: colors.stroke.frame,
-    borderRadius: radii.card,
+    height: 168,
+    borderWidth: 0,
+    borderRadius: 0,
     backgroundColor: colors.surface.panel,
   },
   map: {
@@ -670,17 +753,16 @@ const styles = StyleSheet.create({
   statGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 8,
+    gap: spacing.sm,
+    marginTop: spacing.xs,
   },
   statMini: {
     width: '47%',
     flexGrow: 1,
-    borderWidth: 1,
-    borderColor: brandColors.borderSubtle,
-    borderRadius: 12,
-    backgroundColor: 'rgba(11, 11, 11, 0.35)',
-    padding: 12,
+    borderWidth: 0,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface.hubRow,
+    padding: spacing.md,
     gap: 4,
   },
   statMiniWide: {
@@ -705,12 +787,11 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   hoursBox: {
-    marginTop: 10,
-    borderWidth: 1,
-    borderColor: brandColors.frame,
-    borderRadius: 12,
+    marginTop: spacing.xs,
+    borderWidth: 0,
+    borderRadius: radii.md,
     overflow: 'hidden',
-    backgroundColor: 'rgba(11, 11, 11, 0.28)',
+    backgroundColor: colors.surface.hubRow,
   },
   hoursRow: {
     flexDirection: 'row',
@@ -778,30 +859,25 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   hoursEmpty: {
-    marginTop: 10,
-    padding: 14,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-    borderColor: brandColors.frame,
-    borderRadius: 12,
+    marginTop: spacing.xs,
+    padding: spacing.md,
+    borderWidth: 0,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface.hubRow,
     alignItems: 'center',
   },
   emptyCallout: {
     alignItems: 'center',
     alignSelf: 'stretch',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(29, 24, 15, 0.45)',
-    paddingVertical: 22,
-    paddingHorizontal: 16,
+    borderRadius: radii.md,
+    borderWidth: 0,
+    backgroundColor: colors.surface.panelTranslucent,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
     gap: 10,
   },
-  emptyCalloutInline: {
-    paddingVertical: 16,
-    paddingHorizontal: 14,
-    gap: 8,
-    marginTop: 4,
+  emptyCalloutInlineAlign: {
+    alignItems: 'flex-start',
   },
   emptyCalloutIconWrap: {
     width: 48,
@@ -813,10 +889,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  emptyCalloutIconWrapInline: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  emptyCalloutIconWrapInlineAlign: {
+    alignSelf: 'flex-start',
   },
   emptyCalloutTitle: {
     textAlign: 'center',
@@ -828,23 +902,20 @@ const styles = StyleSheet.create({
   emptyCalloutTitleInline: {
     fontSize: 14,
   },
-  emptyCalloutBody: {
-    textAlign: 'center',
-    fontSize: 13,
-    lineHeight: 19,
-    color: 'rgba(212, 183, 143, 0.72)',
+  emptyCalloutBodyInline: {
+    textAlign: 'left',
   },
   segmentOuter: {
     flexDirection: 'row',
     alignItems: 'stretch',
-    borderRadius: 14,
+    borderRadius: radii.buttonRounded,
     borderWidth: 1,
     borderColor: brandColors.pourCardStroke,
-    backgroundColor: 'rgba(11, 11, 11, 0.55)',
+    backgroundColor: colors.surface.inkTranslucent,
     padding: 4,
     gap: 6,
-    minHeight: 52,
-    marginBottom: 14,
+    minHeight: 48,
+    marginBottom: spacing.xs,
   },
   segmentChip: {
     flex: 1,

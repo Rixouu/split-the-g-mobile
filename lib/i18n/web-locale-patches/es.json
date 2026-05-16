@@ -401,6 +401,8 @@
   "pubDetailWallNext": "Próximo",
   "pubDetailLinkedCompsEmptyBody": "Aún no hay competiciones vinculadas. Cuando un organizador enlace este pub a una competición, aparecerá aquí. Las competiciones se gestionan en la web.",
   "pubDetailFavorite": "Favorito",
+  "pubDetailFavoriteToastAdded": "Guardado en tus bares.",
+  "pubDetailFavoriteToastRemoved": "Quitado de tus bares.",
   "pubDetailSaved": "Guardado",
   "pubDetailAdvertiseTitle": "Anuncios banner",
   "pubDetailAdvertiseBody": "Muestra tu marca o bar a quienes vierten. Consulta ubicaciones, formatos y tarifas.",

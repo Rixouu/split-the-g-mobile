@@ -8,6 +8,7 @@
     "reset-project": "node ./scripts/reset-project.js",
     "generate-assets": "node ./scripts/generate-brand-assets.mjs",
     "i18n:sync-web": "node ./scripts/build-web-locale-overrides.mjs",
+    "backfill:pub-coords": "node --env-file=.env scripts/backfill-pub-place-coordinates.mjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -65,6 +66,7 @@
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
+    "open-location-code": "^1.0.3",
     "react-native-svg-transformer": "^1.5.3",
     "sharp": "^0.33.5",
     "typescript": "~5.9.2"
