@@ -1,17 +1,17 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import * as WebBrowser from 'expo-web-browser';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
+import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
-import { absoluteWebUrl, fetchPubDetailPage } from '@/lib/api/client';
+import { fetchPubDetailPage } from '@/lib/api/client';
 import type { PubLinkedCompetitionRow } from '@/lib/api/types';
 import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -160,7 +160,6 @@ export default function PubDetailScreen() {
 
   const page = q.data;
   const bar = page?.bar;
-  const webPubUrl = absoluteWebUrl(`/pubs/${encodeURIComponent(barKey)}`);
 
   const resolvedPlaceId = useMemo(() => {
     const fromPlace = page?.placeDetails?.google_place_id?.trim();
@@ -227,10 +226,6 @@ export default function PubDetailScreen() {
     if (!query) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     if (await Linking.canOpenURL(url)) void Linking.openURL(url);
-  }
-
-  async function openWebDetail() {
-    await WebBrowser.openBrowserAsync(webPubUrl);
   }
 
   function openCompetition(c: PubLinkedCompetitionRow) {
@@ -367,17 +362,6 @@ export default function PubDetailScreen() {
             <Muted>{t('pubDetailLocationBlurb')}</Muted>
             {!bar.sample_address ? <Muted>{t('pubDetailNoAddressYet')}</Muted> : null}
             <AppButton label={t('pourOpenInMaps')} variant="secondary" onPress={() => void openInGoogleMaps()} />
-            {page?.placeDetails?.maps_place_url?.trim() ? (
-              <AppButton
-                label={t('pubDetailOpenMapsListing')}
-                variant="secondary"
-                onPress={async () => {
-                  const u = page.placeDetails?.maps_place_url?.trim();
-                  if (!u) return;
-                  if (await Linking.canOpenURL(u)) void Linking.openURL(u);
-                }}
-              />
-            ) : null}
           </View>
 
           <View style={styles.sectionDivider} />
@@ -430,11 +414,12 @@ export default function PubDetailScreen() {
 
           <View style={styles.sectionDivider} />
 
-          <View style={styles.section}>
-            <SectionHeading>{t('pubDetailAdvertiseTitle')}</SectionHeading>
-            <Muted>{t('pubDetailAdvertiseBody')}</Muted>
-            <AppButton label={t('pubDetailAdvertiseCta')} variant="secondary" onPress={() => void Linking.openURL(MAIL_ADS)} />
-          </View>
+          <PromotionSpotCard
+            eyebrow={t('pubDetailAdvertiseTitle')}
+            description={t('pubDetailAdvertiseBody')}
+            actionLabel={t('pubDetailAdvertiseCta')}
+            onActionPress={() => void Linking.openURL(MAIL_ADS)}
+          />
 
           <View style={styles.sectionDivider} />
 
@@ -503,26 +488,18 @@ export default function PubDetailScreen() {
                 <PubWallPanel items={page?.wallPours ?? []} wallError={page?.wallError ?? null} />
               </View>
             ) : null}
-
-            <AppButton label={t('pubDetailOpenFullPageWeb')} variant="primary" onPress={() => void openWebDetail()} />
           </View>
 
-          <View style={styles.sectionDivider} />
-
-          <View style={styles.section}>
-            <SectionHeading>{t('pubDetailVenueOwnersTitle')}</SectionHeading>
-            <Muted>{t('pubDetailVenueOwnersBody')}</Muted>
-            <Muted style={styles.toolsHint}>{t('pubDetailWebToolsHint')}</Muted>
-            <AppButton
-              label={t('pubDetailOpenPubsDirectory')}
-              variant="secondary"
-              onPress={() => void Linking.openURL(absoluteWebUrl('/pubs'))}
-            />
-          </View>
         </>
       ) : null}
 
-      <AppButton label={t('actionBack')} variant="ghost" onPress={() => router.back()} />
+      <AppButton
+        label={t('actionBack')}
+        variant="outlineGold"
+        shape="rounded"
+        fullWidth
+        onPress={() => router.back()}
+      />
     </Screen>
   );
 }
@@ -808,8 +785,5 @@ const styles = StyleSheet.create({
   },
   compText: {
     gap: 4,
-  },
-  toolsHint: {
-    marginTop: 4,
   },
 });

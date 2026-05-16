@@ -223,8 +223,6 @@ export function PubWallPanel({ items, wallError }: PubWallPanelProps) {
 
   return (
     <View style={styles.wrap}>
-      <Muted>{t('pubDetailWallIntro').replace(/\{count\}/g, String(items.length))}</Muted>
-
       <View style={styles.filterCard}>
         <View style={styles.filterHeader}>
           <Text style={styles.filterTitle}>{t('pubDetailWallFilters')}</Text>

@@ -6,12 +6,14 @@ import {
   Platform,
   Pressable,
   StyleSheet,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/split-the-g/button';
-import { Body, Muted, Title } from '@/components/split-the-g/typography';
+import { PintGlassOverlay } from '@/components/split-the-g/pint-glass-overlay';
+import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { trackEvent } from '@/lib/analytics/client';
 import { hasRoboflowLiveDetectConfig } from '@/lib/config';
@@ -38,6 +40,7 @@ export function LivePourCameraModal({
   onPourFrameCaptured,
   t,
 }: LivePourCameraModalProps) {
+  const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<ElementRef<typeof CameraView>>(null);
@@ -178,6 +181,15 @@ export function LivePourCameraModal({
 
   if (!visible) return null;
 
+  const guideMaxHeight = Math.min(windowHeight * 0.52, 320);
+  let guideHeight = guideMaxHeight;
+  let guideWidth = guideHeight * (400 / 600);
+  const guideMaxWidth = Math.max(0, windowWidth - 48);
+  if (guideWidth > guideMaxWidth) {
+    guideWidth = guideMaxWidth;
+    guideHeight = guideWidth * (600 / 400);
+  }
+
   return (
     <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
       <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
@@ -205,34 +217,51 @@ export function LivePourCameraModal({
           </View>
         ) : (
           <>
-            <View style={styles.cameraWrap}>
-              <CameraView
-                ref={cameraRef}
-                style={StyleSheet.absoluteFill}
-                facing="back"
-                mode="picture"
-                {...(Platform.OS === 'android' ? { ratio: '4:3' as const } : {})}
-                enableTorch={torchOn}
-                onCameraReady={() => setCameraReady(true)}
-                onMountError={() => {
-                  setIsInferenceUnavailable(true);
-                  setFeedbackKey('homeInferenceUnavailable');
-                }}
-              />
-              {isCapturing ? (
-                <View style={styles.capturingOverlay}>
-                  <ActivityIndicator size="large" color={brandColors.gold} />
+            <View style={styles.cameraOuter}>
+              <View style={styles.cameraWrap}>
+                <CameraView
+                  ref={cameraRef}
+                  style={StyleSheet.absoluteFill}
+                  facing="back"
+                  mode="picture"
+                  {...(Platform.OS === 'android' ? { ratio: '4:3' as const } : {})}
+                  enableTorch={torchOn}
+                  onCameraReady={() => setCameraReady(true)}
+                  onMountError={() => {
+                    setIsInferenceUnavailable(true);
+                    setFeedbackKey('homeInferenceUnavailable');
+                  }}
+                />
+                <View
+                  style={styles.guideLayer}
+                  pointerEvents="none"
+                  accessibilityElementsHidden
+                  importantForAccessibility="no-hide-descendants">
+                  <View style={styles.glassShift}>
+                    <PintGlassOverlay width={guideWidth} height={guideHeight} />
+                  </View>
                 </View>
-              ) : null}
+                {isCapturing ? (
+                  <View style={styles.capturingOverlay}>
+                    <ActivityIndicator size="large" color={brandColors.gold} />
+                  </View>
+                ) : null}
+              </View>
             </View>
 
             <View style={[styles.feedbackBar, { paddingBottom: insets.bottom + 12 }]}>
-              <Title style={styles.feedbackTitle}>{t(feedbackKey)}</Title>
+              <View style={styles.feedbackPanel}>
+                {feedbackKey === 'homeInferenceUnavailable' ? (
+                  <>
+                    <Body style={styles.feedbackHeadline}>{t('homeInferenceUnavailable')}</Body>
+                    <Muted style={styles.feedbackSupporting}>{t('homeInferenceUnavailableBody')}</Muted>
+                  </>
+                ) : (
+                  <Body style={styles.feedbackSingle}>{t(feedbackKey)}</Body>
+                )}
+              </View>
               {!hasRoboflowLiveDetectConfig() ? (
-                <Muted style={styles.hint}>{t('homeRoboflowKeyHint')}</Muted>
-              ) : null}
-              {isInferenceUnavailable && hasRoboflowLiveDetectConfig() ? (
-                <Muted style={styles.hint}>{t('homeInferenceUnavailable')}</Muted>
+                <Muted style={styles.configHint}>{t('homeRoboflowKeyHint')}</Muted>
               ) : null}
               <View style={styles.btnRow}>
                 <AppButton
@@ -270,12 +299,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 14,
   },
+  cameraOuter: {
+    flex: 1,
+    marginHorizontal: 12,
+    marginTop: 4,
+    marginBottom: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: brandColors.pourCardStroke,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(49, 40, 20, 0.3)',
+  },
   cameraWrap: {
     flex: 1,
-    marginHorizontal: 0,
-    borderRadius: 0,
     overflow: 'hidden',
     backgroundColor: '#111',
+  },
+  guideLayer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  glassShift: {
+    transform: [{ translateY: 10 }],
   },
   capturingOverlay: {
     ...StyleSheet.absoluteFillObject,
@@ -286,19 +332,46 @@ const styles = StyleSheet.create({
   feedbackBar: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    gap: 10,
+    gap: 12,
     borderTopWidth: 1,
     borderTopColor: brandColors.frame,
     backgroundColor: 'rgba(11,11,11,0.96)',
   },
-  feedbackTitle: {
+  feedbackPanel: {
+    alignSelf: 'stretch',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: brandColors.borderSubtle,
+    backgroundColor: 'rgba(29, 24, 15, 0.55)',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  feedbackHeadline: {
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '700',
+    lineHeight: 24,
+    color: brandColors.goldBright,
+  },
+  feedbackSupporting: {
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
+    color: brandColors.tanMuted,
+  },
+  feedbackSingle: {
     textAlign: 'center',
     fontSize: 17,
+    fontWeight: '600',
+    lineHeight: 24,
     color: brandColors.gold,
   },
-  hint: {
+  configHint: {
     textAlign: 'center',
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 18,
+    paddingHorizontal: 4,
   },
   btnRow: {
     gap: 10,

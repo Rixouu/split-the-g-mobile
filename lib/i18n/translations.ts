@@ -65,6 +65,7 @@ export type TranslationKey =
   | 'homeFeedbackPerfect'
   | 'homeManualCapture'
   | 'homeInferenceUnavailable'
+  | 'homeInferenceUnavailableBody'
   | 'homeRoboflowKeyHint'
   | 'homeCloseLiveCamera'
   | 'homeTorchOn'
@@ -652,7 +653,6 @@ export type TranslationKey =
   | 'pubDetailTabPromos'
   | 'pubDetailTabComps'
   | 'pubDetailTabWall'
-  | 'pubDetailWallIntro'
   | 'pubDetailWallEmpty'
   | 'pubDetailWallError'
   | 'pubDetailWallFilters'
@@ -684,15 +684,9 @@ export type TranslationKey =
   | 'pubDetailSaved'
   | 'pubDetailFavoriteBusy'
   | 'pubDetailSignInForFavorite'
-  | 'pubDetailOpenMapsListing'
-  | 'pubDetailOpenFullPageWeb'
   | 'pubDetailAdvertiseTitle'
   | 'pubDetailAdvertiseBody'
   | 'pubDetailAdvertiseCta'
-  | 'pubDetailVenueOwnersTitle'
-  | 'pubDetailVenueOwnersBody'
-  | 'pubDetailOpenPubsDirectory'
-  | 'pubDetailWebToolsHint'
   | 'profileDefaultName'
   | 'profileGuestEyebrow'
   | 'profileGuestTitle'
@@ -791,8 +785,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     homeFeedbackCentered: 'Keep the glass centered…',
     homeFeedbackPerfect: 'Perfect! Processing your pour…',
     homeManualCapture: 'Capture manually',
-    homeInferenceUnavailable:
-      'Live detection hit a snag. You can still capture manually — same server scoring as the web app.',
+    homeInferenceUnavailable: 'Live detection is paused.',
+    homeInferenceUnavailableBody:
+      'Use the capture button below. Your photo is scored with the same service as the web app.',
     homeRoboflowKeyHint:
       'Set EXPO_PUBLIC_ROBOFLOW_PUBLISHABLE_KEY (same value as web VITE_ROBOFLOW_PUBLISHABLE_KEY) for automatic G detection. Manual capture still works.',
     homeCloseLiveCamera: 'Close',
@@ -1464,8 +1459,6 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubDetailTabPromos: 'Promos',
     pubDetailTabComps: 'Competitions',
     pubDetailTabWall: 'Wall',
-    pubDetailWallIntro:
-      'Pours tagged with this pub — same filters and sorting as the web wall (up to {count} rows from the server).',
     pubDetailWallEmpty: 'No pours recorded for this pub name yet. Be the first from the home screen.',
     pubDetailWallError: 'Wall: {message}',
     pubDetailWallFilters: 'Filters',
@@ -1497,18 +1490,10 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubDetailSaved: 'Saved',
     pubDetailFavoriteBusy: '…',
     pubDetailSignInForFavorite: 'Sign in to save this pub to your favorites.',
-    pubDetailOpenMapsListing: 'Open saved Maps link',
-    pubDetailOpenFullPageWeb: 'Open full pub page on the web',
     pubDetailAdvertiseTitle: 'Banner ads',
     pubDetailAdvertiseBody:
       'Put your brand or venue in front of pourers. Ask about placements, formats, and rates.',
     pubDetailAdvertiseCta: 'Contact',
-    pubDetailVenueOwnersTitle: 'Claiming, advertising, or importing venue data',
-    pubDetailVenueOwnersBody:
-      'On the web, venue owners use mailto links and banners on the pubs list, plus admin sections on the pub detail page. There is no separate “new pub” route — workflows live under Pubs and each pub URL.',
-    pubDetailOpenPubsDirectory: 'Open pubs on the web',
-    pubDetailWebToolsHint:
-      'Google import, merge duplicates, and directory edits stay on the web app (admin only).',
   },
   th: thWebPatch as Partial<Record<TranslationKey, string>>,
   fr: frWebPatch as Partial<Record<TranslationKey, string>>,
