@@ -21,6 +21,7 @@ interface FavoriteVenueCardProps {
   onPressMaps: () => void;
   onPressRemove: () => void;
   removeDisabled?: boolean;
+  primaryDisabled?: boolean;
 }
 
 export function FavoriteVenueCard({
@@ -38,6 +39,7 @@ export function FavoriteVenueCard({
   onPressMaps,
   onPressRemove,
   removeDisabled,
+  primaryDisabled,
 }: FavoriteVenueCardProps) {
   const hasRating =
     ratingCount > 0 && avgPourRating != null && Number.isFinite(avgPourRating);
@@ -46,7 +48,12 @@ export function FavoriteVenueCard({
     <View style={styles.card}>
       <Pressable
         onPress={onPressPrimary}
-        style={({ pressed }) => [styles.mainTap, pressed && styles.mainTapPressed]}
+        disabled={primaryDisabled}
+        style={({ pressed }) => [
+          styles.mainTap,
+          pressed && !primaryDisabled && styles.mainTapPressed,
+          primaryDisabled && styles.mainTapDisabled,
+        ]}
         accessibilityRole="button">
         <View style={styles.iconWrap}>
           <MaterialCommunityIcons name="map-marker-outline" size={28} color={brandColors.gold} />
@@ -124,6 +131,9 @@ const styles = StyleSheet.create({
   },
   mainTapPressed: {
     opacity: 0.92,
+  },
+  mainTapDisabled: {
+    opacity: 0.55,
   },
   iconWrap: {
     width: 56,

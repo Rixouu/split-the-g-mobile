@@ -6,6 +6,7 @@ import { Linking, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { FavoriteVenueCard } from '@/components/profile/favorite-venue-card';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -19,6 +20,7 @@ import {
 import { appConfig } from '@/lib/config';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { resolveFavoritePubRouteKeys } from '@/lib/pub/resolve-favorite-pub-route-keys';
 import { barKeyToPubPathSegment } from '@/lib/routing/pub-path';
 import { fetchPlaceAutocomplete, fetchPlaceDetails, type PlaceAutocompleteItem } from '@/lib/places/google-places';
 
@@ -44,6 +46,15 @@ export default function ProfileFavoritesScreen() {
     queryFn: () => fetchFavoriteBarStats(listQuery.data!),
     enabled: Boolean(user?.id && listQuery.isSuccess && (listQuery.data?.length ?? 0) > 0),
   });
+
+  const pubRouteKeysQuery = useQuery({
+    queryKey: ['favorite-pub-route-keys', user?.id, favKey],
+    queryFn: () => resolveFavoritePubRouteKeys(listQuery.data!),
+    enabled: Boolean(user?.id && listQuery.isSuccess && (listQuery.data?.length ?? 0) > 0),
+    staleTime: 120_000,
+  });
+
+  const pubRouteKeys = pubRouteKeysQuery.data ?? {};
 
   useEffect(() => {
     const key = appConfig.googleMapsApiKey?.trim();
@@ -134,7 +145,7 @@ export default function ProfileFavoritesScreen() {
       ) : null}
 
       {user && listQuery.isLoading ? (
-        <Muted style={styles.centerNote}>{t('commonLoading')}</Muted>
+        <ScreenLoadingBlock dense style={styles.centerNote} />
       ) : null}
 
       {user && listQuery.isError ? (
@@ -155,7 +166,8 @@ export default function ProfileFavoritesScreen() {
               pourCount === 1
                 ? t('pubsCardRatingDotOne')
                 : tVars('pubsCardRatingDotMany', { count: String(pourCount) });
-            const barKeySegment = barKeyToPubPathSegment(f.bar_name.trim().toLowerCase());
+            const fallbackSegment = barKeyToPubPathSegment(f.bar_name.trim().toLowerCase());
+            const pubRouteBarKey = pubRouteKeys[f.id] ?? fallbackSegment;
             return (
               <FavoriteVenueCard
                 key={f.id}
@@ -170,11 +182,12 @@ export default function ProfileFavoritesScreen() {
                 mapsLabel={t('profileFavoritesMaps')}
                 removeLabel={t('profileFavoritesRemove')}
                 onPressPrimary={() =>
-                  router.push({ pathname: '/pub/[barKey]', params: { barKey: barKeySegment } })
+                  router.push(`/pub/${encodeURIComponent(pubRouteBarKey)}`)
                 }
                 onPressMaps={() => void Linking.openURL(favoriteMapsUrl(f))}
                 onPressRemove={() => delMut.mutate(f.id)}
                 removeDisabled={busy}
+                primaryDisabled={pubRouteKeysQuery.isLoading}
               />
             );
           })}
@@ -182,7 +195,7 @@ export default function ProfileFavoritesScreen() {
       ) : null}
 
       {user && listQuery.isSuccess && (listQuery.data?.length ?? 0) === 0 ? (
-        <Muted style={styles.centerNote}>{t('profileFavoritesEmpty')}</Muted>
+        <Muted style={styles.emptyNote}>{t('profileFavoritesEmpty')}</Muted>
       ) : null}
     </Screen>
   );
@@ -240,6 +253,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   centerNote: {
+    paddingVertical: 8,
+  },
+  emptyNote: {
     textAlign: 'center',
     paddingVertical: 8,
   },

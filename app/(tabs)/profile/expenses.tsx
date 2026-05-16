@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMyScores } from '@/components/profile/hooks/use-my-scores';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { MyScoreRow } from '@/lib/api/profile';
@@ -67,11 +68,7 @@ export default function ProfileExpensesScreen() {
         </View>
       ) : null}
 
-      {user && scores.isLoading ? (
-        <View style={styles.card}>
-          <Body>{t('commonLoading')}</Body>
-        </View>
-      ) : null}
+      {user && scores.isLoading ? <ScreenLoadingBlock /> : null}
 
       {user && scores.error ? (
         <View style={styles.card}>

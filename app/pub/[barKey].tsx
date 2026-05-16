@@ -1,24 +1,26 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState, type ComponentProps } from 'react';
+import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
+import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
 import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
-import { TextLink } from '@/components/split-the-g/text-link';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
+import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubDetailPage } from '@/lib/api/client';
 import type { PubLinkedCompetitionRow } from '@/lib/api/types';
 import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
-import { fetchPlaceDetails, geocodeAddress } from '@/lib/places/google-places';
+import { resolvePubMapCoords } from '@/lib/pub/resolve-pub-map-coords';
 
 const BANGKOK_REGION = {
   latitude: 13.7563,
@@ -28,23 +30,6 @@ const BANGKOK_REGION = {
 };
 
 const MAIL_ADS = 'mailto:contact@split-the-g.app?subject=Split%20the%20G%20%E2%80%94%20banner%20ads';
-
-async function resolvePubMapCoords(
-  placeId: string | null,
-  displayName: string,
-  sampleAddress: string | null,
-): Promise<{ lat: number; lng: number } | null> {
-  const trimmedPlaceId = placeId?.trim();
-  if (trimmedPlaceId) {
-    const details = await fetchPlaceDetails(trimmedPlaceId);
-    if (details && Number.isFinite(details.lat) && Number.isFinite(details.lng)) {
-      return { lat: details.lat, lng: details.lng };
-    }
-  }
-  const geoQuery = [displayName.trim(), (sampleAddress ?? '').trim()].filter(Boolean).join(', ');
-  if (!geoQuery) return null;
-  return geocodeAddress(geoQuery);
-}
 
 function formatSpend(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return '—';
@@ -71,8 +56,41 @@ function isSameWeekdayLabel(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
-function SectionHeading({ children }: { children: string }) {
-  return <Text style={styles.sectionHeading}>{children}</Text>;
+function PubDetailEmptyCallout({
+  icon,
+  title,
+  body,
+  variant,
+}: {
+  icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
+  title?: string;
+  body: string;
+  variant: 'panel' | 'inline';
+}) {
+  const isPanel = variant === 'panel';
+  return (
+    <View
+      style={[styles.emptyCallout, !isPanel && styles.emptyCalloutInline]}
+      accessibilityRole="text"
+      accessibilityLabel={title ? `${title}. ${body}` : body}>
+      <View style={[styles.emptyCalloutIconWrap, !isPanel && styles.emptyCalloutIconWrapInline]}>
+        <MaterialCommunityIcons
+          name={icon}
+          size={isPanel ? 28 : 22}
+          color={brandColors.goldBright}
+        />
+      </View>
+      {title ? (
+        <Text style={[styles.emptyCalloutTitle, !isPanel && styles.emptyCalloutTitleInline]}>{title}</Text>
+      ) : null}
+      <Text style={styles.emptyCalloutBody}>{body}</Text>
+    </View>
+  );
+}
+
+/** In-card section label — reads as native “group header”, not marketing chrome. */
+function CardSectionHeading({ children }: { children: string }) {
+  return <Text style={styles.cardSectionHeading}>{children}</Text>;
 }
 
 function StatMini({
@@ -178,6 +196,16 @@ export default function PubDetailScreen() {
       .filter(Boolean);
   }, [page?.placeDetails?.opening_hours]);
 
+  const promosContentFlags = useMemo(() => {
+    const hasGuinnessInfo = Boolean(page?.placeDetails?.guinness_info?.trim());
+    const hasAlcoholPromos = Boolean(page?.placeDetails?.alcohol_promotions?.trim());
+    return {
+      hasGuinnessInfo,
+      hasAlcoholPromos,
+      promosTabFullyEmpty: !hasGuinnessInfo && !hasAlcoholPromos,
+    };
+  }, [page?.placeDetails?.guinness_info, page?.placeDetails?.alcohol_promotions]);
+
   const mapCoordsQuery = useQuery({
     queryKey: ['pub-map-coords', barKey, resolvedPlaceId, bar?.display_name, bar?.sample_address],
     queryFn: () =>
@@ -192,8 +220,8 @@ export default function PubDetailScreen() {
       return {
         latitude: c.lat,
         longitude: c.lng,
-        latitudeDelta: 0.012,
-        longitudeDelta: 0.012,
+        latitudeDelta: 0.0045,
+        longitudeDelta: 0.0045,
       };
     }
     return BANGKOK_REGION;
@@ -248,12 +276,19 @@ export default function PubDetailScreen() {
       : t('pubDetailStatNoRatingsYet');
 
   return (
-    <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
+    <Screen
+      edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.pubScrollContent}>
       <View style={styles.header}>
         <View style={styles.heroTopRow}>
           <View style={styles.heroTitleColumn}>
             <Eyebrow>{t('pubEyebrow')}</Eyebrow>
-            {bar ? <Title>{bar.display_name || t('pubTitleFallback')}</Title> : <Title>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>}
+            {bar ? (
+              <Title style={typeScale.titleCompact}>{bar.display_name || t('pubTitleFallback')}</Title>
+            ) : (
+              <Title style={typeScale.titleCompact}>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>
+            )}
           </View>
           {bar && user && page ? (
             <Pressable
@@ -293,11 +328,7 @@ export default function PubDetailScreen() {
         ) : null}
       </View>
 
-      {q.isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
-      ) : null}
+      {q.isLoading ? <ScreenLoadingBlock /> : null}
 
       {q.error ? (
         <Card>
@@ -327,6 +358,9 @@ export default function PubDetailScreen() {
                 key={mapKey}
                 style={styles.map}
                 initialRegion={mapRegion}
+                mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+                customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
+                showsPointsOfInterest={false}
                 scrollEnabled={false}
                 rotateEnabled={false}
                 pitchEnabled={false}
@@ -336,7 +370,9 @@ export default function PubDetailScreen() {
                   <Marker
                     coordinate={{ latitude: mapPin.lat, longitude: mapPin.lng }}
                     title={bar.display_name?.trim() || t('pubTitleFallback')}
-                  />
+                    anchor={{ x: 0.5, y: 0.5 }}>
+                    <PubGoldMapPin variant="detail" />
+                  </Marker>
                 ) : null}
               </MapView>
               {mapCoordsQuery.isFetching ? (
@@ -426,40 +462,69 @@ export default function PubDetailScreen() {
           <View style={styles.sectionDivider} />
 
           <View style={styles.section}>
-            <View style={styles.tabBar} accessibilityRole="tablist">
+            {/* Inset segmented control (same pattern as leaderboard) */}
+            <View style={styles.segmentOuter} accessibilityRole="tablist">
               {(
                 [
                   ['promos', t('pubDetailTabPromos')],
                   ['competitions', t('pubDetailTabComps')],
                   ['wall', t('pubDetailTabWall')],
                 ] as const
-              ).map(([id, label]) => (
-                <Pressable
-                  key={id}
-                  accessibilityRole="tab"
-                  accessibilityState={{ selected: pubTab === id }}
-                  onPress={() => setPubTab(id)}
-                  style={[styles.tab, pubTab === id && styles.tabActive]}>
-                  <Text style={[styles.tabLabel, pubTab === id && styles.tabLabelActive]}>{label}</Text>
-                </Pressable>
-              ))}
+              ).map(([id, label]) => {
+                const active = pubTab === id;
+                return (
+                  <Pressable
+                    key={id}
+                    accessibilityRole="tab"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => setPubTab(id)}
+                    style={[styles.segmentChip, active && styles.segmentChipActive]}>
+                    <Text
+                      style={[styles.segmentLabel, active && styles.segmentLabelActive]}
+                      numberOfLines={1}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {pubTab === 'promos' ? (
               <View style={styles.tabPanel}>
                 <SectionHeading>{t('pubDetailGuinnessPromosTitle')}</SectionHeading>
                 <Muted style={styles.tabBlurb}>{t('pubDetailDirectoryBlurbViewer')}</Muted>
-                <Text style={styles.subSection}>{t('pubDetailSectionGuinness')}</Text>
-                {page?.placeDetails?.guinness_info?.trim() ? (
-                  <Text style={styles.preWrap}>{page.placeDetails.guinness_info.trim()}</Text>
+                {promosContentFlags.promosTabFullyEmpty ? (
+                  <PubDetailEmptyCallout
+                    icon="glass-mug-variant"
+                    title={t('pubDetailPromosAllEmptyTitle')}
+                    body={t('pubDetailPromosAllEmptyBody')}
+                    variant="panel"
+                  />
                 ) : (
-                  <Muted>{t('pubDetailGuinnessEmptyHint')}</Muted>
-                )}
-                <Text style={[styles.subSection, styles.subSectionSpaced]}>{t('pubDetailSectionPromotions')}</Text>
-                {page?.placeDetails?.alcohol_promotions?.trim() ? (
-                  <Text style={styles.preWrap}>{page.placeDetails.alcohol_promotions.trim()}</Text>
-                ) : (
-                  <Muted>{t('pubDetailPromotionsEmptyHint')}</Muted>
+                  <>
+                    <Text style={styles.subSection}>{t('pubDetailSectionGuinness')}</Text>
+                    {promosContentFlags.hasGuinnessInfo ? (
+                      <Text style={styles.preWrap}>{page?.placeDetails?.guinness_info?.trim()}</Text>
+                    ) : (
+                      <PubDetailEmptyCallout
+                        icon="beer-outline"
+                        body={t('pubDetailGuinnessEmptyHint')}
+                        variant="inline"
+                      />
+                    )}
+                    <Text style={[styles.subSection, styles.subSectionSpaced]}>
+                      {t('pubDetailSectionPromotions')}
+                    </Text>
+                    {promosContentFlags.hasAlcoholPromos ? (
+                      <Text style={styles.preWrap}>{page?.placeDetails?.alcohol_promotions?.trim()}</Text>
+                    ) : (
+                      <PubDetailEmptyCallout
+                        icon="tag-outline"
+                        body={t('pubDetailPromotionsEmptyHint')}
+                        variant="inline"
+                      />
+                    )}
+                  </>
                 )}
               </View>
             ) : null}
@@ -468,7 +533,11 @@ export default function PubDetailScreen() {
               <View style={styles.tabPanel}>
                 <SectionHeading>{t('pubDetailLinkedCompsTitle')}</SectionHeading>
                 {!page?.linkedCompetitions.length ? (
-                  <Muted>{t('pubDetailLinkedCompsEmpty')}</Muted>
+                  <PubDetailEmptyCallout
+                    icon="trophy-outline"
+                    body={t('pubDetailLinkedCompsEmptyBody')}
+                    variant="panel"
+                  />
                 ) : (
                   <View style={styles.compList}>
                     {page.linkedCompetitions.map((c) => (
@@ -717,34 +786,88 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  tabBar: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-  },
-  tab: {
-    flex: 1,
-    minHeight: 44,
-    borderRadius: radii.buttonRounded,
+  emptyCallout: {
+    alignItems: 'center',
+    alignSelf: 'stretch',
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: colors.cta.secondaryBorder,
-    backgroundColor: colors.cta.secondaryBg,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(29, 24, 15, 0.45)',
+    paddingVertical: 22,
+    paddingHorizontal: 16,
+    gap: 10,
+  },
+  emptyCalloutInline: {
+    paddingVertical: 16,
+    paddingHorizontal: 14,
+    gap: 8,
+    marginTop: 4,
+  },
+  emptyCalloutIconWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(179, 139, 45, 0.25)',
+    backgroundColor: 'rgba(212, 183, 143, 0.06)',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
   },
-  tabActive: {
-    backgroundColor: colors.cta.primaryBg,
-    borderColor: colors.cta.secondaryBorder,
+  emptyCalloutIconWrapInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
-  tabLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.cta.secondaryFg,
+  emptyCalloutTitle: {
     textAlign: 'center',
+    color: brandColors.cream,
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
   },
-  tabLabelActive: {
-    color: colors.cta.primaryFg,
+  emptyCalloutTitleInline: {
+    fontSize: 14,
+  },
+  emptyCalloutBody: {
+    textAlign: 'center',
+    fontSize: 13,
+    lineHeight: 19,
+    color: 'rgba(212, 183, 143, 0.72)',
+  },
+  segmentOuter: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: brandColors.pourCardStroke,
+    backgroundColor: 'rgba(11, 11, 11, 0.55)',
+    padding: 4,
+    gap: 6,
+    minHeight: 52,
+    marginBottom: 14,
+  },
+  segmentChip: {
+    flex: 1,
+    minHeight: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    backgroundColor: 'transparent',
+  },
+  segmentChipActive: {
+    backgroundColor: brandColors.gold,
+  },
+  segmentLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: 'rgba(212, 183, 143, 0.88)',
+    textAlign: 'center',
+    letterSpacing: 0.02,
+  },
+  segmentLabelActive: {
+    color: brandColors.black,
   },
   tabPanel: {
     gap: 12,

@@ -4,7 +4,6 @@ import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Keyboard,
   Pressable,
   StyleSheet,
@@ -14,6 +13,7 @@ import {
 
 import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { AppButton } from '@/components/split-the-g/button';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { PourScore } from '@/lib/api/types';
@@ -267,7 +267,7 @@ export function PourVenueEditor({ pourRef, score, competitionId }: PourVenueEdit
       />
 
       {suggestLoading ? (
-        <ActivityIndicator color={brandColors.gold} style={{ alignSelf: 'flex-start' }} />
+        <ScreenLoadingBlock layout="row" indicatorSize="small" dense contentAlign="start" />
       ) : null}
 
       {suggestions.length > 0 ? (

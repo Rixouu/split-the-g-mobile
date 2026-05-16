@@ -3,7 +3,6 @@ import { Image } from 'expo-image';
 import { router, useGlobalSearchParams } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Image as RNImage,
   LayoutAnimation,
   Modal,
@@ -17,6 +16,7 @@ import {
 import { LivePourCameraModal } from '@/components/pour/live-pour-camera-modal';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted, Tagline, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { trackEvent } from '@/lib/analytics/client';
@@ -167,9 +167,13 @@ export default function HomeScreen() {
     <Screen>
       <Modal visible={isSubmitting} transparent animationType="fade" statusBarTranslucent>
         <View style={styles.fullscreenOverlay} accessibilityViewIsModal>
-          <ActivityIndicator size="large" color={brandColors.gold} />
-          <Title style={styles.overlayTitle}>{t('homeAnalyzingPour')}</Title>
-          <Muted style={styles.overlaySub}>{t('homeOneMoment')}</Muted>
+          <ScreenLoadingBlock
+            label={t('homeAnalyzingPour')}
+            subtitle={t('homeOneMoment')}
+            primaryVariant="title"
+            dense
+            style={styles.overlayLoadingBlock}
+          />
         </View>
       </Modal>
 
@@ -322,13 +326,8 @@ const styles = StyleSheet.create({
     gap: 16,
     paddingHorizontal: 24,
   },
-  overlayTitle: {
-    textAlign: 'center',
-    marginTop: 8,
-  },
-  overlaySub: {
-    textAlign: 'center',
-    fontSize: 14,
+  overlayLoadingBlock: {
+    paddingVertical: 0,
   },
   noGCard: {
     maxWidth: 400,

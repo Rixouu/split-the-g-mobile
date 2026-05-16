@@ -1,4 +1,5 @@
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { ProfileProgressDashboard } from '@/components/profile/profile-progress-dashboard';
 import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
@@ -20,11 +21,7 @@ export default function ProfileProgressScreen() {
         </Card>
       ) : null}
 
-      {user && hub.isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
-      ) : null}
+      {user && hub.isLoading ? <ScreenLoadingBlock /> : null}
 
       {user && hub.isError ? (
         <Card>

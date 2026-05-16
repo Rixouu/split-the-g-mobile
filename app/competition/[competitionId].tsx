@@ -7,6 +7,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, View } from 'react-native
 
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
@@ -134,11 +135,7 @@ export default function CompetitionDetailScreen() {
         ) : null}
       </View>
 
-      {compQuery.isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
-      ) : null}
+      {compQuery.isLoading ? <ScreenLoadingBlock /> : null}
 
       {compQuery.error ? (
         <Card>
@@ -260,7 +257,12 @@ export default function CompetitionDetailScreen() {
             {tab === 'leaderboard' ? (
               <>
                 {scoresLoading ? (
-                  <Body style={styles.tabPanePad}>{t('commonLoading')}</Body>
+                  <ScreenLoadingBlock
+                    layout="row"
+                    indicatorSize="small"
+                    dense
+                    style={styles.tabPanePad}
+                  />
                 ) : ranked.length === 0 ? (
                   <View style={styles.tabPanePad}>
                     <TabEmptyState
@@ -310,7 +312,12 @@ export default function CompetitionDetailScreen() {
                 )}
               </>
             ) : rosterLoading ? (
-              <Body style={styles.tabPanePad}>{t('commonLoading')}</Body>
+              <ScreenLoadingBlock
+                layout="row"
+                indicatorSize="small"
+                dense
+                style={styles.tabPanePad}
+              />
             ) : rosterRows.length === 0 ? (
               <View style={styles.tabPanePad}>
                 <TabEmptyState

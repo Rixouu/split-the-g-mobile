@@ -7,6 +7,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { LeaderboardEntryRow } from '@/components/leaderboard/leaderboard-entry-row';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -151,11 +152,7 @@ export default function LeaderboardScreen() {
           })}
         </View>
 
-        {isLoadingBlock ? (
-          <Card>
-            <Body>{t('commonLoading')}</Body>
-          </Card>
-        ) : null}
+        {isLoadingBlock ? <ScreenLoadingBlock /> : null}
 
         {listQuery.error ? (
           <Card>

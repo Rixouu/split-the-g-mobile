@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   Share,
@@ -16,6 +15,7 @@ import {
 import { AchievementStickerGraphic } from '@/components/profile/achievement-sticker-graphic';
 import { AppButton } from '@/components/split-the-g/button';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -153,10 +153,7 @@ export default function ProfileAchievementsScreen() {
   if (bundle.isLoading) {
     return (
       <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
-        <View style={[styles.card, styles.loadingCard]}>
-          <ActivityIndicator color={brandColors.gold} />
-          <Muted style={styles.loadingText}>{t('commonLoading')}</Muted>
-        </View>
+        <ScreenLoadingBlock />
       </Screen>
     );
   }
@@ -270,13 +267,6 @@ const CARD_BORDER_UNLOCKED = 'rgba(179, 139, 45, 0.4)';
 const styles = StyleSheet.create({
   screenContent: {
     paddingBottom: 160,
-  },
-  loadingCard: {
-    alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    marginTop: 4,
   },
   card: {
     borderWidth: 1,

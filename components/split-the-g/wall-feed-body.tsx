@@ -16,6 +16,7 @@ import {
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { PourListRow } from '@/components/split-the-g/pour-list-row';
 import { Card } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
@@ -97,9 +98,7 @@ export function WallFeedBody() {
       <DiscoverSegmentHeader eyebrow={t('wallEyebrow')} title={t('wallTitle')} subtitle={t('wallSubtitle')} />
 
       {scores.isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
+        <ScreenLoadingBlock />
       ) : scores.error ? (
         <Card>
           <Body>{t('wallLoadError')}</Body>

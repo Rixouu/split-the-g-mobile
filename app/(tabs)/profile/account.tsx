@@ -14,6 +14,7 @@ import { ProfileAccountTierAvatar } from '@/components/profile/profile-tier-avat
 import { ProfileCountryPicker } from '@/components/profile/profile-country-picker';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { getCachedAnalyticsConsent, persistAnalyticsConsent, type AnalyticsConsentStatus } from '@/lib/analytics/consent';
@@ -143,11 +144,7 @@ export default function ProfileAccountScreen() {
         </Card>
       ) : null}
 
-      {isLoading ? (
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
-      ) : null}
+      {isLoading ? <ScreenLoadingBlock /> : null}
 
       {!isLoading && !user ? (
         <Card>

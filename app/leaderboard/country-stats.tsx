@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { fetchCountryStats24h, fetchCountryStatsAllTime, type CountryStatRow } from '@/lib/api/leaderboard';
@@ -116,11 +117,7 @@ export default function CountryStatsLeaderboardScreen() {
           </Pressable>
         </View>
 
-        {active.isLoading ? (
-          <Card>
-            <Body>{t('commonLoading')}</Body>
-          </Card>
-        ) : null}
+        {active.isLoading ? <ScreenLoadingBlock /> : null}
 
         {active.error ? (
           <Card>

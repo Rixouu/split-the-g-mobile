@@ -17,6 +17,7 @@ import {
 import { DiscoverSegmentHeader } from '@/components/split-the-g/discover-feed-chrome';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import {
@@ -178,9 +179,7 @@ export default function CompetitionEditScreen() {
   if (compQuery.isLoading || !form) {
     return (
       <Screen edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
-        <Card>
-          <Body>{t('commonLoading')}</Body>
-        </Card>
+        <ScreenLoadingBlock />
       </Screen>
     );
   }

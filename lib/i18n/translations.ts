@@ -22,6 +22,13 @@ export type TranslationKey =
   | 'pubsEmptyDirectoryBody'
   | 'pubsVenueOne'
   | 'pubsVenueMany'
+  | 'pubsVenueFilteredHint'
+  | 'pubsSearchPlaceholder'
+  | 'pubsSearchAccessibilityLabel'
+  | 'pubsSearchNoMatches'
+  | 'pubsSortRecommended'
+  | 'pubsSortName'
+  | 'pubsSortPours'
   | 'pubsCardUnnamed'
   | 'pubsCardAddressPending'
   | 'pubsListingRatingsOne'
@@ -657,6 +664,8 @@ export type TranslationKey =
   | 'pubDetailSectionPromotions'
   | 'pubDetailGuinnessEmptyHint'
   | 'pubDetailPromotionsEmptyHint'
+  | 'pubDetailPromosAllEmptyTitle'
+  | 'pubDetailPromosAllEmptyBody'
   | 'pubDetailTabPromos'
   | 'pubDetailTabComps'
   | 'pubDetailTabWall'
@@ -685,7 +694,7 @@ export type TranslationKey =
   | 'pubDetailWallNext'
   | 'pubDetailWallPageOf'
   | 'pubDetailLinkedCompsTitle'
-  | 'pubDetailLinkedCompsEmpty'
+  | 'pubDetailLinkedCompsEmptyBody'
   | 'pubDetailCompOpen'
   | 'pubDetailFavorite'
   | 'pubDetailSaved'
@@ -748,6 +757,13 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubsEmptyDirectoryBody: 'Check back soon as the community adds venues.',
     pubsVenueOne: '1 venue',
     pubsVenueMany: '{count} venues',
+    pubsVenueFilteredHint: '{shown} of {total} venues',
+    pubsSearchPlaceholder: 'Search by name or address',
+    pubsSearchAccessibilityLabel: 'Search pubs by name or address',
+    pubsSearchNoMatches: 'No pubs match that search. Try a different name or address.',
+    pubsSortRecommended: 'Top rated',
+    pubsSortName: 'A–Z',
+    pubsSortPours: 'Most pours',
     pubsCardUnnamed: 'Unnamed pub',
     pubsCardAddressPending: 'Address pending',
     pubsListingRatingsOne: '1 rating',
@@ -1461,17 +1477,22 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Could not load pour spend stats. If this persists, apply migration 20260328260000_pub_details_and_comp_bar_link.',
     pubDetailOpeningHoursTitle: 'Opening hours',
     pubDetailOpeningHoursBlurb:
-      'Live hours from Google appear on the website when a Place ID is linked. Directory notes (if any) show below on mobile.',
+      'Directory hours are listed below. When this pub has a linked Google Place ID, live Google Business hours are shown on the website.',
     pubDetailHoursEmpty:
-      'No directory hours text yet. On the web, hours from the Google Business Profile show here when linked.',
+      'No saved hours in the directory yet. On the web, link a Google Place ID to pull live Google Business hours into this listing.',
     pubDetailHoursTodayBadge: 'Today',
     pubDetailGuinnessPromosTitle: 'Guinness & promos',
     pubDetailDirectoryBlurbViewer:
-      'Community notes — visible to everyone. Updates are managed by the team (same as the web pub page).',
+      'Curated by the team—the same details as on the public pub page on the web.',
     pubDetailSectionGuinness: 'Guinness',
     pubDetailSectionPromotions: 'Promotions & drinks',
-    pubDetailGuinnessEmptyHint: 'Taps, pour quality, nitro — nothing added yet.',
-    pubDetailPromotionsEmptyHint: 'Nothing added yet.',
+    pubDetailPromosAllEmptyTitle: 'No promos or notes yet',
+    pubDetailPromosAllEmptyBody:
+      'When the team adds Guinness notes, tap line-up, or drink specials to this pub’s web listing, they’ll show up here for pourers.',
+    pubDetailGuinnessEmptyHint:
+      'No Guinness notes yet. Taps, pour quality, or nitro details can be added from the web directory.',
+    pubDetailPromotionsEmptyHint:
+      'No drink promos or specials yet. The team can add them from the web directory.',
     pubDetailTabPromos: 'Promos',
     pubDetailTabComps: 'Competitions',
     pubDetailTabWall: 'Wall',
@@ -1500,7 +1521,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubDetailWallNext: 'Next',
     pubDetailWallPageOf: '{page} / {totalPages}',
     pubDetailLinkedCompsTitle: 'Linked competitions',
-    pubDetailLinkedCompsEmpty: 'No active competition linked. Organizers can attach this pub when creating or editing a comp.',
+    pubDetailLinkedCompsEmptyBody:
+      'No competitions linked yet. When an organizer links this pub to a competition, it will appear here. Competitions are managed on the web.',
     pubDetailCompOpen: 'Open competition',
     pubDetailFavorite: 'Favorite',
     pubDetailSaved: 'Saved',

@@ -3,7 +3,6 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   FlatList,
   ListRenderItem,
   Platform,
@@ -18,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/split-the-g/button';
 import { Card } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
@@ -450,12 +450,7 @@ export default function CompetitionHomeScreen() {
 
   const listEmpty = useMemo(() => {
     if (catalogQuery.isLoading && !catalogQuery.data) {
-      return (
-        <View style={styles.emptyStateCard}>
-          <ActivityIndicator color={brandColors.goldBright} size="large" />
-          <Muted style={styles.emptyBody}>{t('competeLoadingCatalog')}</Muted>
-        </View>
-      );
+      return <ScreenLoadingBlock label={t('competeLoadingCatalog')} />;
     }
     if (catalogQuery.error) {
       const errMsg = (catalogQuery.error as Error).message?.trim();

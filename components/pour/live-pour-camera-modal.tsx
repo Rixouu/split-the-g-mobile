@@ -1,7 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { type ElementRef, useCallback, useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -13,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppButton } from '@/components/split-the-g/button';
 import { PintGlassOverlay } from '@/components/split-the-g/pint-glass-overlay';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { trackEvent } from '@/lib/analytics/client';
@@ -243,7 +243,7 @@ export function LivePourCameraModal({
                 </View>
                 {isCapturing ? (
                   <View style={styles.capturingOverlay}>
-                    <ActivityIndicator size="large" color={brandColors.gold} />
+                    <ScreenLoadingBlock showCaption={false} dense style={styles.capturingSpinner} />
                   </View>
                 ) : null}
               </View>
@@ -328,6 +328,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.35)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  capturingSpinner: {
+    paddingVertical: 0,
   },
   feedbackBar: {
     paddingHorizontal: 16,

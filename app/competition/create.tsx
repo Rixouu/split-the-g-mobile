@@ -28,6 +28,7 @@ import {
 import { DiscoverSegmentHeader } from '@/components/split-the-g/discover-feed-chrome';
 import { AppButton } from '@/components/split-the-g/button';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
@@ -202,7 +203,12 @@ export default function CreateCompetitionScreen() {
       />
 
       {barsQuery.isFetching && !barsQuery.data ? (
-        <Muted style={styles.loadingHint}>{t('commonLoading')}</Muted>
+        <ScreenLoadingBlock
+          layout="row"
+          indicatorSize="small"
+          dense
+          style={styles.loadingHint}
+        />
       ) : null}
 
       <CompetitionFormSection title={t('compFormSectionDetails')} spacing="afterHero">

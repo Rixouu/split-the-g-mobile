@@ -12,6 +12,7 @@ import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { absoluteWebUrl } from '@/lib/api/client';
@@ -130,7 +131,7 @@ export default function PourDetailScreen() {
       {query.isLoading ? (
         <CompetitionFormInset>
           <View style={styles.statePad}>
-            <Body>{t('commonLoading')}</Body>
+            <ScreenLoadingBlock contentAlign="start" />
           </View>
         </CompetitionFormInset>
       ) : null}

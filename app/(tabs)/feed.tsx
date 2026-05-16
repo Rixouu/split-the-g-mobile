@@ -9,6 +9,7 @@ import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { DiscoverSegmentHeader, DiscoverSectionTitle } from '@/components/split-the-g/discover-feed-chrome';
 import { WallFeedBody } from '@/components/split-the-g/wall-feed-body';
 import { Card } from '@/components/split-the-g/screen';
+import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
@@ -101,9 +102,7 @@ export default function FeedScreen() {
           }
           ListEmptyComponent={
             scores.isLoading ? (
-              <Card>
-                <Body>{t('commonLoading')}</Body>
-              </Card>
+              <ScreenLoadingBlock dense />
             ) : scores.error ? (
               <Card>
                 <Body>{t('feedLoadError')}</Body>
