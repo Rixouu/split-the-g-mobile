@@ -9,8 +9,8 @@
 ## Commands
 
 ```bash
-npm test              # CI mode, once
-npm run test:watch    # local TDD loop
+pnpm test              # CI mode, once
+pnpm run test:watch    # local TDD loop
 ```
 
 ## What to test first
@@ -24,8 +24,8 @@ Prioritize **pure functions** and small modules with no native calls:
 
 1. Create `lib/<area>/__tests__/<module>.test.ts` next to the module under test.
 2. Import the exported functions and assert edge cases (`null`, invalid input, boundaries).
-3. Run `npm test` before opening a PR.
+3. Run `pnpm test` before opening a PR.
 
 ## CI
 
-If you add GitHub Actions (or EAS workflow), run `npm test` after `npm ci` on Node 20+. This repo may not define CI yet; adding `test` to your pipeline is recommended when contributing.
+If you add GitHub Actions (or EAS workflow), run `pnpm test` after `pnpm install --frozen-lockfile` on Node 20+. This repo may not define CI yet; adding `test` to your pipeline is recommended when contributing.

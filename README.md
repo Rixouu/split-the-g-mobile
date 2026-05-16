@@ -70,7 +70,7 @@ The current product was substantially revamped by [Jonathan Rycx](https://github
 ### Prerequisites
 
 - **Node.js 20+**
-- **npm**
+- **pnpm 11+** (enable Corepack once: `corepack enable` — ships with Node.js)
 - **Xcode** (iOS Simulator) and/or **Android Studio** emulators for local device testing
 - A **Supabase** project (URL + anon key — public to the client)
 - Optional: **Google Maps** SDK key (iOS bundle + Android package restrictions)
@@ -79,15 +79,16 @@ The current product was substantially revamped by [Jonathan Rycx](https://github
 ### Installation
 
 ```bash
-npm install
-npx expo start
+corepack enable
+pnpm install
+pnpm start
 ```
 
 Use **Expo Go** for quick UI checks, or a **development build** if a library is not supported in Go. In an **interactive** terminal you can press **`i`** / **`a`** or run:
 
 ```bash
-npm run ios       # expo start --ios
-npm run android   # expo start --android
+pnpm run ios       # expo start --ios
+pnpm run android   # expo start --android
 ```
 
 If Expo prompts to upgrade **Expo Go** on the emulator to match your SDK, accept it (non-interactive CI shells cannot answer that prompt).
@@ -156,14 +157,14 @@ split-the-g-mobile/
 ## 🔧 Available Scripts
 
 ```bash
-npm start            # expo start
-npm run ios          # expo start --ios
-npm run android      # expo start --android
-npm run web          # expo start --web
-npm run lint         # expo lint
-npm test             # jest (unit tests; see docs/testing.md)
-npm run test:watch   # jest --watch
-npm run generate-assets  # re-gen app icon / splash / favicon from assets/images/icon.png
+pnpm start            # expo start
+pnpm run ios          # expo start --ios
+pnpm run android      # expo start --android
+pnpm run web          # expo start --web
+pnpm run lint         # expo lint
+pnpm test             # jest (unit tests; see docs/testing.md)
+pnpm run test:watch   # jest --watch
+pnpm run generate-assets  # re-gen app icon / splash / favicon from assets/images/icon.png
 ```
 
 ## 🌟 Implementation Notes (native)
@@ -206,7 +207,7 @@ Use **EAS Build** / **Submit** (`eas.json` profiles). Production configuration a
 
 Contributions are welcome.
 
-1. Run **`npm run lint`** and **`npm test`**
+1. Run **`pnpm run lint`** and **`pnpm test`**
 2. Keep mobile-only secrets out of git; use **EAS Secrets** for `EXPO_PUBLIC_*` in CI if needed
 3. Open a PR; note any **Supabase** or **web API** dependency
 

@@ -5,17 +5,19 @@ This complements the root [README](../README.md) with a single place for day-to-
 ## Prerequisites
 
 - Node.js **20+** (see README for engine notes)
-- **npm**
+- **pnpm 11+** (`corepack enable` once)
 - iOS Simulator (Xcode) and/or Android emulator (Android Studio) for device testing
 
 ## Install and run
 
 ```bash
-npm install
-npm start
+pnpm install
+pnpm start
 ```
 
-Use `npm run ios`, `npm run android`, or `npm run web` as shortcuts. For a clean Metro cache: `npm run start:clean`.
+Use `pnpm run ios`, `pnpm run android`, or `pnpm run web` as shortcuts. For a clean Metro cache: `pnpm run start:clean`.
+
+Dependency installs honor **`minimumReleaseAge: 1440`** (24 hours after publish) in **`pnpm-workspace.yaml`** to reduce freshly-published compromise risk.
 
 ## Environment variables
 
@@ -50,8 +52,8 @@ Use a **Maps SDK** key restricted to the iOS bundle and Android package (`com.ri
 ## Lint and tests
 
 ```bash
-npm run lint
-npm test
+pnpm run lint
+pnpm test
 ```
 
 See [testing.md](./testing.md) for Jest layout and conventions.

@@ -2,7 +2,7 @@
 /**
  * Regenerates Expo icon, Android adaptive layers, splash, and favicon from
  * `assets/images/icon.svg` (preferred) or `assets/images/icon.png`.
- * Run: npm run generate-assets
+ * Run: pnpm run generate-assets
  */
 import fs from 'node:fs';
 import os from 'node:os';

@@ -1,0 +1,16 @@
+# Root-only workspace (omit `packages` → root package only).
+# https://pnpm.io/pnpm-workspace_yaml
+
+# Wait 24h after publish before resolving a version (supply-chain hardening).
+minimumReleaseAge: 1440
+
+# Metro / React Native expect a flat node_modules layout.
+nodeLinker: hoisted
+
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
+
+overrides:
+  postcss: ^8.5.10
+  "@tootallnate/once": ^3.0.1
