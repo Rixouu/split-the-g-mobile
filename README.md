@@ -147,7 +147,7 @@ split-the-g-mobile/
 ├── app/                    # Expo Router screens (tabs, pour detail, auth callback, …)
 ├── components/             # UI (including split-the-g primitives)
 ├── lib/                    # config, Supabase, API client, auth, i18n, analytics, pour submit
-├── docs/                   # data parity, release checklist, planning exports
+├── docs/                   # index: docs/README.md — parity, design, dev, testing
 ├── assets/                 # icons, splash
 ├── app.json                # Expo config + extra (EAS project id)
 └── eas.json                # EAS build profiles
@@ -161,6 +161,8 @@ npm run ios          # expo start --ios
 npm run android      # expo start --android
 npm run web          # expo start --web
 npm run lint         # expo lint
+npm test             # jest (unit tests; see docs/testing.md)
+npm run test:watch   # jest --watch
 npm run generate-assets  # re-gen app icon / splash / favicon from assets/images/icon.png
 ```
 
@@ -204,7 +206,7 @@ Use **EAS Build** / **Submit** (`eas.json` profiles). Production configuration a
 
 Contributions are welcome.
 
-1. Run **`npm run lint`**
+1. Run **`npm run lint`** and **`npm test`**
 2. Keep mobile-only secrets out of git; use **EAS Secrets** for `EXPO_PUBLIC_*` in CI if needed
 3. Open a PR; note any **Supabase** or **web API** dependency
 
