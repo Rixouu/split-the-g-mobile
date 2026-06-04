@@ -3,9 +3,14 @@
 
 # Wait 24h after publish before resolving a version (supply-chain hardening).
 minimumReleaseAge: 1440
+# Allow EAS/CI to fall back when a range has no version old enough yet.
+minimumReleaseAgeStrict: false
 
 # Metro / React Native expect a flat node_modules layout.
 nodeLinker: hoisted
+
+# EAS/Linux may pull deps with install scripts not listed below; warn instead of fail.
+strictDepBuilds: false
 
 allowBuilds:
   sharp: true

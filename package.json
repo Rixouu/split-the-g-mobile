@@ -15,7 +15,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest --ci",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "eas-build-pre-install": "corepack enable"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

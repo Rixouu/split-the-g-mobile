@@ -7,15 +7,24 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "environment": "development"
+      "environment": "development",
+      "node": "20.18.0",
+      "corepack": true,
+      "pnpm": "11.1.2"
     },
     "preview": {
       "distribution": "internal",
-      "environment": "preview"
+      "environment": "preview",
+      "node": "20.18.0",
+      "corepack": true,
+      "pnpm": "11.1.2"
     },
     "production": {
       "autoIncrement": true,
-      "environment": "production"
+      "environment": "production",
+      "node": "20.18.0",
+      "corepack": true,
+      "pnpm": "11.1.2"
     }
   },
   "submit": {
