@@ -5,7 +5,7 @@ This complements the root [README](../README.md) with a single place for day-to-
 ## Prerequisites
 
 - Node.js **20+** (see README for engine notes)
-- **pnpm 11+** (`corepack enable` once)
+- **pnpm 9.15.9** (`corepack enable` once; matches EAS Build)
 - iOS Simulator (Xcode) and/or Android emulator (Android Studio) for device testing
 
 ## Install and run
@@ -17,7 +17,17 @@ pnpm start
 
 Use `pnpm run ios`, `pnpm run android`, or `pnpm run web` as shortcuts. For a clean Metro cache: `pnpm run start:clean`.
 
-Dependency installs honor **`minimumReleaseAge: 1440`** (24 hours after publish) in **`pnpm-workspace.yaml`** to reduce freshly-published compromise risk.
+## iOS preview build (Test on device before production)
+
+```bash
+# Register your iPhone once (required for internal/ad hoc installs)
+npx eas device:create
+
+# Cloud build (preview profile = internal distribution)
+EXPO_APPLE_TEAM_ID=3RCWMPH883 npx eas build --profile preview --platform ios
+```
+
+Open the build URL from the CLI on your iPhone to install. Add **`splittheg://auth/callback`** in Supabase before testing sign-in.
 
 ## Environment variables
 

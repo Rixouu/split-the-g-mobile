@@ -9,22 +9,19 @@
       "distribution": "internal",
       "environment": "development",
       "node": "20.18.0",
-      "corepack": true,
-      "pnpm": "11.1.2"
+      "pnpm": "9.15.9"
     },
     "preview": {
       "distribution": "internal",
       "environment": "preview",
       "node": "20.18.0",
-      "corepack": true,
-      "pnpm": "11.1.2"
+      "pnpm": "9.15.9"
     },
     "production": {
       "autoIncrement": true,
       "environment": "production",
       "node": "20.18.0",
-      "corepack": true,
-      "pnpm": "11.1.2"
+      "pnpm": "9.15.9"
     }
   },
   "submit": {

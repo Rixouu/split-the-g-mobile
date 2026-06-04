@@ -70,7 +70,7 @@ The current product was substantially revamped by [Jonathan Rycx](https://github
 ### Prerequisites
 
 - **Node.js 20+**
-- **pnpm 11+** (enable Corepack once: `corepack enable` — ships with Node.js)
+- **pnpm 9.15.9** (via `packageManager` + Corepack: `corepack enable`)
 - **Xcode** (iOS Simulator) and/or **Android Studio** emulators for local device testing
 - A **Supabase** project (URL + anon key — public to the client)
 - Optional: **Google Maps** SDK key (iOS bundle + Android package restrictions)

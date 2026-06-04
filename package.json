@@ -2,7 +2,7 @@
   "name": "split-the-g-mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
-  "packageManager": "pnpm@11.1.2",
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "start": "expo start",
     "start:clean": "expo start --clear",
@@ -15,8 +15,7 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "test": "jest --ci",
-    "test:watch": "jest --watch",
-    "eas-build-pre-install": "corepack enable"
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -66,6 +65,9 @@
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["sharp", "unrs-resolver"]
+  },
   "devDependencies": {
     "@types/jest": "29.5.14",
     "@types/react": "~19.1.0",
@@ -81,6 +83,6 @@
   "private": true,
   "engines": {
     "node": ">=20",
-    "pnpm": ">=11"
+    "pnpm": ">=9.15"
   }
 }
