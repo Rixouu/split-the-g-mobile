@@ -1,8 +1,9 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
 import { router, useGlobalSearchParams } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
+  AppState,
   Image as RNImage,
   LayoutAnimation,
   Modal,
@@ -24,6 +25,11 @@ import { trackEvent } from '@/lib/analytics/client';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
 import type { TranslationKey } from '@/lib/i18n/translations';
+import {
+  enqueueOfflinePour,
+  flushOfflinePourQueue,
+  isLikelyNetworkError,
+} from '@/lib/pour/offline-queue';
 import { submitPourImage } from '@/lib/pour/submit-pour';
 import { mobilePathFromWebPath } from '@/lib/routing/paths';
 
@@ -58,6 +64,15 @@ function messageForPourError(
   return t('homeErrGenericPour');
 }
 
+function actorNameFromUser(user: { email?: string | null; user_metadata?: Record<string, unknown> } | null): string | null {
+  return (
+    user?.user_metadata?.full_name?.toString() ||
+    user?.user_metadata?.name?.toString() ||
+    user?.email?.split('@')[0] ||
+    null
+  );
+}
+
 export default function HomeScreen() {
   const { accessToken, user, signInWithGoogle, isConfigured } = useAuth();
   const { t } = useLocale();
@@ -72,6 +87,37 @@ export default function HomeScreen() {
   const [showNoGModal, setShowNoGModal] = useState(false);
   const [livePourOpen, setLivePourOpen] = useState(false);
   const lastPickSourceRef = useRef<'camera' | 'library'>('camera');
+  const queueFlushActiveRef = useRef(false);
+
+  const flushPendingPours = useCallback(async () => {
+    if (queueFlushActiveRef.current) return;
+    queueFlushActiveRef.current = true;
+    try {
+      const { synced } = await flushOfflinePourQueue(async (item) => {
+        const result = await submitPourImage({
+          imageUri: item.imageUri,
+          accessToken,
+          actorName: item.actorName,
+          competitionId: item.competitionId,
+        });
+        if (!result.success) throw new Error(result.error ?? result.detail ?? 'Submission failed');
+      });
+      if (synced > 0) {
+        trackEvent('mobile_offline_pours_synced', { count: synced });
+        setMessage(t('homeQueuedSync').replace('{count}', String(synced)));
+      }
+    } finally {
+      queueFlushActiveRef.current = false;
+    }
+  }, [accessToken, t]);
+
+  useEffect(() => {
+    void flushPendingPours();
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') void flushPendingPours();
+    });
+    return () => subscription.remove();
+  }, [flushPendingPours]);
 
   const submitPourFromUri = useCallback(
     async (imageUri: string, source: 'camera' | 'library') => {
@@ -83,10 +129,7 @@ export default function HomeScreen() {
         const result = await submitPourImage({
           imageUri,
           accessToken,
-          actorName:
-            user?.user_metadata?.full_name?.toString() ||
-            user?.user_metadata?.name?.toString() ||
-            user?.email?.split('@')[0],
+          actorName: actorNameFromUser(user),
           competitionId,
         });
 
@@ -106,6 +149,21 @@ export default function HomeScreen() {
         else if (result.scoreId) router.push(`/pour/${result.scoreId}` as never);
         else setMessage(t('homeErrGenericPour'));
       } catch (error) {
+        if (isLikelyNetworkError(error)) {
+          try {
+            await enqueueOfflinePour({
+              imageUri,
+              actorName: actorNameFromUser(user),
+              competitionId,
+            });
+            setSelectedImageUri(null);
+            setMessage(t('homeQueuedOffline'));
+            trackEvent('mobile_pour_queued_offline', { source, hasCompetition: Boolean(competitionId) });
+          } catch {
+            setMessage(t('homeQueueSaveFailed'));
+          }
+          return;
+        }
         setMessage(error instanceof Error ? error.message : t('homeErrGenericPour'));
       } finally {
         setIsSubmitting(false);
@@ -224,7 +282,7 @@ export default function HomeScreen() {
           <Body style={styles.browseLabel}>{t('homeTopSplits')}</Body>
         </Pressable>
         <Pressable
-          onPress={() => router.push('/feed?tab=wall')}
+          onPress={() => router.push('/wall')}
           style={({ pressed }) => [styles.browseBtn, pressed && styles.browsePressed]}
           accessibilityRole="button">
           <Body style={styles.browseLabel}>{t('homeWall')}</Body>

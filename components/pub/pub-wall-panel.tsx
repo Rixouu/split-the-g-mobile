@@ -103,7 +103,7 @@ interface PubWallPanelProps {
 }
 
 export function PubWallPanel({ items, wallError }: PubWallPanelProps) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
   const [sort, setSort] = useState<PubWallSort>('newest');
   const [minScore, setMinScore] = useState('0');
   const [dateFrom, setDateFrom] = useState('');
@@ -178,22 +178,16 @@ export function PubWallPanel({ items, wallError }: PubWallPanelProps) {
           .replace(/\{page\}/g, String(safePage))
           .replace(/\{totalPages\}/g, String(totalPages));
 
-  const sortOptions: OptionRow[] = useMemo(
-    () => [
-      { value: 'newest', label: t('pubDetailWallSortNewest') },
-      { value: 'oldest', label: t('pubDetailWallSortOldest') },
-      { value: 'score_high', label: t('pubDetailWallSortScoreHigh') },
-      { value: 'score_low', label: t('pubDetailWallSortScoreLow') },
-    ],
-    [locale, t],
-  );
+  const sortOptions: OptionRow[] = [
+    { value: 'newest', label: t('pubDetailWallSortNewest') },
+    { value: 'oldest', label: t('pubDetailWallSortOldest') },
+    { value: 'score_high', label: t('pubDetailWallSortScoreHigh') },
+    { value: 'score_low', label: t('pubDetailWallSortScoreLow') },
+  ];
 
-  const minScoreOptions: OptionRow[] = useMemo(
-    () => MIN_SCORE_CHOICES.map((v) => ({ value: v, label: minLabel(v) })),
-    [locale, t],
-  );
+  const minScoreOptions: OptionRow[] = MIN_SCORE_CHOICES.map((v) => ({ value: v, label: minLabel(v) }));
 
-  const countryOptions: OptionRow[] = useMemo(() => {
+  const countryOptions: OptionRow[] = (() => {
     const rows: OptionRow[] = [{ value: '', label: t('pubDetailWallAnyCountry') }];
     for (const c of countryMeta) {
       const flag =
@@ -203,7 +197,7 @@ export function PubWallPanel({ items, wallError }: PubWallPanelProps) {
       rows.push({ value: c.code, label: flag ? `${flag} ${c.name}` : c.name });
     }
     return rows;
-  }, [countryMeta, locale, t]);
+  })();
 
   function resetFilters() {
     setMinScore('0');

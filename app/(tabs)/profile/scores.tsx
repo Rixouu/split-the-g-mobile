@@ -31,7 +31,7 @@ export default function ProfileScoresScreen() {
   const { t, tVars, locale } = useLocale();
   const scores = useMyScores();
 
-  const list = scores.data ?? [];
+  const list = useMemo(() => scores.data ?? [], [scores.data]);
   const hasScores = list.length > 0;
 
   const stats = useMemo(() => computeProgressStats(list), [list]);

@@ -36,6 +36,29 @@ export async function fetchRecentScores(limit = 20): Promise<PourScore[]> {
   return (data ?? []) as PourScore[];
 }
 
+/**
+ * Full public Wall collection. Prefer the same security-definer RPC used by the web app;
+ * older deployments retain the direct-query fallback so the Wall stays browseable during a
+ * staged database rollout.
+ */
+export async function fetchWallScores(limit = 120): Promise<PourScore[]> {
+  const { data, error } = await supabase.rpc('wall_scores_recent', { p_limit: limit });
+
+  if (!error) return (data ?? []) as PourScore[];
+
+  const hint = `${error.message ?? ''} ${error.code ?? ''}`.toLowerCase();
+  const rpcUnavailable = error.code === '42883' || hint.includes('wall_scores_recent') || hint.includes('function');
+  if (!rpcUnavailable) throw error;
+
+  const { data: fallback, error: fallbackError } = await supabase
+    .from('scores')
+    .select(SCORE_PUBLIC_SELECT)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (fallbackError) throw fallbackError;
+  return (fallback ?? []) as PourScore[];
+}
+
 export async function fetchScoreByRef(pourRef: string): Promise<PourScore | null> {
   const ref = pourRef.trim();
   const isUuid =

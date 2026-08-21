@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -9,6 +9,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
+import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
 import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
@@ -334,11 +335,26 @@ export default function PubDetailScreen() {
         : t('pubDetailStatRatedPourMany').replace(/\{count\}/g, String(bar.rating_count))
       : t('pubDetailStatNoRatingsYet');
 
+  function goBackToPubs() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)/pubs');
+  }
+
   return (
-    <Screen
-      edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.pubScrollContent}>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => <NavigationBackButton accessibilityLabel={t('actionBack')} onPress={goBackToPubs} />,
+        }}
+      />
+      <Screen
+        edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.pubScrollContent}>
       <View style={styles.header}>
         <View style={styles.heroTopRow}>
           <View style={styles.heroTitleColumn}>
@@ -623,7 +639,8 @@ export default function PubDetailScreen() {
           </Card>
         </>
       ) : null}
-    </Screen>
+      </Screen>
+    </>
   );
 }
 
@@ -876,6 +893,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     gap: 10,
   },
+  emptyCalloutInline: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    gap: 8,
+  },
   emptyCalloutInlineAlign: {
     alignItems: 'flex-start',
   },
@@ -889,6 +911,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyCalloutIconWrapInline: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
   emptyCalloutIconWrapInlineAlign: {
     alignSelf: 'flex-start',
   },
@@ -901,6 +928,12 @@ const styles = StyleSheet.create({
   },
   emptyCalloutTitleInline: {
     fontSize: 14,
+  },
+  emptyCalloutBody: {
+    textAlign: 'center',
+    color: 'rgba(212, 183, 143, 0.78)',
+    fontSize: 14,
+    lineHeight: 20,
   },
   emptyCalloutBodyInline: {
     textAlign: 'left',

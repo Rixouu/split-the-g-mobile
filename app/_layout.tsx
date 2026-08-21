@@ -49,7 +49,7 @@ export default function RootLayout() {
             headerTitleStyle: { color: brandColors.goldBright, fontWeight: '700' },
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="wall" options={{ headerShown: false }} />
+          <Stack.Screen name="wall" options={{ title: 'The wall' }} />
           <Stack.Screen name="pour/[pourRef]" options={{ title: 'Pour result' }} />
           <Stack.Screen name="competition/create" options={{ title: 'Create competition' }} />
           <Stack.Screen name="competition/[competitionId]" options={{ title: 'Competition' }} />

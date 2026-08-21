@@ -8,6 +8,7 @@
     "start:clean": "expo start --clear",
     "reset-project": "node ./scripts/reset-project.js",
     "generate-assets": "node ./scripts/generate-brand-assets.mjs",
+    "sync:ios-icon": "node ./scripts/sync-ios-app-icon.mjs",
     "i18n:sync-web": "node ./scripts/build-web-locale-overrides.mjs",
     "backfill:pub-coords": "node --env-file=.env scripts/backfill-pub-place-coordinates.mjs",
     "android": "expo run:android",

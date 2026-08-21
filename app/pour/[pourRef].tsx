@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, RefreshControl, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { PourClaimCard } from '@/components/pour-detail/pour-claim-card';
@@ -11,6 +11,7 @@ import { PourScoreSummary } from '@/components/pour-detail/pour-score-summary';
 import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
+import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -115,17 +116,32 @@ export default function PourDetailScreen() {
     void query.refetch();
   }, [query]);
 
+  const goBack = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace('/(tabs)');
+  }, [router]);
+
   return (
-    <Screen
-      edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
-      contentContainerStyle={styles.screenBody}
-      refreshControl={
-        <RefreshControl
-          refreshing={query.isRefetching}
-          onRefresh={onRefresh}
-          tintColor={brandColors.gold}
-        />
-      }>
+    <>
+      <Stack.Screen
+        options={{
+          headerBackVisible: false,
+          headerLeft: () => <NavigationBackButton accessibilityLabel={t('actionBack')} onPress={goBack} />,
+        }}
+      />
+      <Screen
+        edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
+        contentContainerStyle={styles.screenBody}
+        refreshControl={
+          <RefreshControl
+            refreshing={query.isRefetching}
+            onRefresh={onRefresh}
+            tintColor={brandColors.gold}
+          />
+        }>
       <PourResultsHeader />
 
       {query.isLoading ? (
@@ -204,7 +220,8 @@ export default function PourDetailScreen() {
           />
         </>
       ) : null}
-    </Screen>
+      </Screen>
+    </>
   );
 }
 

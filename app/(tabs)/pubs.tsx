@@ -12,7 +12,7 @@ import {
   View,
   type ListRenderItem,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
@@ -24,7 +24,6 @@ import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubs } from '@/lib/api/client';
-import { appConfig } from '@/lib/config';
 import type { PubSummary } from '@/lib/api/types';
 import { resolvePubMapCoords } from '@/lib/pub/resolve-pub-map-coords';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -54,6 +53,7 @@ function canResolveCoordsWithoutCache(pub: PubSummary): boolean {
 }
 
 type PubsSortMode = 'recommended' | 'name' | 'pours';
+type MappedPub = { pub: PubSummary; lat: number; lng: number };
 
 function filterAndSortPubs(directory: PubSummary[], search: string, sort: PubsSortMode): PubSummary[] {
   const q = search.trim().toLowerCase();
@@ -81,8 +81,8 @@ export default function PubsScreen() {
   const [mapMounted, setMapMounted] = useState(false);
   const [pubSearch, setPubSearch] = useState('');
   const [sortMode, setSortMode] = useState<PubsSortMode>('recommended');
+  const [selectedBarKey, setSelectedBarKey] = useState<string | null>(null);
   const mapRef = useRef<MapView>(null);
-  const useGoogleMaps = Boolean(appConfig.googleMapsApiKey.trim());
 
   const pubs = useQuery({
     queryKey: ['pubs'],
@@ -139,18 +139,33 @@ export default function PubsScreen() {
   });
 
   const markerCoords = useMemo(() => {
-    const out: { barKey: string; lat: number; lng: number }[] = [];
+    const out: MappedPub[] = [];
     for (let i = 0; i < filteredRows.length; i++) {
       const pub = filteredRows[i];
       const fromQuery = coordQueries[i]?.data;
       const fromDirectory = directoryCachedCoords(pub);
       const coords = fromQuery ?? fromDirectory;
       if (coords != null && Number.isFinite(coords.lat) && Number.isFinite(coords.lng)) {
-        out.push({ barKey: pub.bar_key, lat: coords.lat, lng: coords.lng });
+        out.push({ pub, lat: coords.lat, lng: coords.lng });
       }
     }
     return out;
   }, [filteredRows, coordQueries]);
+
+  const selectedMapPub = useMemo(
+    () => markerCoords.find((marker) => marker.pub.bar_key === selectedBarKey) ?? markerCoords[0] ?? null,
+    [markerCoords, selectedBarKey],
+  );
+
+  useEffect(() => {
+    if (markerCoords.length === 0) {
+      setSelectedBarKey(null);
+      return;
+    }
+    if (!markerCoords.some((marker) => marker.pub.bar_key === selectedBarKey)) {
+      setSelectedBarKey(markerCoords[0].pub.bar_key);
+    }
+  }, [markerCoords, selectedBarKey]);
 
   const fitMapToMarkers = useCallback(() => {
     if (!mapMounted || markerCoords.length === 0) return;
@@ -170,7 +185,7 @@ export default function PubsScreen() {
       return;
     }
     mv.fitToCoordinates(coords, {
-      edgePadding: { top: 32, right: 24, bottom: 38, left: 24 },
+      edgePadding: { top: 52, right: 28, bottom: 118, left: 28 },
       animated: true,
     });
   }, [mapMounted, markerCoords]);
@@ -217,35 +232,74 @@ export default function PubsScreen() {
 
         <View style={styles.mapCard}>
           {mapMounted ? (
-            <MapView
-              ref={mapRef}
-              provider={useGoogleMaps ? PROVIDER_GOOGLE : undefined}
-              style={styles.map}
-              mapType={useGoogleMaps ? 'standard' : Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-              customMapStyle={
-                Platform.OS === 'android' || useGoogleMaps ? GOOGLE_MAP_DARK_STYLE : undefined
-              }
-              pitchEnabled={false}
-              toolbarEnabled={false}
-              showsPointsOfInterest={false}
-              onMapReady={fitMapToMarkers}
-              initialRegion={{
-                latitude: 13.7563,
-                longitude: 100.5018,
-                latitudeDelta: 0.12,
-                longitudeDelta: 0.12,
-              }}>
-              {markerCoords.map((m) => (
-                <Marker
-                  key={`${m.barKey}:${m.lat}:${m.lng}`}
-                  coordinate={{ latitude: m.lat, longitude: m.lng }}
-                  anchor={{ x: 0.5, y: 0.5 }}
-                  tracksViewChanges
-                  onPress={() => navigateToPub(m.barKey)}>
-                  <PubGoldMapPin />
-                </Marker>
-              ))}
-            </MapView>
+            <>
+              <MapView
+                ref={mapRef}
+                style={styles.map}
+                mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
+                customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
+                pitchEnabled={false}
+                rotateEnabled={false}
+                toolbarEnabled={false}
+                showsBuildings={false}
+                showsCompass={false}
+                showsPointsOfInterest={false}
+                onMapReady={fitMapToMarkers}
+                initialRegion={{
+                  latitude: 13.7563,
+                  longitude: 100.5018,
+                  latitudeDelta: 0.12,
+                  longitudeDelta: 0.12,
+                }}>
+                {markerCoords.map((marker) => {
+                  const pubTitle = marker.pub.display_name.trim() || t('pubsCardUnnamed');
+                  return (
+                    <Marker
+                      key={`${marker.pub.bar_key}:${marker.lat}:${marker.lng}`}
+                      coordinate={{ latitude: marker.lat, longitude: marker.lng }}
+                      anchor={{ x: 0.5, y: 1 }}
+                      title={pubTitle}
+                      description={marker.pub.sample_address?.trim() || undefined}
+                      tracksViewChanges
+                      onPress={() => setSelectedBarKey(marker.pub.bar_key)}>
+                      <PubGoldMapPin label={pubTitle} selected={selectedMapPub?.pub.bar_key === marker.pub.bar_key} />
+                    </Marker>
+                  );
+                })}
+              </MapView>
+
+              <View pointerEvents="none" style={styles.mapStatus}>
+                <Text style={styles.mapStatusLabel}>
+                  {tVars('pubsMapVenueCount', { count: markerCoords.length })}
+                </Text>
+                <Text style={styles.mapStatusHint}>{t('pubsMapHint')}</Text>
+              </View>
+
+              {selectedMapPub ? (
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={tVars('pubsMapOpenVenueAccessibilityLabel', {
+                    pub: selectedMapPub.pub.display_name.trim() || t('pubsCardUnnamed'),
+                  })}
+                  onPress={() => navigateToPub(selectedMapPub.pub.bar_key)}
+                  style={({ pressed }) => [styles.mapPreview, pressed && styles.mapPreviewPressed]}>
+                  <View style={styles.mapPreviewBody}>
+                    <Text style={styles.mapPreviewTitle} numberOfLines={1}>
+                      {selectedMapPub.pub.display_name.trim() || t('pubsCardUnnamed')}
+                    </Text>
+                    <Text style={styles.mapPreviewAddress} numberOfLines={1}>
+                      {selectedMapPub.pub.sample_address?.trim() || t('pubsCardAddressPending')}
+                    </Text>
+                  </View>
+                  <Text style={styles.mapPreviewAction}>{t('pubsMapOpenVenue')}</Text>
+                </Pressable>
+              ) : (
+                <View pointerEvents="none" style={styles.mapEmptyState}>
+                  <Text style={styles.mapEmptyTitle}>{t('pubsMapNoLocations')}</Text>
+                  <Text style={styles.mapEmptyBody}>{t('pubsMapNoLocationsHint')}</Text>
+                </View>
+              )}
+            </>
           ) : (
             <View style={styles.mapPlaceholder}>
               <ScreenLoadingBlock showCaption={false} dense style={styles.mapPlaceholderLoading} />
@@ -318,9 +372,9 @@ export default function PubsScreen() {
     filteredCount,
     fitMapToMarkers,
     mapMounted,
-    useGoogleMaps,
     markerCoords,
     navigateToPub,
+    selectedMapPub,
     pubSearch,
     pubs.error,
     pubs.isPending,
@@ -381,8 +435,9 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   mapCard: {
+    position: 'relative',
     overflow: 'hidden',
-    height: 280,
+    height: 314,
     borderWidth: 1,
     borderColor: brandColors.frame,
     borderRadius: 16,
@@ -398,6 +453,100 @@ const styles = StyleSheet.create({
   },
   mapPlaceholderLoading: {
     paddingVertical: 0,
+  },
+  mapStatus: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    right: 12,
+    alignSelf: 'flex-start',
+    gap: 2,
+  },
+  mapStatusLabel: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(11, 11, 11, 0.84)',
+    color: brandColors.goldBright,
+    fontSize: 11,
+    fontWeight: '800',
+    letterSpacing: 0.7,
+    textTransform: 'uppercase',
+  },
+  mapStatusHint: {
+    alignSelf: 'flex-start',
+    maxWidth: '94%',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(11, 11, 11, 0.7)',
+    color: 'rgba(253, 251, 243, 0.82)',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  mapPreview: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    left: 10,
+    minHeight: 68,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderWidth: 1,
+    borderColor: 'rgba(197, 160, 89, 0.68)',
+    borderRadius: 12,
+    backgroundColor: 'rgba(11, 11, 11, 0.92)',
+  },
+  mapPreviewPressed: {
+    opacity: 0.9,
+  },
+  mapPreviewBody: {
+    flex: 1,
+    minWidth: 0,
+    gap: 3,
+  },
+  mapPreviewTitle: {
+    color: brandColors.cream,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  mapPreviewAddress: {
+    color: brandColors.tanMuted,
+    fontSize: 12,
+  },
+  mapPreviewAction: {
+    color: brandColors.goldBright,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.45,
+  },
+  mapEmptyState: {
+    position: 'absolute',
+    right: 12,
+    bottom: 12,
+    left: 12,
+    gap: 3,
+    paddingHorizontal: 13,
+    paddingVertical: 11,
+    borderRadius: 12,
+    backgroundColor: 'rgba(11, 11, 11, 0.88)',
+  },
+  mapEmptyTitle: {
+    color: brandColors.cream,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  mapEmptyBody: {
+    color: brandColors.tanMuted,
+    fontSize: 12,
+    lineHeight: 17,
   },
   loadingBlock: {
     paddingVertical: 8,

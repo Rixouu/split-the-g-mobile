@@ -49,7 +49,7 @@ export default function ProfileExpensesScreen() {
   const { user } = useAuth();
   const { t } = useLocale();
   const scores = useMyScores();
-  const rows = scores.data ?? [];
+  const rows = useMemo(() => scores.data ?? [], [scores.data]);
 
   const pricedPours = useMemo(
     () => rows.filter((s) => s.pint_price != null && Number.isFinite(Number(s.pint_price))),

@@ -29,6 +29,12 @@ export type TranslationKey =
   | 'pubsSortRecommended'
   | 'pubsSortName'
   | 'pubsSortPours'
+  | 'pubsMapVenueCount'
+  | 'pubsMapHint'
+  | 'pubsMapOpenVenue'
+  | 'pubsMapOpenVenueAccessibilityLabel'
+  | 'pubsMapNoLocations'
+  | 'pubsMapNoLocationsHint'
   | 'pubsCardUnnamed'
   | 'pubsCardAddressPending'
   | 'pubsListingRatingsOne'
@@ -65,6 +71,9 @@ export type TranslationKey =
   | 'homeErrDuplicate'
   | 'homeErrStaleExif'
   | 'homeErrInvalidImage'
+  | 'homeQueuedOffline'
+  | 'homeQueuedSync'
+  | 'homeQueueSaveFailed'
   | 'homeFeedbackShowGlass'
   | 'homeFeedbackGVisible'
   | 'homeFeedbackHoldStill'
@@ -93,6 +102,11 @@ export type TranslationKey =
   | 'feedLoadError'
   | 'feedEmptyState'
   | 'feedNoImage'
+  | 'feedSponsorEyebrow'
+  | 'feedSponsorBody'
+  | 'feedSponsorCta'
+  | 'feedNewsTitle'
+  | 'feedNewsReadMore'
   | 'wallLast24'
   | 'wallTopWeek'
   | 'wallEarlier'
@@ -103,6 +117,30 @@ export type TranslationKey =
   | 'wallTitle'
   | 'wallEyebrow'
   | 'wallSubtitle'
+  | 'wallCollectionTitle'
+  | 'wallCollectionSubtitle'
+  | 'wallFilters'
+  | 'wallShownCount'
+  | 'wallShowFilters'
+  | 'wallHideFilters'
+  | 'wallSortBy'
+  | 'wallSortNewest'
+  | 'wallSortOldest'
+  | 'wallSortScoreHigh'
+  | 'wallSortScoreLow'
+  | 'wallMinimumScore'
+  | 'wallAnyScore'
+  | 'wallDateRange'
+  | 'wallFrom'
+  | 'wallTo'
+  | 'wallAnyDate'
+  | 'wallCountry'
+  | 'wallAnyCountry'
+  | 'wallChooseCountry'
+  | 'wallClearFilters'
+  | 'wallDone'
+  | 'wallEmptyTitle'
+  | 'wallEmptyHint'
   | 'competeTitle'
   | 'competeEyebrow'
   | 'competeSubtitle'
@@ -782,6 +820,12 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubsSortRecommended: 'Top rated',
     pubsSortName: 'A–Z',
     pubsSortPours: 'Most pours',
+    pubsMapVenueCount: '{count} mapped',
+    pubsMapHint: 'Tap a marker to preview a pub.',
+    pubsMapOpenVenue: 'Open pub',
+    pubsMapOpenVenueAccessibilityLabel: 'Open {pub}',
+    pubsMapNoLocations: 'Venue locations are loading',
+    pubsMapNoLocationsHint: 'Browse the list while we prepare the map.',
     pubsCardUnnamed: 'Unnamed pub',
     pubsCardAddressPending: 'Address pending',
     pubsListingRatingsOne: '1 rating',
@@ -820,6 +864,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     homeErrDuplicate: 'This exact photo was already submitted.',
     homeErrStaleExif: 'Photo date in the file looks too old. Take a new picture at the bar.',
     homeErrInvalidImage: 'Could not read that image. Try a different file.',
+    homeQueuedOffline: 'You’re offline. This pour is saved and will upload when the app reconnects.',
+    homeQueuedSync: '{count} queued pour(s) uploaded.',
+    homeQueueSaveFailed: 'This pour could not be saved offline. Please try again when you reconnect.',
     homeFeedbackShowGlass: 'Show your pint glass',
     homeFeedbackGVisible: 'Make sure the G pattern is visible',
     homeFeedbackHoldStill: 'Hold still…',
@@ -850,6 +897,11 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     feedLoadError: 'Could not load the feed.',
     feedEmptyState: 'No pours yet.',
     feedNoImage: 'No photo',
+    feedSponsorEyebrow: 'Advertise with Split The G',
+    feedSponsorBody: 'Put your pub, event, or Guinness night in front of the community.',
+    feedSponsorCta: 'Ask about a placement',
+    feedNewsTitle: 'Guinness in Thailand',
+    feedNewsReadMore: 'Read article',
     wallLast24: 'Last 24 hours',
     wallTopWeek: 'Top of the week',
     wallEarlier: 'Earlier on the wall',
@@ -860,6 +912,30 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     wallTitle: 'The wall',
     wallEyebrow: 'Activity',
     wallSubtitle: 'Newest community pours first, grouped by day.',
+    wallCollectionTitle: 'The wall',
+    wallCollectionSubtitle: 'Browse the complete collection of community pours.',
+    wallFilters: 'Filters',
+    wallShownCount: '{filtered} of {total} pours shown',
+    wallShowFilters: 'Show',
+    wallHideFilters: 'Hide',
+    wallSortBy: 'Sort by',
+    wallSortNewest: 'Newest',
+    wallSortOldest: 'Oldest',
+    wallSortScoreHigh: 'Highest score',
+    wallSortScoreLow: 'Lowest score',
+    wallMinimumScore: 'Minimum score',
+    wallAnyScore: 'Any score',
+    wallDateRange: 'Date range',
+    wallFrom: 'From',
+    wallTo: 'To',
+    wallAnyDate: 'Any date',
+    wallCountry: 'Country',
+    wallAnyCountry: 'Any country',
+    wallChooseCountry: 'Choose country',
+    wallClearFilters: 'Clear filters',
+    wallDone: 'Done',
+    wallEmptyTitle: 'No pours match these filters.',
+    wallEmptyHint: 'Try widening your filters or clear them to see the full Wall.',
     competeTitle: 'Competitions',
     competeEyebrow: 'Compete',
     competeSubtitle: 'Browse open and past competitions, invite friends, and track standings.',

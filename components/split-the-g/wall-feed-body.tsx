@@ -79,7 +79,7 @@ export function WallFeedBody() {
   const carouselTileWidth = Math.min(168, Math.round(windowWidth * 0.44));
   const carouselSnapOffsets = useMemo(
     () => last24.map((_, i) => i * (carouselTileWidth + CAROUSEL_GAP)),
-    [carouselTileWidth, last24.length],
+    [carouselTileWidth, last24],
   );
 
   const empty = !scores.isLoading && !scores.error && (scores.data?.length ?? 0) === 0;

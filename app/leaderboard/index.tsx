@@ -126,7 +126,7 @@ export default function LeaderboardScreen() {
           <AppButton
             label={t('lbViewSubmissions')}
             variant="primary"
-            onPress={() => router.push('/feed?tab=wall')}
+            onPress={() => router.push('/wall')}
             style={styles.primaryCta}
           />
         </View>
@@ -205,7 +205,7 @@ export default function LeaderboardScreen() {
             </View>
             <Body style={styles.stateTitle}>{t('lbEmpty')}</Body>
             <Muted style={styles.stateMuted}>{t('lbEmptySubtitle')}</Muted>
-            <Pressable style={styles.wallTap} onPress={() => router.push('/feed?tab=wall')} accessibilityRole="button">
+            <Pressable style={styles.wallTap} onPress={() => router.push('/wall')} accessibilityRole="button">
               <Text style={styles.wallTapText}>{t('navWall')} →</Text>
             </Pressable>
           </View>
