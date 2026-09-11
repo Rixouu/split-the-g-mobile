@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
+import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
 import { HubRow, SignedInProfileHub } from '@/components/profile/signed-in-profile-hub';
 import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
 import { AppButton } from '@/components/split-the-g/button';
@@ -17,7 +18,7 @@ const HUB_STROKE = brandColors.hubStroke;
 
 export default function ProfileHubScreen() {
   const router = useRouter();
-  const { isConfigured, isLoading, signInWithGoogle, user } = useAuth();
+  const { isConfigured, isLoading, user } = useAuth();
   const { locale, t, tVars } = useLocale();
   const hubQuery = useProfileHubData();
 
@@ -36,7 +37,7 @@ export default function ProfileHubScreen() {
           <View style={styles.guestHero}>
             <Title style={styles.guestTitle}>{t('profileGuestTitle')}</Title>
             <Muted style={styles.guestBlurb}>{t('profileGuestBlurb')}</Muted>
-            <AppButton label={t('signInGoogle')} onPress={signInWithGoogle} />
+            <AuthSignInButtons />
             <Text style={styles.guestFaqLine}>
               <Text style={styles.guestFaqLink} onPress={() => router.push('/faq')}>
                 {t('profileNavFaq')}

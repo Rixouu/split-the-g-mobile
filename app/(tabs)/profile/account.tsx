@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 
+import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
 import { ProfileAccountTierAvatar } from '@/components/profile/profile-tier-avatar';
 import { ProfileCountryPicker } from '@/components/profile/profile-country-picker';
 import { AppButton } from '@/components/split-the-g/button';
@@ -29,7 +30,7 @@ import { flagEmojiFromIso2 } from '@/lib/utils/country-display';
 import { getCountryOptions } from '@/lib/utils/country-options';
 
 export default function ProfileAccountScreen() {
-  const { user, signOut, signInWithGoogle, isLoading, isConfigured } = useAuth();
+  const { user, signOut, deleteAccount, isLoading, isConfigured } = useAuth();
   const { t, tVars, locale } = useLocale();
   const qc = useQueryClient();
 
@@ -41,6 +42,7 @@ export default function ProfileAccountScreen() {
   const [analyticsConsent, setAnalyticsConsent] = useState<AnalyticsConsentStatus>('unset');
   const [pushGranted, setPushGranted] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const countryOptions = useMemo(() => getCountryOptions(), []);
 
@@ -149,7 +151,7 @@ export default function ProfileAccountScreen() {
       {!isLoading && !user ? (
         <Card>
           <Body>{t('signInPrompt')}</Body>
-          <AppButton label={t('signInGoogle')} onPress={signInWithGoogle} />
+          <AuthSignInButtons />
         </Card>
       ) : null}
 
@@ -306,6 +308,52 @@ export default function ProfileAccountScreen() {
               ]);
             }}
           />
+
+          <View style={styles.dangerZone}>
+            <Text style={styles.dangerTitle}>{t('profileAccountDeleteTitle')}</Text>
+            <Muted style={styles.innerBody}>{t('profileAccountDeleteBody')}</Muted>
+            <AppButton
+              label={deleteBusy ? t('profileAccountDeleting') : t('profileAccountDeleteButton')}
+              variant="secondary"
+              shape="rounded"
+              fullWidth
+              disabled={deleteBusy}
+              onPress={() => {
+                Alert.alert(
+                  t('profileAccountDeleteConfirmTitle'),
+                  t('profileAccountDeleteConfirmMessage'),
+                  [
+                    { text: t('profileAccountDeleteCancel'), style: 'cancel' },
+                    {
+                      text: t('profileAccountDeleteConfirm'),
+                      style: 'destructive',
+                      onPress: () => {
+                        void (async () => {
+                          setDeleteBusy(true);
+                          try {
+                            await deleteAccount();
+                            Alert.alert(
+                              t('profileAccountDeleteSuccessTitle'),
+                              t('profileAccountDeleteSuccessBody'),
+                            );
+                          } catch (error) {
+                            Alert.alert(
+                              t('profileAccountDeleteFailedTitle'),
+                              error instanceof Error
+                                ? error.message
+                                : t('profileAccountDeleteFailedBody'),
+                            );
+                          } finally {
+                            setDeleteBusy(false);
+                          }
+                        })();
+                      },
+                    },
+                  ],
+                );
+              }}
+            />
+          </View>
         </Card>
       ) : null}
     </Screen>
@@ -435,5 +483,18 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginTop: 4,
     fontSize: 13,
+  },
+  dangerZone: {
+    borderWidth: 1,
+    borderColor: 'rgba(214, 90, 90, 0.5)',
+    borderRadius: 10,
+    padding: 14,
+    marginTop: 14,
+    gap: 12,
+  },
+  dangerTitle: {
+    color: '#f09a9a',
+    fontSize: 14,
+    fontWeight: '700',
   },
 });

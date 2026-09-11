@@ -1,3 +1,5 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import {
   createContext,
@@ -8,6 +10,7 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react';
+import { Platform } from 'react-native';
 
 import { getOAuthRedirectTo, oauthRedirectLikelyRejectedByGoTrue } from '@/lib/auth/oauth-redirect';
 import { hasSupabaseConfig } from '@/lib/config';
@@ -34,7 +37,9 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   accessToken: string | null;
+  signInWithApple: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -65,10 +70,70 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setIsLoading(false);
     });
 
+    const appleRevokeSubscription =
+      Platform.OS === 'ios'
+        ? AppleAuthentication.addRevokeListener(() => {
+            void supabase.auth.signOut({ scope: 'local' });
+          })
+        : null;
+
     return () => {
       isMounted = false;
       subscription.subscription.unsubscribe();
+      appleRevokeSubscription?.remove();
     };
+  }, []);
+
+  const signInWithApple = useCallback(async () => {
+    if (!hasSupabaseConfig()) throw new Error('Supabase is not configured.');
+    if (Platform.OS !== 'ios' || !(await AppleAuthentication.isAvailableAsync())) {
+      throw new Error('Sign in with Apple is unavailable on this device.');
+    }
+
+    const rawNonce = `${Crypto.randomUUID()}-${Crypto.randomUUID()}`;
+    const hashedNonce = await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      rawNonce,
+    );
+
+    let credential: AppleAuthentication.AppleAuthenticationCredential;
+    try {
+      credential = await AppleAuthentication.signInAsync({
+        nonce: hashedNonce,
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+    } catch (error) {
+      if ((error as { code?: string }).code === 'ERR_REQUEST_CANCELED') return;
+      throw error;
+    }
+
+    if (!credential.identityToken) {
+      throw new Error('Apple did not return an identity token.');
+    }
+
+    const { error } = await supabase.auth.signInWithIdToken({
+      provider: 'apple',
+      token: credential.identityToken,
+      nonce: rawNonce,
+    });
+    if (error) throw error;
+
+    if (credential.fullName) {
+      const fullName = AppleAuthentication.formatFullName(credential.fullName).trim();
+      if (fullName) {
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: {
+            full_name: fullName,
+            given_name: credential.fullName.givenName,
+            family_name: credential.fullName.familyName,
+          },
+        });
+        if (updateError) throw updateError;
+      }
+    }
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
@@ -129,6 +194,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await supabase.auth.signOut();
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    const currentAccessToken = session?.access_token;
+    if (!currentAccessToken) throw new Error('Sign in again before deleting your account.');
+
+    const { deleteMyAccount } = await import('@/lib/api/account');
+    await deleteMyAccount(currentAccessToken);
+    await supabase.auth.signOut({ scope: 'local' });
+  }, [session?.access_token]);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       isConfigured: hasSupabaseConfig(),
@@ -136,10 +210,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
       session,
       user: session?.user ?? null,
       accessToken: session?.access_token ?? null,
+      signInWithApple,
       signInWithGoogle,
+      deleteAccount,
       signOut,
     }),
-    [isLoading, session, signInWithGoogle, signOut],
+    [deleteAccount, isLoading, session, signInWithApple, signInWithGoogle, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

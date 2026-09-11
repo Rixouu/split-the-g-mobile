@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 
+import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
 import { LivePourCameraModal } from '@/components/pour/live-pour-camera-modal';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
@@ -74,7 +75,7 @@ function actorNameFromUser(user: { email?: string | null; user_metadata?: Record
 }
 
 export default function HomeScreen() {
-  const { accessToken, user, signInWithGoogle, isConfigured } = useAuth();
+  const { accessToken, user, isConfigured } = useAuth();
   const { t } = useLocale();
   const globalParams = useGlobalSearchParams<{ competition?: string | string[] }>();
   const competitionRaw = normalizeSearchParam(globalParams.competition);
@@ -381,7 +382,7 @@ export default function HomeScreen() {
           <Eyebrow style={styles.sectionEyebrow}>{t('homeSignInEyebrow')}</Eyebrow>
           <Muted style={styles.signInBlurb}>{t('signInPrompt')}</Muted>
           <View style={styles.signInActions}>
-            <AppButton label={t('signInGoogle')} fullWidth onPress={signInWithGoogle} />
+            <AuthSignInButtons />
           </View>
         </Card>
       ) : null}

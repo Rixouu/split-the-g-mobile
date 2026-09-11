@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
 import { CompetitionFormInset } from '@/components/competition/competition-form-layout';
 import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -21,7 +22,7 @@ interface PourClaimCardProps {
 }
 
 export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardProps) {
-  const { user, isLoading: authLoading, signInWithGoogle } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { locale } = useLocale();
   const qc = useQueryClient();
   const [banner, setBanner] = useState<string | null>(null);
@@ -30,13 +31,6 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
   const canUnclaim = Boolean(
     user?.email && claimed && canUnclaimPour(user.email, score.email) === true,
   );
-
-  const signInMut = useMutation({
-    mutationFn: () => signInWithGoogle(),
-    onError: () => {
-      setBanner(translate(locale, 'pourMsgClaimFail'));
-    },
-  });
 
   const claimMut = useMutation({
     mutationFn: async (): Promise<{ attachPart: string | null }> => {
@@ -129,14 +123,9 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
             />
           </>
         ) : (
-          <AppButton
-            label={authLoading || signInMut.isPending ? '…' : translate(locale, 'signInGoogle')}
-            disabled={authLoading || signInMut.isPending}
-            variant="secondary"
-            onPress={() => {
-              setBanner(null);
-              signInMut.mutate();
-            }}
+          <AuthSignInButtons
+            disabled={authLoading}
+            onError={() => setBanner(translate(locale, 'pourMsgClaimFail'))}
           />
         )}
         </View>

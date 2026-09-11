@@ -99,6 +99,7 @@ export type TranslationKey =
   | 'library'
   | 'submitPour'
   | 'signInGoogle'
+  | 'signInError'
   | 'signInPrompt'
   | 'feedTitle'
   | 'feedEyebrow'
@@ -600,6 +601,18 @@ export type TranslationKey =
   | 'profileAccountSignOutConfirmTitle'
   | 'profileAccountSignOutConfirmMessage'
   | 'profileAccountSignOutConfirmCancel'
+  | 'profileAccountDeleteTitle'
+  | 'profileAccountDeleteBody'
+  | 'profileAccountDeleteButton'
+  | 'profileAccountDeleting'
+  | 'profileAccountDeleteConfirmTitle'
+  | 'profileAccountDeleteConfirmMessage'
+  | 'profileAccountDeleteCancel'
+  | 'profileAccountDeleteConfirm'
+  | 'profileAccountDeleteFailedTitle'
+  | 'profileAccountDeleteFailedBody'
+  | 'profileAccountDeleteSuccessTitle'
+  | 'profileAccountDeleteSuccessBody'
   | 'profileAccountProfilePhotoSimpleAria'
   | 'profileAccountProfilePhotoTierAria'
   | 'profileNextSteps'
@@ -901,6 +914,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     library: 'Choose from library',
     submitPour: 'Score this pour',
     signInGoogle: 'Continue with Google',
+    signInError: 'Sign-in did not complete. Please try again.',
     signInPrompt: 'Sign in to claim scores and sync your leaderboard name.',
     feedTitle: 'Latest pours',
     feedEyebrow: 'Discover',
@@ -1478,6 +1492,21 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     profileAccountSignOutConfirmMessage:
       "You'll need to sign in again to manage your profile, friends, and favorites.",
     profileAccountSignOutConfirmCancel: 'Stay signed in',
+    profileAccountDeleteTitle: 'Delete account',
+    profileAccountDeleteBody:
+      'Permanently delete your profile, pours, competitions, friends, favorites, and sign-in account.',
+    profileAccountDeleteButton: 'Delete my account',
+    profileAccountDeleting: 'Deleting account…',
+    profileAccountDeleteConfirmTitle: 'Delete your account?',
+    profileAccountDeleteConfirmMessage:
+      'This permanently deletes your Split The G account and associated data. This cannot be undone.',
+    profileAccountDeleteCancel: 'Keep account',
+    profileAccountDeleteConfirm: 'Delete permanently',
+    profileAccountDeleteFailedTitle: 'Account not deleted',
+    profileAccountDeleteFailedBody: 'Could not delete your account. Please try again.',
+    profileAccountDeleteSuccessTitle: 'Account deleted',
+    profileAccountDeleteSuccessBody:
+      'Your Split The G account and data were deleted. If you used Apple, you can also revoke Split The G in Settings → Apple Account → Sign in with Apple.',
     profileAccountProfilePhotoSimpleAria: 'Profile photo',
     profileAccountProfilePhotoTierAria:
       'Profile photo with achievement tier {tier}; {unlocked} of {total} badges unlocked.',
