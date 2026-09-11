@@ -83,6 +83,13 @@ export type TranslationKey =
   | 'homeInferenceUnavailable'
   | 'homeInferenceUnavailableBody'
   | 'homeRoboflowKeyHint'
+  | 'homeCameraReady'
+  | 'homeCameraReadyBody'
+  | 'homeCaptureAnalyze'
+  | 'homeGuideFullPint'
+  | 'homeGuideGVisible'
+  | 'homeCameraUnavailable'
+  | 'homeCameraUnavailableBody'
   | 'homeCloseLiveCamera'
   | 'homeTorchOn'
   | 'homeTorchOff'
@@ -878,6 +885,13 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Use the capture button below. Your photo is scored with the same service as the web app.',
     homeRoboflowKeyHint:
       'Set EXPO_PUBLIC_ROBOFLOW_PUBLISHABLE_KEY (same value as web VITE_ROBOFLOW_PUBLISHABLE_KEY) for automatic G detection. Manual capture still works.',
+    homeCameraReady: 'Ready to analyze',
+    homeCameraReadyBody: 'Frame the whole pint, keep the Guinness G visible, then capture.',
+    homeCaptureAnalyze: 'Capture & analyze',
+    homeGuideFullPint: 'Fit the whole pint inside the frame',
+    homeGuideGVisible: 'Keep the Guinness G clearly visible',
+    homeCameraUnavailable: 'Camera unavailable',
+    homeCameraUnavailableBody: 'Close the camera and try again.',
     homeCloseLiveCamera: 'Close',
     homeTorchOn: 'Torch on',
     homeTorchOff: 'Torch off',
