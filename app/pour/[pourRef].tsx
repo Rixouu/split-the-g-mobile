@@ -9,6 +9,7 @@ import { PourImageCards } from '@/components/pour-detail/pour-image-cards';
 import { PourResultsHeader } from '@/components/pour-detail/pour-results-header';
 import { PourScoreSummary } from '@/components/pour-detail/pour-score-summary';
 import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
+import { PourSafetyPanel } from '@/components/pour-detail/pour-safety-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
 import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
@@ -218,6 +219,7 @@ export default function PourDetailScreen() {
             pubPageBarKey={pubPageBarKey}
             googlePlaceId={d.google_place_id?.trim() || null}
           />
+          <PourSafetyPanel score={d} isOwner={isOwner} webUrl={webUrl} />
         </>
       ) : null}
       </Screen>

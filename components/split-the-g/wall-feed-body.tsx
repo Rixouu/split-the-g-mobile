@@ -23,6 +23,7 @@ import { brandColors } from '@/constants/theme';
 import { fetchRecentScores } from '@/lib/api/client';
 import type { PourScore } from '@/lib/api/types';
 import { useLocale } from '@/lib/i18n/locale-context';
+import { filterBlockedScores } from '@/lib/moderation/content-safety';
 
 const MS_DAY = 86_400_000;
 const MS_WEEK = 7 * MS_DAY;
@@ -58,7 +59,7 @@ export function WallFeedBody() {
   const { width: windowWidth } = useWindowDimensions();
   const scores = useQuery({
     queryKey: ['scores', 'wall'],
-    queryFn: () => fetchRecentScores(80),
+    queryFn: async () => filterBlockedScores(await fetchRecentScores(80)),
     staleTime: 180_000,
   });
 

@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth/auth-context';
 import { fetchLeaderboardDisplayNameForUser } from '@/lib/auth/leaderboard-display-name';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { registerForPushNotifications } from '@/lib/notifications/register';
+import { containsObjectionableText } from '@/lib/moderation/content-safety';
 import { achievementHubSummaryFromPersistedCodes } from '@/lib/profile/achievement-hub-summary';
 import { supabase } from '@/lib/supabase/client';
 import { flagEmojiFromIso2 } from '@/lib/utils/country-display';
@@ -95,6 +96,9 @@ export default function ProfileAccountScreen() {
   const saveMut = useMutation({
     mutationFn: async () => {
       if (!user?.id) return;
+      if (containsObjectionableText(displayName) || containsObjectionableText(nickname)) {
+        throw new Error('That profile name is not allowed. Please choose another name.');
+      }
       await upsertPublicProfile(user.id, {
         display_name: displayName.trim() || user.email?.split('@')[0] || 'Player',
         nickname: nickname.trim() || null,
