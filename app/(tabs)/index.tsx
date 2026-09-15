@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import { Image } from 'expo-image';
-import { router, useGlobalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   AppState,
@@ -40,15 +40,6 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 const logoAsset = require('../../assets/images/logo-splittheg.png');
 
-const COMPETITION_UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-function normalizeSearchParam(value: string | string[] | undefined): string {
-  if (typeof value === 'string') return value.trim();
-  if (Array.isArray(value) && typeof value[0] === 'string') return value[0].trim();
-  return '';
-}
-
 function messageForPourError(
   t: (key: TranslationKey) => string,
   err?: string,
@@ -77,10 +68,6 @@ function actorNameFromUser(user: { email?: string | null; user_metadata?: Record
 export default function HomeScreen() {
   const { accessToken, user, isConfigured } = useAuth();
   const { t } = useLocale();
-  const globalParams = useGlobalSearchParams<{ competition?: string | string[] }>();
-  const competitionRaw = normalizeSearchParam(globalParams.competition);
-  const competitionId = COMPETITION_UUID_RE.test(competitionRaw) ? competitionRaw : null;
-
   const [selectedImageUri, setSelectedImageUri] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,7 +118,7 @@ export default function HomeScreen() {
           imageUri,
           accessToken,
           actorName: actorNameFromUser(user),
-          competitionId,
+          competitionId: null,
         });
 
         if (!result.success) {
@@ -155,11 +142,11 @@ export default function HomeScreen() {
             await enqueueOfflinePour({
               imageUri,
               actorName: actorNameFromUser(user),
-              competitionId,
+              competitionId: null,
             });
             setSelectedImageUri(null);
             setMessage(t('homeQueuedOffline'));
-            trackEvent('mobile_pour_queued_offline', { source, hasCompetition: Boolean(competitionId) });
+            trackEvent('mobile_pour_queued_offline', { source });
           } catch {
             setMessage(t('homeQueueSaveFailed'));
           }
@@ -170,7 +157,7 @@ export default function HomeScreen() {
         setIsSubmitting(false);
       }
     },
-    [accessToken, competitionId, t, user],
+    [accessToken, t, user],
   );
 
   async function pickImage(source: 'camera' | 'library') {
@@ -277,13 +264,13 @@ export default function HomeScreen() {
 
       <View style={styles.browseGrid}>
         <Pressable
-          onPress={() => router.push('/leaderboard')}
+          onPress={() => router.push('/journal' as never)}
           style={({ pressed }) => [styles.browseBtn, pressed && styles.browsePressed]}
           accessibilityRole="button">
           <Body style={styles.browseLabel}>{t('homeTopSplits')}</Body>
         </Pressable>
         <Pressable
-          onPress={() => router.push('/wall')}
+          onPress={() => router.push('/feed')}
           style={({ pressed }) => [styles.browseBtn, pressed && styles.browsePressed]}
           accessibilityRole="button">
           <Body style={styles.browseLabel}>{t('homeWall')}</Body>
@@ -317,12 +304,6 @@ export default function HomeScreen() {
         <Card>
           <Body>Supabase env is not configured yet.</Body>
           <Muted>Add EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY to continue.</Muted>
-        </Card>
-      ) : null}
-
-      {competitionId ? (
-        <Card>
-          <Muted style={styles.compBanner}>{t('homeCompetitionBanner')}</Muted>
         </Card>
       ) : null}
 
@@ -511,11 +492,6 @@ const styles = StyleSheet.create({
   },
   sectionEyebrow: {
     textAlign: 'center',
-  },
-  compBanner: {
-    textAlign: 'center',
-    fontSize: 13,
-    lineHeight: 19,
   },
   preview: {
     width: '100%',

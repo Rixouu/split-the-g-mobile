@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -11,7 +12,6 @@ import {
 } from 'react-native';
 
 import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
-import { ProfileAccountTierAvatar } from '@/components/profile/profile-tier-avatar';
 import { ProfileCountryPicker } from '@/components/profile/profile-country-picker';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
@@ -19,20 +19,19 @@ import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { getCachedAnalyticsConsent, persistAnalyticsConsent, type AnalyticsConsentStatus } from '@/lib/analytics/consent';
-import { fetchMyAchievementCodes, fetchPublicProfile, upsertPublicProfile } from '@/lib/api/profile';
+import { fetchPublicProfile, upsertPublicProfile } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
 import { fetchLeaderboardDisplayNameForUser } from '@/lib/auth/leaderboard-display-name';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { registerForPushNotifications } from '@/lib/notifications/register';
 import { containsObjectionableText } from '@/lib/moderation/content-safety';
-import { achievementHubSummaryFromPersistedCodes } from '@/lib/profile/achievement-hub-summary';
 import { supabase } from '@/lib/supabase/client';
 import { flagEmojiFromIso2 } from '@/lib/utils/country-display';
 import { getCountryOptions } from '@/lib/utils/country-options';
 
 export default function ProfileAccountScreen() {
   const { user, signOut, deleteAccount, isLoading, isConfigured } = useAuth();
-  const { t, tVars, locale } = useLocale();
+  const { t, locale } = useLocale();
   const qc = useQueryClient();
 
   const [displayName, setDisplayName] = useState('');
@@ -52,17 +51,6 @@ export default function ProfileAccountScreen() {
     queryFn: () => fetchPublicProfile(user!.id),
     enabled: Boolean(user?.id),
   });
-
-  const achievementsQuery = useQuery({
-    queryKey: ['achievementCodes', user?.id],
-    queryFn: () => fetchMyAchievementCodes(user!.id),
-    enabled: Boolean(user?.id),
-  });
-
-  const achievementSummary = useMemo(
-    () => achievementHubSummaryFromPersistedCodes(achievementsQuery.data ?? []),
-    [achievementsQuery.data],
-  );
 
   useEffect(() => {
     const p = profileQuery.data;
@@ -128,15 +116,6 @@ export default function ProfileAccountScreen() {
     },
   });
 
-  const tierAvatarAria =
-    achievementSummary.unlockedCount > 0 && achievementSummary.maxTierAmongUnlocked > 0
-      ? tVars('profileAccountProfilePhotoTierAria', {
-          tier: String(achievementSummary.maxTierAmongUnlocked),
-          unlocked: String(achievementSummary.unlockedCount),
-          total: String(achievementSummary.totalCount),
-        })
-      : t('profileAccountProfilePhotoSimpleAria');
-
   const cc = countryCode.trim().toUpperCase();
   const nameLine =
     (cc && /^[A-Z]{2}$/.test(cc) ? `${flagEmojiFromIso2(cc)} ` : '') + (displayName.trim() || '—');
@@ -162,7 +141,9 @@ export default function ProfileAccountScreen() {
       {user ? (
         <Card>
           <View style={styles.hero}>
-            <ProfileAccountTierAvatar user={user} summary={achievementSummary} accessibilityLabel={tierAvatarAria} />
+            <View style={styles.avatar} accessibilityRole="image" accessibilityLabel={t('profileAccountProfilePhotoSimpleAria')}>
+              <Ionicons name="person" size={38} color={brandColors.gold} />
+            </View>
             <Text style={styles.signedIn}>{t('profileAccountSignedIn')}</Text>
             <Muted style={styles.email} numberOfLines={1}>
               {user.email}
@@ -371,6 +352,16 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(179, 139, 45, 0.12)',
     marginBottom: 4,
+  },
+  avatar: {
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 1,
+    borderColor: brandColors.hubStroke,
+    backgroundColor: 'rgba(29, 24, 15, 0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   signedIn: {
     marginTop: 10,

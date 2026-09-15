@@ -82,12 +82,8 @@ function FaqWhatAppAnswer({ locale }: { locale: SupportedLocale }) {
         {translate(locale, 'navPubs').toLowerCase()}
       </Text>
       {translate(locale, 'faqAWhatAppDoesMid2')}{' '}
-      <Text style={linkStyle} onPress={() => router.push('/leaderboard')}>
-        {translate(locale, 'navLeaderboard').toLowerCase()}
-      </Text>
-      {translate(locale, 'faqAWhatAppDoesMid3')}{' '}
-      <Text style={linkStyle} onPress={() => router.push('/compete')}>
-        {translate(locale, 'navCompete').toLowerCase()}
+      <Text style={linkStyle} onPress={() => router.push('/journal' as never)}>
+        {translate(locale, 'navJournal').toLowerCase()}
       </Text>
       {translate(locale, 'faqAWhatAppDoesOutro')}
     </Text>

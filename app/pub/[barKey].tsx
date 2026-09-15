@@ -2,7 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useMemo, useState, type ComponentProps } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
@@ -10,7 +10,6 @@ import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
 import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
-import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
@@ -18,7 +17,6 @@ import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
 import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubDetailPage } from '@/lib/api/client';
-import type { PubLinkedCompetitionRow } from '@/lib/api/types';
 import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
@@ -30,8 +28,6 @@ const BANGKOK_REGION = {
   latitudeDelta: 0.06,
   longitudeDelta: 0.06,
 };
-
-const MAIL_ADS = 'mailto:contact@split-the-g.app?subject=Split%20the%20G%20%E2%80%94%20banner%20ads';
 
 function formatSpend(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return '—';
@@ -56,47 +52,6 @@ function weekdayLabelToday(): string {
 
 function isSameWeekdayLabel(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-function PubDetailEmptyCallout({
-  icon,
-  title,
-  body,
-  variant,
-}: {
-  icon: ComponentProps<typeof MaterialCommunityIcons>['name'];
-  title?: string;
-  body: string;
-  variant: 'panel' | 'inline';
-}) {
-  const isPanel = variant === 'panel';
-  return (
-    <View
-      style={[
-        styles.emptyCallout,
-        !isPanel && styles.emptyCalloutInline,
-        !isPanel && styles.emptyCalloutInlineAlign,
-      ]}
-      accessibilityRole="text"
-      accessibilityLabel={title ? `${title}. ${body}` : body}>
-      <View
-        style={[
-          styles.emptyCalloutIconWrap,
-          !isPanel && styles.emptyCalloutIconWrapInline,
-          !isPanel && styles.emptyCalloutIconWrapInlineAlign,
-        ]}>
-        <MaterialCommunityIcons
-          name={icon}
-          size={isPanel ? 28 : 22}
-          color={brandColors.goldBright}
-        />
-      </View>
-      {title ? (
-        <Text style={[styles.emptyCalloutTitle, !isPanel && styles.emptyCalloutTitleInline]}>{title}</Text>
-      ) : null}
-      <Text style={[styles.emptyCalloutBody, !isPanel && styles.emptyCalloutBodyInline]}>{body}</Text>
-    </View>
-  );
 }
 
 /** In-card section label — reads as native “group header”, not marketing chrome. */
@@ -158,18 +113,6 @@ function OpeningHoursLines({ lines, todayBadge }: { lines: string[]; todayBadge:
   );
 }
 
-function formatCompRange(starts: string, ends: string): string {
-  try {
-    const s = new Date(starts);
-    const e = new Date(ends);
-    return `${s.toLocaleDateString()} – ${e.toLocaleDateString()}`;
-  } catch {
-    return `${starts} – ${ends}`;
-  }
-}
-
-type PubTab = 'promos' | 'competitions' | 'wall';
-
 export default function PubDetailScreen() {
   const router = useRouter();
   const qc = useQueryClient();
@@ -181,7 +124,6 @@ export default function PubDetailScreen() {
       typeof rawKey === 'string' ? rawKey : Array.isArray(rawKey) ? (rawKey[0] ?? '') : '',
     ).trim() || '';
 
-  const [pubTab, setPubTab] = useState<PubTab>('wall');
   const [favoriteToast, setFavoriteToast] = useState<'added' | 'removed' | null>(null);
 
   useEffect(() => {
@@ -213,16 +155,6 @@ export default function PubDetailScreen() {
       .map((l) => l.trim())
       .filter(Boolean);
   }, [page?.placeDetails?.opening_hours]);
-
-  const promosContentFlags = useMemo(() => {
-    const hasGuinnessInfo = Boolean(page?.placeDetails?.guinness_info?.trim());
-    const hasAlcoholPromos = Boolean(page?.placeDetails?.alcohol_promotions?.trim());
-    return {
-      hasGuinnessInfo,
-      hasAlcoholPromos,
-      promosTabFullyEmpty: !hasGuinnessInfo && !hasAlcoholPromos,
-    };
-  }, [page?.placeDetails?.guinness_info, page?.placeDetails?.alcohol_promotions]);
 
   const mapsPlaceUrl = page?.placeDetails?.maps_place_url ?? null;
 
@@ -316,11 +248,6 @@ export default function PubDetailScreen() {
     if (!query) return;
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
     if (await Linking.canOpenURL(url)) void Linking.openURL(url);
-  }
-
-  function openCompetition(c: PubLinkedCompetitionRow) {
-    const ref = (c.path_segment && c.path_segment.trim()) || c.id;
-    router.push(`/competition/${encodeURIComponent(ref)}`);
   }
 
   const avgBlock =
@@ -532,110 +459,11 @@ export default function PubDetailScreen() {
             </View>
           </Card>
 
-          <PromotionSpotCard
-            eyebrow={t('pubDetailAdvertiseTitle')}
-            description={t('pubDetailAdvertiseBody')}
-            actionLabel={t('pubDetailAdvertiseCta')}
-            onActionPress={() => void Linking.openURL(MAIL_ADS)}
-          />
-
           <Card style={styles.tabSheetCard}>
-            <View style={styles.segmentOuter} accessibilityRole="tablist">
-              {(
-                [
-                  ['promos', t('pubDetailTabPromos')],
-                  ['competitions', t('pubDetailTabComps')],
-                  ['wall', t('pubDetailTabWall')],
-                ] as const
-              ).map(([id, label]) => {
-                const active = pubTab === id;
-                return (
-                  <Pressable
-                    key={id}
-                    accessibilityRole="tab"
-                    accessibilityState={{ selected: active }}
-                    onPress={() => setPubTab(id)}
-                    style={[styles.segmentChip, active && styles.segmentChipActive]}>
-                    <Text
-                      style={[styles.segmentLabel, active && styles.segmentLabelActive]}
-                      numberOfLines={1}>
-                      {label}
-                    </Text>
-                  </Pressable>
-                );
-              })}
+            <CardSectionHeading>{t('pubDetailTabWall')}</CardSectionHeading>
+            <View style={styles.tabPanel}>
+              <PubWallPanel items={page?.wallPours ?? []} wallError={page?.wallError ?? null} />
             </View>
-
-            {pubTab === 'promos' ? (
-              <View style={styles.tabPanel}>
-                <CardSectionHeading>{t('pubDetailGuinnessPromosTitle')}</CardSectionHeading>
-                <Muted style={styles.tabBlurb}>{t('pubDetailDirectoryBlurbViewer')}</Muted>
-                {promosContentFlags.promosTabFullyEmpty ? (
-                  <PubDetailEmptyCallout
-                    icon="glass-mug-variant"
-                    title={t('pubDetailPromosAllEmptyTitle')}
-                    body={t('pubDetailPromosAllEmptyBody')}
-                    variant="panel"
-                  />
-                ) : (
-                  <>
-                    <Text style={styles.subSection}>{t('pubDetailSectionGuinness')}</Text>
-                    {promosContentFlags.hasGuinnessInfo ? (
-                      <Text style={styles.preWrap}>{page?.placeDetails?.guinness_info?.trim()}</Text>
-                    ) : (
-                      <PubDetailEmptyCallout
-                        icon="beer-outline"
-                        body={t('pubDetailGuinnessEmptyHint')}
-                        variant="inline"
-                      />
-                    )}
-                    <Text style={[styles.subSection, styles.subSectionSpaced]}>
-                      {t('pubDetailSectionPromotions')}
-                    </Text>
-                    {promosContentFlags.hasAlcoholPromos ? (
-                      <Text style={styles.preWrap}>{page?.placeDetails?.alcohol_promotions?.trim()}</Text>
-                    ) : (
-                      <PubDetailEmptyCallout
-                        icon="tag-outline"
-                        body={t('pubDetailPromotionsEmptyHint')}
-                        variant="inline"
-                      />
-                    )}
-                  </>
-                )}
-              </View>
-            ) : null}
-
-            {pubTab === 'competitions' ? (
-              <View style={styles.tabPanel}>
-                <CardSectionHeading>{t('pubDetailLinkedCompsTitle')}</CardSectionHeading>
-                {!page?.linkedCompetitions.length ? (
-                  <PubDetailEmptyCallout
-                    icon="trophy-outline"
-                    body={t('pubDetailLinkedCompsEmptyBody')}
-                    variant="panel"
-                  />
-                ) : (
-                  <View style={styles.compList}>
-                    {page.linkedCompetitions.map((c) => (
-                      <View key={c.id} style={styles.compRow}>
-                        <View style={styles.compText}>
-                          <Body>{c.title}</Body>
-                          <Muted>{formatCompRange(c.starts_at, c.ends_at)}</Muted>
-                        </View>
-                        <AppButton label={t('pubDetailCompOpen')} variant="secondary" onPress={() => openCompetition(c)} />
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-            ) : null}
-
-            {pubTab === 'wall' ? (
-              <View style={styles.tabPanel}>
-                <PubWallPanel items={page?.wallPours ?? []} wallError={page?.wallError ?? null} />
-              </View>
-            ) : null}
           </Card>
         </>
       ) : null}

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Split The G",
+    "name": "Split The G: Pour Analyzer",
     "slug": "split-the-g",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,7 +12,7 @@
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.rixouu.splittheg",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -57,7 +57,7 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Split The G uses the camera to line up your pint and detect the Guinness G before scoring.",
+          "cameraPermission": "Split The G uses the camera to capture a still image and measure the visible liquid line against the Guinness G mark.",
           "microphonePermission": "Split The G uses the microphone only when you record video.",
           "recordAudioAndroid": false
         }

@@ -10,7 +10,6 @@ import { AppButton } from '@/components/split-the-g/button';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { colors, layout, radii } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
-import type { PourRankContext } from '@/lib/api/types';
 import { buildPourTelegramBlurb, buildPourTweetText, getPourShareHookLine } from '@/lib/i18n/translations';
 import { useLocale } from '@/lib/i18n/locale-context';
 
@@ -21,21 +20,15 @@ interface PourSharePanelProps {
   shareMessage: string;
   webUrl: string;
   splitScore: number;
-  rank: PourRankContext | null;
   previewImageUrl: string | null;
   pubPageBarKey: string | null;
   googlePlaceId: string | null;
-}
-
-function replaceRankTemplate(template: string, rank: number, total: number): string {
-  return template.replace(/\{rank\}/g, String(rank)).replace(/\{total\}/g, String(total));
 }
 
 export function PourSharePanel({
   shareMessage,
   webUrl,
   splitScore,
-  rank,
   previewImageUrl,
   pubPageBarKey,
   googlePlaceId,
@@ -53,13 +46,6 @@ export function PourSharePanel({
 
   const scoreLabel = splitScore.toFixed(2);
   const hook = getPourShareHookLine(locale, splitScore);
-
-  const rankAllTimeLine = rank
-    ? replaceRankTemplate(t('pourShareRankAllTime'), rank.allTimeRank, rank.totalSplits)
-    : '—';
-  const rankWeekLine = rank
-    ? replaceRankTemplate(t('pourShareRankWeek'), rank.weeklyRank, rank.weeklyTotalSplits)
-    : '—';
 
   const tweetText = useMemo(
     () => buildPourTweetText(locale, { shareUrl: webUrl, splitScore }),
@@ -143,11 +129,7 @@ export function PourSharePanel({
               <Text style={styles.previewOutOf}>{t('pourShareOutOfFive')}</Text>
             </Text>
           </View>
-          <Text style={styles.previewRanks}>
-            {rankAllTimeLine}
-            <Text style={styles.rankSep}> | </Text>
-            {rankWeekLine}
-          </Text>
+          <Text style={styles.previewNote}>Still-image visual measurement · no drinking required</Text>
           <Text style={styles.previewUrl} numberOfLines={2}>
             {webUrl}
           </Text>
@@ -265,7 +247,7 @@ export function PourSharePanel({
         <Pressable
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/leaderboard');
+            router.push('/journal' as never);
           }}
           style={({ pressed }) => [styles.ctaGold, pressed && styles.ctaGoldPressed]}
           accessibilityRole="button"
@@ -407,13 +389,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: 'rgba(212, 183, 143, 0.62)',
   },
-  previewRanks: {
+  previewNote: {
     fontSize: 12,
     color: 'rgba(253, 251, 243, 0.72)',
     marginTop: 2,
-  },
-  rankSep: {
-    color: 'rgba(179, 139, 45, 0.28)',
   },
   previewUrl: {
     fontSize: 10,

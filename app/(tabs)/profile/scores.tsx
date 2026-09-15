@@ -26,7 +26,7 @@ function SplitScoreMeter({ score }: { score: number }) {
   );
 }
 
-export default function ProfileScoresScreen() {
+export default function ProfileScoresScreen({ showStackHeader = true }: { showStackHeader?: boolean }) {
   const { user } = useAuth();
   const { t, tVars, locale } = useLocale();
   const scores = useMyScores();
@@ -38,7 +38,7 @@ export default function ProfileScoresScreen() {
 
   return (
     <Screen contentContainerStyle={styles.screenContent} edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}>
-      <Stack.Screen options={{ title: t('profileNavScores') }} />
+      {showStackHeader ? <Stack.Screen options={{ title: t('profileNavScores') }} /> : null}
 
       {!user ? (
         <Card>

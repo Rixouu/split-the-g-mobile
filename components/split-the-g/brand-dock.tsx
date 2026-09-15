@@ -8,8 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /**
  * Mirrors split-the-g `AppNavigation.tsx` mobile dock:
  * - FAB: `h-[3.85rem] w-[3.85rem]`, `top-0`, `-translate-y-[38%]` (center sits just below panel top edge, ~62% of circle above).
- * - Center gap: fixed width between Compete and Pubs for the FAB column.
- * Row: Feed | Compete · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
+ * - Center gap: fixed width between Journal and Pubs for the FAB column.
+ * Row: Feed | Journal · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
 import { colors, layout, radii, shadows, spacing, typeScale } from '@/constants/design-tokens';
@@ -91,10 +91,10 @@ export function BrandDockTabBar({ state, navigation }: BottomTabBarProps) {
               renderIcon={(color) => <Ionicons name="albums-outline" size={DOCK_TAB_ICON} color={color} />}
             />
             <DockTabIcon
-              active={current === 'compete'}
-              label={t('navCompete')}
-              onPress={() => go('compete')}
-              renderIcon={(color) => <Ionicons name="trophy-outline" size={DOCK_TAB_ICON} color={color} />}
+              active={current === 'journal'}
+              label={t('navJournal')}
+              onPress={() => go('journal')}
+              renderIcon={(color) => <Ionicons name="book-outline" size={DOCK_TAB_ICON} color={color} />}
             />
             <View style={styles.row1Spacer} />
             <DockTabIcon

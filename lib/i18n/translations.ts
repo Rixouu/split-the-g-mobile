@@ -1,10 +1,3 @@
-import deWebPatch from './web-locale-patches/de.json';
-import esWebPatch from './web-locale-patches/es.json';
-import frWebPatch from './web-locale-patches/fr.json';
-import itWebPatch from './web-locale-patches/it.json';
-import jaWebPatch from './web-locale-patches/ja.json';
-import thWebPatch from './web-locale-patches/th.json';
-
 export const supportedLocales = ['en', 'th', 'fr', 'es', 'de', 'it', 'ja'] as const;
 
 export type SupportedLocale = (typeof supportedLocales)[number];
@@ -40,6 +33,7 @@ export type TranslationKey =
   | 'pubsListingRatingsOne'
   | 'pubsListingRatingsMany'
   | 'navProfile'
+  | 'navJournal'
   | 'navCompete'
   | 'navLeaderboard'
   | 'navLang'
@@ -851,20 +845,21 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pubsListingRatingsOne: '1 rating',
     pubsListingRatingsMany: '{count} ratings',
     navProfile: 'Profile',
+    navJournal: 'Journal',
     navCompete: 'Compete',
     navLeaderboard: 'Leaderboard',
     navLang: 'Lang',
     navPour: 'Pour',
-    homeTagline: 'Frame it. Split it.',
+    homeTagline: 'Visual pour analysis.',
     homeSubtitle:
-      'One photo of your pint, we score the G line. Share on the wall or chase the board.',
-    homeTopSplits: 'Top splits',
-    homeWall: 'Wall',
+      'Use a still photo to measure how the visible liquid line aligns with the G mark. No drinking is required.',
+    homeTopSplits: 'Analysis journal',
+    homeWall: 'Photo gallery',
     homeHowItWorks: 'How it works',
     homeStep1: 'Straight-on pint, G and foam line visible.',
-    homeStep2: 'Start analysis and hold still for the score.',
-    homeStep3: 'Post to the wall or climb the leaderboard.',
-    homeScorePour: 'Score your pour',
+    homeStep2: 'Capture a still image; computer vision identifies the glass, G mark, and liquid line.',
+    homeStep3: 'Review the annotated measurement and optionally save it to your journal.',
+    homeScorePour: 'Analyze a pour',
     homeStartAnalysis: 'Start analysis',
     homeStartHint: 'Line up the pint and G, hold steady, or upload below.',
     homeUploadPhoto: 'Upload a photo instead',
@@ -915,7 +910,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     submitPour: 'Score this pour',
     signInGoogle: 'Continue with Google',
     signInError: 'Sign-in did not complete. Please try again.',
-    signInPrompt: 'Sign in to claim scores and sync your leaderboard name.',
+    signInPrompt: 'Sign in to save analyses to your personal journal and sync your profile.',
     feedTitle: 'Latest pours',
     feedEyebrow: 'Discover',
     feedSubtitle: 'Fresh splits from the community.',
@@ -1078,9 +1073,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     competitionWebHintLess: 'Invites and some organizer tools are also on www.split-the-g.app.',
     languageTitle: 'Language',
     languageSubtitle: 'Choose your display language.',
-    pourResultsEyebrow: 'Pour result',
-    pourResultsTitle: 'Results',
-    pourOutOfFive: 'out of 5.0',
+    pourResultsEyebrow: 'Visual analysis',
+    pourResultsTitle: 'Measurement result',
+    pourOutOfFive: 'visual alignment / 5.0',
     pourMetaAllTime: 'All-time',
     pourMetaThisWeek: 'This week',
     pourVenueLabel: 'Venue',
@@ -1093,8 +1088,8 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourFullFrameBadge: 'Full frame',
     pourAnnotatedHint: 'Model boxes and labels on your photo',
     pourNoImagePlaceholder: 'No image available',
-    pourSharePanelTitle: 'Share your split',
-    pourSharePanelBlurb: 'Challenge line, score, wall ranks, and the link they tap to pour theirs.',
+    pourSharePanelTitle: 'Share this analysis',
+    pourSharePanelBlurb: 'Share the annotated visual measurement or keep the link for your records.',
     pourShareOutOfFive: ' / 5.0',
     pourShareRankAllTime: '#{rank} of {total}',
     pourShareRankWeek: 'week #{rank} of {total}',
@@ -1107,13 +1102,13 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourShareFewerOptions: 'Fewer options',
     pourShareSocialBlurb:
       'Instagram has no web share. Use Copy text or Copy link, then paste in the app.',
-    pourTryAgain: 'Try again',
-    pourViewTopSplits: 'View top splits',
+    pourTryAgain: 'Analyze another',
+    pourViewTopSplits: 'Open journal',
     pourEnjoyingApp: 'Enjoying Split the G?',
-    pourShareMailSubject: 'Split the G challenge ({score}/5)',
-    pourShareRedditTitle: 'Split the G: scored {score}/5. Can you beat this pour?',
-    pourShareTelegramRest: 'I scored {score}/5. Open the link to pour yours and get scored.',
-    pourAnonymousDisplay: 'Anonymous drinker',
+    pourShareMailSubject: 'Split The G visual analysis ({score}/5)',
+    pourShareRedditTitle: 'Split The G visual pour analysis: {score}/5',
+    pourShareTelegramRest: 'Visual alignment measured at {score}/5. Open the annotated analysis.',
+    pourAnonymousDisplay: 'Unclaimed analysis',
     pourCelebrationHigh: 'Exceptional split — that line is razor sharp.',
     pourCelebrationMidHigh: 'Solid pour — great eye on the G.',
     pourCelebrationMid: 'Nice work — room to tighten the line.',
@@ -1131,11 +1126,11 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourBuyCreatorBeer: 'Buy the creator a beer',
     pourOpenInMaps: 'Open in Google Maps',
     pourViewPub: 'View pub',
-    pourShareHookHigh: 'Think you can split the G cleaner?',
-    pourShareHookMid: 'How close can you get to the perfect split?',
-    pourShareHookLow: 'Grab a pint and try to beat this line.',
+    pourShareHookHigh: 'Visual alignment analysis complete.',
+    pourShareHookMid: 'Visual alignment analysis complete.',
+    pourShareHookLow: 'Visual alignment analysis complete.',
     pourShareBody:
-      'Split score: {score}\nAll-time: #{allTimeRank} of {totalSplits}\nThis week: #{weeklyRank} of {weeklyTotalSplits}\n\n{shareUrl}',
+      'Visual alignment: {score}/5\nStill-image analysis only — no drinking required.\n\n{shareUrl}',
     pourCompBanner:
       'Opened from a competition link. Save venue details below to attach this pour (sign in required for attach).',
     pourOpenCompetition: 'Open competition',
@@ -1174,34 +1169,34 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     actionConfirm: 'Unclaim',
     faqPageTitle: 'Frequently asked questions',
     faqPageSubtitle:
-      'Tap any question for plain-English answers on scoring, sharing pours, and getting the most out of the app.',
+      'Tap any question for plain-English answers about visual analysis, sharing photos, and using the app.',
     faqSearchPlaceholder: 'Search questions…',
     faqSearchAccessibilityLabel: 'Search frequently asked questions',
     faqSearchClear: 'Clear search',
     faqSearchNoResults: 'No questions match that search. Try another word.',
     faqSectionBasics: 'Basics',
-    faqSectionScoring: 'Scores & photos',
+    faqSectionScoring: 'Analysis & photos',
     faqSectionMore: 'Sharing & support',
     faqQSplitTheG: 'What is "Split the G"?',
     faqASplitTheG:
-      '"Split the G" is the Guinness challenge where you sip your pint so the foam line lands in the middle of the "G" in the harp logo. It\'s part skill, part steady hands, and part luck.',
+      '"Split the G" describes the visual relationship between the liquid line and the "G" mark on a Guinness glass. This app documents that alignment from an existing still photo; it does not instruct or require anyone to drink.',
     faqQWhatAppDoes: 'What does this app do?',
     faqAWhatAppDoesIntro:
-      'Split the G scores that pour from a photo. You get a score from 0 to 5. Use the app to browse the',
+      'Split The G analyzes the visible line in a still photo and returns an annotated 0–5 alignment measurement. Use the app to browse the',
     faqAWhatAppDoesMid1: ', open pours for detail, explore',
-    faqAWhatAppDoesMid2: '(venues wall), check',
-    faqAWhatAppDoesMid3: ', and browse',
+    faqAWhatAppDoesMid2: '(venue gallery), open your',
+    faqAWhatAppDoesMid3: ', and review the',
     faqAWhatAppDoesOutro:
-      '. Sign in with Google from Profile for a saved profile, friends, favorites, and competition invites.',
+      '. Sign in from Profile to keep a personal analysis journal, save venues, and manage your account.',
     faqQHowScore: 'How does the app score my pint?',
     faqAHowScore:
-      'The app looks for a Guinness pint glass and logo in your photo, then compares where the foam line sits relative to the center of the "G". That becomes a score from 0 (way off) to 5 (as close as the model can tell). Results depend on lighting, angle, and image quality; it\'s a fun guide, not a lab measurement.',
+      'The app uses computer vision to identify a Guinness pint glass, the logo, and the visible liquid line in a still photo. It compares that line with the center of the "G" and returns an annotated 0–5 visual-alignment measurement. Results depend on lighting, angle, and image quality and are not a laboratory measurement.',
     faqQGuinnessOnly: 'Do I have to drink Guinness to use the app?',
     faqAGuinnessOnly:
-      'Yes. Scoring is built around the standard Guinness glass and harp logo. Other beers or glass shapes aren\'t supported.',
+      'The image model is built around the standard Guinness glass and harp logo, but using the app never requires drinking. You can analyze a photo of an existing or non-alcoholic display pint. Other glass shapes are not currently supported.',
     faqQFree: 'Is the app free?',
     faqAFree:
-      'Yes. There are no paywalls for pouring, browsing, or competitions, and no ads in the app today.',
+      'Yes. There are no paywalls for image analysis, journaling, or venue browsing, and no ads in the app today.',
     faqQGlassTypes: 'Can I use older or non-standard Guinness glasses?',
     faqAGlassTypes:
       'The model is trained on the familiar curved pint with a clear "G". Etched, faded, or unusual glassware may score less reliably. Better photos usually help more than a perfect glass.',
@@ -1211,9 +1206,9 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     faqQShareScore: 'Can I share my score?',
     faqAShareScore:
       'Each pour has its own page you can open from the feed or wall. Copy the link from share, or screenshot your result and share it anywhere you like.',
-    faqQHigherScore: 'How can I get a higher score?',
+    faqQHigherScore: 'How can I get a clearer result?',
     faqAHigherScore:
-      'Start with a well poured pint, then sip slowly and stop when the line looks centered on the "G". Small adjustments beat big gulps. If the model seems off, try a clearer, straighter photo next time.',
+      'For a clearer measurement, photograph the full glass straight-on with the G mark and liquid line visible, avoid glare, and hold the camera steady. The app never asks you to consume alcohol.',
     faqQSupport: 'How can I support the creator?',
     faqASupport:
       "Split the G is a solo project and free to use. If it's been fun for you and you'd like to say thanks, you can buy the creator a beer. It helps cover hosting, APIs, and time spent improving the app.",
@@ -1232,20 +1227,20 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     lbCountryStats24h: 'Past 24 hours',
     faqLink: 'FAQ',
     profileHubTitle: 'Your profile',
-    profileHubSubtitle: 'Scores, progress, favorites, and friends sync with the same Supabase data as the web app.',
+    profileHubSubtitle: 'Your analysis journal, saved venues, and account details sync securely.',
     profileDefaultName: 'Player',
     profileGuestEyebrow: 'Profile',
     profileGuestTitle: 'Join the community',
     profileGuestBlurb:
-      'Sign in with Google to link pours to your profile, compare with friends, save favorite bars, and track spend from pint prices.',
-    profileGuestTeaser: 'Progress, scores, favorites, and expenses unlock after you sign in.',
+      'Sign in to save visual analyses to a personal journal, keep favorite venues, and track venue notes.',
+    profileGuestTeaser: 'Your private journal, favorites, and venue expenses unlock after you sign in.',
     profileGuestFaqBlurbSuffix: ' — answers without signing in',
     profileHubProfileLabel: 'Profile',
     profileHubMemberSinceYear: 'Member since {year}',
     profileHubEdit: 'Edit',
-    profileHubStatPours: 'Pours',
-    profileHubStatScore: 'Score',
-    profileHubStatFriends: 'Friends',
+    profileHubStatPours: 'Analyses',
+    profileHubStatScore: 'Avg alignment',
+    profileHubStatFriends: 'Saved venues',
     profileHubWeeklyBoardTitle: "This week's friends board",
     profileHubWeeklySolo: 'Add friends on the Friends tab to see weekly rankings.',
     profileHubWeeklyNoScores: 'Log a pour this week to appear on the board.',
@@ -1255,10 +1250,10 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     profileHubActivitySection: 'Activity',
     profileHubAccountSection: 'Account',
     profileHubProgressSubStreak: '{count} pours logged · {streak}-day streak',
-    profileHubProgressSubPlain: '{count} pours logged',
+    profileHubProgressSubPlain: '{count} analyses saved',
     profileHubAchievementsRatio: '{unlocked} / {total} unlocked',
     profileHubScoresRanked: '{total} pts total · rank #{rank} among friends',
-    profileHubScoresSolo: '{total} pts total',
+    profileHubScoresSolo: '{total} analyses in your journal',
     profileHubScoresFlagHint: 'Set your country under Edit to show your flag here',
     profileHubFavoritesDated: '{count} saved · last added {date}',
     profileHubFavoritesEmpty: 'Save bars you visit',
@@ -1268,11 +1263,11 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     profileHubFriendsIncoming: '{count} friends · {incoming} incoming',
     profileHubFriendsOutgoing: '{count} friends · {outgoing} pending sent',
     profileHubFriendsBoth: '{count} friends · {incoming} incoming · {outgoing} pending sent',
-    profileHubFaqSub: 'Answers about scores, friends, and your account',
-    profileHubPourCta: 'Split the G',
+    profileHubFaqSub: 'Answers about visual analysis, photos, and your account',
+    profileHubPourCta: 'Analyze a photo',
     profileHubRetry: 'Try again',
     profileNavAccount: 'Account',
-    profileNavScores: 'Scores',
+    profileNavScores: 'Analysis journal',
     profileNavProgress: 'Progress',
     profileNavExpenses: 'Expenses',
     profileNavFavorites: 'Favorite bars',
@@ -1280,18 +1275,18 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     profileNavAchievements: 'Achievements',
     profileNavFaq: 'FAQ',
     profileScoresEmptyBlurb:
-      'No scores linked to this email yet. Claim a pour to start a score log.',
+      'No analyses are saved yet. Analyze a still photo to start your journal.',
     profileScoresPaid: 'Paid {amount}',
-    profileScoresRecentTitle: 'Recent scores',
+    profileScoresRecentTitle: 'Recent analyses',
     profileProgressTitle: 'At a glance',
     profileProgressTotalPints: 'Total pours',
     profileProgressAvg: 'Average split',
     profileProgressBest: 'Best split',
     profileProgressLast7: 'Pours last 7 days',
-    profileProgressStatPours: 'Pours',
-    profileProgressStatBest: 'Best',
-    profileProgressStatAvg: 'Avg / 5',
-    profileProgressStatLast7: 'Last 7d',
+    profileProgressStatPours: 'Analyses',
+    profileProgressStatBest: 'Highest alignment',
+    profileProgressStatAvg: 'Average / 5',
+    profileProgressStatLast7: 'Past 7 days',
     profileProgressAverage: 'Average',
     profileProgressLast7Pour: 'Last 7 days:',
     profileProgressPoursSuffix: 'pour(s)',
@@ -1690,12 +1685,14 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Put your brand or venue in front of pourers. Ask about placements, formats, and rates.',
     pubDetailAdvertiseCta: 'Contact',
   },
-  th: thWebPatch as Partial<Record<TranslationKey, string>>,
-  fr: frWebPatch as Partial<Record<TranslationKey, string>>,
-  es: esWebPatch as Partial<Record<TranslationKey, string>>,
-  de: deWebPatch as Partial<Record<TranslationKey, string>>,
-  it: itWebPatch as Partial<Record<TranslationKey, string>>,
-  ja: jaWebPatch as Partial<Record<TranslationKey, string>>,
+  // This release falls back to the reviewed English utility copy in every locale.
+  // Translations will return after their former competition/challenge language is rewritten.
+  th: {},
+  fr: {},
+  es: {},
+  de: {},
+  it: {},
+  ja: {},
 };
 
 export function translate(locale: SupportedLocale, key: TranslationKey): string {
@@ -1756,9 +1753,9 @@ export function buildPourTweetText(
 ): string {
   const hook = getPourShareHookLine(locale, params.splitScore);
   const s = params.splitScore.toFixed(2);
-  const long = `${hook} I scored ${s}/5 on Split the G. Pour yours: ${params.shareUrl}`;
+  const long = `${hook} Visual alignment measured at ${s}/5 on Split The G: ${params.shareUrl}`;
   if (long.length <= 280) return long;
-  return `${hook} ${s}/5 on Split the G: ${params.shareUrl}`;
+  return `${hook} ${s}/5 visual analysis: ${params.shareUrl}`;
 }
 
 export function buildPourTelegramBlurb(locale: SupportedLocale, splitScore: number): string {

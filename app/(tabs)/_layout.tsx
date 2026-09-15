@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { BrandDockTabBar } from '@/components/split-the-g/brand-dock';
-import { fetchCompetitionsCatalog, fetchPubs, fetchRecentScores } from '@/lib/api/client';
+import { fetchPubs, fetchRecentScores } from '@/lib/api/client';
 import { fetchProfileHubBundle } from '@/lib/api/profile-hub-data';
 import { useAuth } from '@/lib/auth/auth-context';
 
@@ -28,10 +28,6 @@ function TabQueryWarmup() {
     void qc.prefetchQuery({
       queryKey: ['pubs'],
       queryFn: () => fetchPubs(50),
-    });
-    void qc.prefetchQuery({
-      queryKey: ['competitions', 'catalog'],
-      queryFn: () => fetchCompetitionsCatalog(40),
     });
   }, [qc]);
 
@@ -58,7 +54,7 @@ export default function TabLayout() {
         }}>
         <Tabs.Screen name="index" options={{ title: 'Pour' }} />
         <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
-        <Tabs.Screen name="compete" options={{ title: 'Compete' }} />
+        <Tabs.Screen name="journal" options={{ title: 'Journal' }} />
         <Tabs.Screen name="pubs" options={{ title: 'Pubs' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>
