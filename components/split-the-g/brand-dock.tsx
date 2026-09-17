@@ -8,8 +8,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 /**
  * Mirrors split-the-g `AppNavigation.tsx` mobile dock:
  * - FAB: `h-[3.85rem] w-[3.85rem]`, `top-0`, `-translate-y-[38%]` (center sits just below panel top edge, ~62% of circle above).
- * - Center gap: fixed width between Journal and Pubs for the FAB column.
- * Row: Feed | Journal · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
+ * - Center gap: fixed width between Notebook and Pubs for the FAB column.
+ * Row: Feed | Notebook · FAB · Pubs | Profile — icon + label per tab, vertically centered as a column.
  */
 import PourNavIcon from '@/assets/icons/nav/pour.svg';
 import { colors, layout, radii, shadows, spacing, typeScale } from '@/constants/design-tokens';

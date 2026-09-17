@@ -247,7 +247,7 @@ export function PourSharePanel({
         <Pressable
           onPress={() => {
             void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.push('/journal' as never);
+            router.push('/profile/scores');
           }}
           style={({ pressed }) => [styles.ctaGold, pressed && styles.ctaGoldPressed]}
           accessibilityRole="button"

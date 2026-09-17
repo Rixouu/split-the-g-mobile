@@ -54,7 +54,7 @@ export default function TabLayout() {
         }}>
         <Tabs.Screen name="index" options={{ title: 'Pour' }} />
         <Tabs.Screen name="feed" options={{ title: 'Feed' }} />
-        <Tabs.Screen name="journal" options={{ title: 'Journal' }} />
+        <Tabs.Screen name="journal" options={{ title: 'Notebook' }} />
         <Tabs.Screen name="pubs" options={{ title: 'Pubs' }} />
         <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
       </Tabs>

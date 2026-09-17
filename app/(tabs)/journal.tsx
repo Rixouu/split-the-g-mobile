@@ -1,5 +1,3 @@
-import ProfileScoresScreen from './profile/scores';
+import { PubNotebookScreen } from '@/components/pub/pub-notebook-screen';
 
-export default function AnalysisJournalTab() {
-  return <ProfileScoresScreen showStackHeader={false} />;
-}
+export default PubNotebookScreen;

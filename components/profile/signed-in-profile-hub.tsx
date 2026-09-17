@@ -67,8 +67,8 @@ export function SignedInProfileHub({ user, hub, t, tVars }: SignedInProfileHubPr
 
       <View>
         <Eyebrow style={styles.sectionEyebrow}>{t('profileHubActivitySection')}</Eyebrow>
-        <HubRow icon={<Ionicons name="book-outline" size={20} color={colors.text.accent} />} title={t('profileNavScores')} subtitle={tVars('profileHubScoresSolo', { total: analysisCount })} onPress={() => router.push('/journal' as never)} />
-        <HubRow icon={<Ionicons name="star-outline" size={20} color={colors.text.accent} />} title={t('profileNavFavorites')} subtitle={hub.favorites.length > 0 && lastFavLabel ? tVars('profileHubFavoritesDated', { count: hub.favorites.length, date: lastFavLabel }) : t('profileHubFavoritesEmpty')} onPress={() => router.push('/profile/favorites')} />
+        <HubRow icon={<Ionicons name="book-outline" size={20} color={colors.text.accent} />} title={t('profileNavScores')} subtitle={tVars('profileHubScoresSolo', { total: analysisCount })} onPress={() => router.push('/profile/scores')} />
+        <HubRow icon={<Ionicons name="star-outline" size={20} color={colors.text.accent} />} title={t('profileNavFavorites')} subtitle={hub.favorites.length > 0 && lastFavLabel ? tVars('profileHubFavoritesDated', { count: hub.favorites.length, date: lastFavLabel }) : t('profileHubFavoritesEmpty')} onPress={() => router.push('/journal')} />
         <HubRow icon={<Ionicons name="wallet-outline" size={20} color={colors.text.accent} />} title={t('profileNavExpenses')} subtitle={priced.length > 0 ? tVars('profileHubExpensesTracked', { amount: totalSpend.toLocaleString(undefined, { maximumFractionDigits: 0 }) }) : t('profileHubExpensesEmpty')} onPress={() => router.push('/profile/expenses')} />
       </View>
 

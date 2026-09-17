@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
@@ -21,6 +21,7 @@ import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
 import { useAuth } from '@/lib/auth/auth-context';
 import { useLocale } from '@/lib/i18n/locale-context';
 import { resolvePubMapCoords } from '@/lib/pub/resolve-pub-map-coords';
+import { addGuestPlace, readGuestNotebook, removeGuestPlace } from '@/lib/pub/guest-notebook';
 
 const BANGKOK_REGION = {
   latitude: 13.7563,
@@ -140,6 +141,13 @@ export default function PubDetailScreen() {
 
   const page = q.data;
   const bar = page?.bar;
+  const guestPlaces = useQuery({
+    queryKey: ['favorites', 'guest'],
+    queryFn: () => readGuestNotebook().then((data) => data.favorites),
+    enabled: !user,
+    networkMode: 'always',
+  });
+  const favoriteId = user ? page?.favId : guestPlaces.data?.find((place) => place.bar_name.trim().toLowerCase() === bar?.bar_key.trim().toLowerCase())?.id;
 
   const resolvedPlaceId = useMemo(() => {
     const fromPlace = page?.placeDetails?.google_place_id?.trim();
@@ -211,15 +219,21 @@ export default function PubDetailScreen() {
       : 'region-fallback';
 
   const favMutation = useMutation({
+    networkMode: 'always',
     mutationFn: async () => {
-      if (!user?.id || !page) throw new Error('sign-in');
-      if (page.favId) await deleteFavoriteBar(page.favId);
-      else await insertFavoriteBar(user.id, page.bar.bar_key, page.bar.sample_address);
+      if (!page) throw new Error('Place unavailable');
+      if (favoriteId) {
+        if (user) await deleteFavoriteBar(favoriteId);
+        else await removeGuestPlace(favoriteId);
+      } else if (user) await insertFavoriteBar(user.id, page.bar.bar_key, page.bar.sample_address);
+      else await addGuestPlace(page.bar.bar_key, page.bar.sample_address);
     },
-    onMutate: async () => ({ wasFavorite: Boolean(page?.favId) }),
+    onMutate: async () => ({ wasFavorite: Boolean(favoriteId) }),
     onSuccess: async (_data, _variables, context) => {
       void qc.invalidateQueries({ queryKey: ['pub-detail', barKey, user?.id ?? 'anon'] });
-      if (user?.id) void qc.invalidateQueries({ queryKey: ['favorites', user.id] });
+      void qc.invalidateQueries({ queryKey: ['favorites', user?.id ?? 'guest'] });
+      void qc.invalidateQueries({ queryKey: ['pub-notes', user?.id ?? 'guest'] });
+      void qc.invalidateQueries({ queryKey: ['profileHub'] });
       if (context?.wasFavorite) {
         setFavoriteToast('removed');
       } else {
@@ -292,31 +306,37 @@ export default function PubDetailScreen() {
               <Title style={typeScale.titleCompact}>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>
             )}
           </View>
-          {bar && user && page ? (
+          {bar && page ? (
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={
                 favMutation.isPending
                   ? t('pubDetailFavoriteBusy')
-                  : page.favId
+                  : favoriteId
                     ? t('pubDetailSaved')
                     : t('pubDetailFavorite')
               }
-              disabled={favMutation.isPending}
-              onPress={() => favMutation.mutate()}
+              disabled={favMutation.isPending || (!user && !guestPlaces.isSuccess)}
+              onPress={() => {
+                if (!favoriteId) return favMutation.mutate();
+                Alert.alert('Remove saved place?', 'This also removes its private Notebook note and cannot be undone.', [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Remove', style: 'destructive', onPress: () => favMutation.mutate() },
+                ]);
+              }}
               hitSlop={10}
               style={({ pressed }) => [
                 styles.favIconButton,
-                page.favId ? styles.favIconButtonOn : null,
+                favoriteId ? styles.favIconButtonOn : null,
                 pressed && styles.favIconButtonPressed,
               ]}>
               {favMutation.isPending ? (
                 <ActivityIndicator color={brandColors.goldBright} size="small" />
               ) : (
                 <MaterialCommunityIcons
-                  name={page.favId ? 'heart' : 'heart-outline'}
+                  name={favoriteId ? 'bookmark' : 'bookmark-outline'}
                   size={26}
-                  color={page.favId ? brandColors.goldBright : brandColors.cream}
+                  color={favoriteId ? brandColors.goldBright : brandColors.cream}
                 />
               )}
             </Pressable>
@@ -328,6 +348,8 @@ export default function PubDetailScreen() {
             {bar.sample_address}
           </Muted>
         ) : null}
+        {bar ? <AppButton label={favoriteId ? 'Open Notebook' : 'Save to Notebook'} variant="secondary" disabled={favMutation.isPending || (!user && !guestPlaces.isSuccess)} onPress={() => favoriteId ? router.push('/journal') : favMutation.mutate()} /> : null}
+        {favMutation.isError ? <Body accessibilityRole="alert">Could not update your Notebook. Please try again.</Body> : null}
       </View>
 
       {favoriteToast ? (
@@ -404,7 +426,7 @@ export default function PubDetailScreen() {
               </Pressable>
             </View>
             {!user ? (
-              <Muted style={styles.mapSignInHint}>{t('pubDetailSignInForFavorite')}</Muted>
+              <Muted style={styles.mapSignInHint}>Save this place to your Notebook without an account. Guest notes stay on this device.</Muted>
             ) : null}
           </Card>
 

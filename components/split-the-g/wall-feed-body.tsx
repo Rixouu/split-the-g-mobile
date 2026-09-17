@@ -14,7 +14,6 @@ import {
   discoverChromeStyles,
 } from '@/components/split-the-g/discover-feed-chrome';
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
-import { PourListRow } from '@/components/split-the-g/pour-list-row';
 import { Card } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -26,7 +25,6 @@ import { useLocale } from '@/lib/i18n/locale-context';
 import { filterBlockedScores } from '@/lib/moderation/content-safety';
 
 const MS_DAY = 86_400_000;
-const MS_WEEK = 7 * MS_DAY;
 
 function pourTime(score: PourScore): number {
   const raw = score.created_at;
@@ -35,21 +33,12 @@ function pourTime(score: PourScore): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-function scoreValue(score: PourScore): number {
-  const v = score.split_score;
-  return typeof v === 'number' && Number.isFinite(v) ? v : 0;
-}
-
 function chunkPairs<T>(items: T[]): T[][] {
   const rows: T[][] = [];
   for (let i = 0; i < items.length; i += 2) {
     rows.push(items.slice(i, i + 2));
   }
   return rows;
-}
-
-function WallInsetList({ children }: { children: React.ReactNode }) {
-  return <View style={styles.insetList}>{children}</View>;
 }
 
 const CAROUSEL_GAP = 12;
@@ -63,16 +52,14 @@ export function WallFeedBody() {
     staleTime: 180_000,
   });
 
-  const { last24, weekTop, archive } = useMemo(() => {
+  const { last24, archive } = useMemo(() => {
     const data = scores.data ?? [];
     const now = Date.now();
     const sorted = [...data].sort((a, b) => pourTime(b) - pourTime(a));
     const last24h = sorted.filter((s) => now - pourTime(s) <= MS_DAY);
     const ids24 = new Set(last24h.map((s) => s.id));
-    const inWeekNot24 = sorted.filter((s) => now - pourTime(s) <= MS_WEEK && !ids24.has(s.id));
-    const topWeek = [...inWeekNot24].sort((a, b) => scoreValue(b) - scoreValue(a)).slice(0, 12);
     const older = sorted.filter((s) => !ids24.has(s.id));
-    return { last24: last24h, weekTop: topWeek, archive: older };
+    return { last24: last24h, archive: older };
   }, [scores.data]);
 
   const archiveRows = useMemo(() => chunkPairs(archive), [archive]);
@@ -143,23 +130,6 @@ export function WallFeedBody() {
               </ScrollView>
             </View>
           )}
-
-          <DiscoverSectionTitle style={discoverChromeStyles.sectionSpaced}>
-            {t('wallTopWeek')}
-          </DiscoverSectionTitle>
-          <WallInsetList>
-            {weekTop.length === 0 ? (
-              <Muted style={styles.panelEmpty}>{t('wallTopWeekEmpty')}</Muted>
-            ) : (
-              weekTop.map((item, index) => (
-                <PourListRow
-                  key={item.id}
-                  score={item}
-                  showSeparatorBelow={index < weekTop.length - 1}
-                />
-              ))
-            )}
-          </WallInsetList>
 
           <DiscoverSectionTitle style={discoverChromeStyles.sectionSpaced}>
             {t('wallEarlier')}
