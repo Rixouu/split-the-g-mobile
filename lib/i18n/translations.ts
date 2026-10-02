@@ -65,6 +65,7 @@ export type TranslationKey =
   | 'homeErrDuplicate'
   | 'homeErrStaleExif'
   | 'homeErrInvalidImage'
+  | 'homeErrImageTooLarge'
   | 'homeQueuedOffline'
   | 'homeQueuedSync'
   | 'homeQueueSaveFailed'
@@ -879,6 +880,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     homeErrDuplicate: 'This exact photo was already submitted.',
     homeErrStaleExif: 'Photo date in the file looks too old. Take a new picture at the bar.',
     homeErrInvalidImage: 'Could not read that image. Try a different file.',
+    homeErrImageTooLarge: 'That photo is too large to analyze. Try a smaller image.',
     homeQueuedOffline: 'You’re offline. This pour is saved and will upload when the app reconnects.',
     homeQueuedSync: '{count} queued pour(s) uploaded.',
     homeQueueSaveFailed: 'This pour could not be saved offline. Please try again when you reconnect.',

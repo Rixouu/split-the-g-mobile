@@ -52,6 +52,7 @@ function messageForPourError(
   if (err === 'DUPLICATE_IMAGE') return t('homeErrDuplicate');
   if (err === 'STALE_IMAGE_EXIF') return t('homeErrStaleExif');
   if (err === 'INVALID_IMAGE') return t('homeErrInvalidImage');
+  if (err === 'IMAGE_TOO_LARGE') return t('homeErrImageTooLarge');
   if (typeof detail === 'string' && detail.trim()) return detail.trim();
   return t('homeErrGenericPour');
 }
@@ -127,7 +128,11 @@ export default function HomeScreen() {
             return;
           }
           setMessage(messageForPourError(t, result.error, result.detail));
-          trackEvent('mobile_pour_failed', { code: result.error ?? 'unknown', source });
+          trackEvent('mobile_pour_failed', {
+            code: result.error ?? 'unknown',
+            status: result.status ?? null,
+            source,
+          });
           return;
         }
 
