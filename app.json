@@ -62,7 +62,8 @@
           "recordAudioAndroid": false
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "./plugins/with-ios-scene-lifecycle"
     ],
     "extra": {
       "siteUrl": "https://www.split-the-g.app",
