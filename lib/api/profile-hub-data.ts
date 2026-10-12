@@ -1,12 +1,12 @@
 import type { User } from '@supabase/supabase-js';
+import type { QueryClient } from '@tanstack/react-query';
 
 import {
-  fetchFavoriteRows,
-  fetchMyScores,
   fetchPublicProfile,
   type FavoriteRow,
   type MyScoreRow,
 } from '@/lib/api/profile';
+import { favoriteRowsQueryOptions, myScoresQueryOptions, publicProfileQueryOptions } from '@/lib/queries/profile';
 
 export interface ProfileHubBundle {
   scores: MyScoreRow[];
@@ -14,14 +14,14 @@ export interface ProfileHubBundle {
   publicProfile: Awaited<ReturnType<typeof fetchPublicProfile>>;
 }
 
-export async function fetchProfileHubBundle(user: User): Promise<ProfileHubBundle> {
+export async function fetchProfileHubBundle(user: User, queryClient: QueryClient): Promise<ProfileHubBundle> {
   const email = user.email?.trim();
   if (!email) throw new Error('User email required for profile hub');
 
   const [scores, publicProfile, favorites] = await Promise.all([
-    fetchMyScores(email),
-    fetchPublicProfile(user.id),
-    fetchFavoriteRows(user.id),
+    queryClient.fetchQuery(myScoresQueryOptions(user.id, email)),
+    queryClient.fetchQuery(publicProfileQueryOptions(user.id)),
+    queryClient.fetchQuery(favoriteRowsQueryOptions(user.id)),
   ]);
 
   return {

@@ -6,7 +6,7 @@ import { AuthSignInButtons } from '@/components/auth/auth-sign-in-buttons';
 import { HubRow, SignedInProfileHub } from '@/components/profile/signed-in-profile-hub';
 import { useProfileHubData } from '@/components/profile/hooks/use-profile-hub-data';
 import { AppButton } from '@/components/split-the-g/button';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ProfileSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -51,7 +51,7 @@ export default function ProfileHubScreen() {
         </View>
       ) : null}
 
-      {isLoading ? <ScreenLoadingBlock /> : null}
+      {isLoading ? <ProfileSkeleton /> : null}
 
       {user && !user.email?.trim() ? (
         <Card>
@@ -59,9 +59,9 @@ export default function ProfileHubScreen() {
         </Card>
       ) : null}
 
-      {user?.email?.trim() ? (
+      {!isLoading && user?.email?.trim() ? (
         <>
-          {hubQuery.isLoading ? <ScreenLoadingBlock /> : null}
+          {hubQuery.isPending ? <ProfileSkeleton /> : null}
           {hubQuery.isError ? (
             <Card>
               <Body>{t('lbError')}</Body>

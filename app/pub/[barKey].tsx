@@ -10,7 +10,7 @@ import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
 import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
@@ -363,7 +363,7 @@ export default function PubDetailScreen() {
         </Pressable>
       ) : null}
 
-      {q.isLoading ? <ScreenLoadingBlock /> : null}
+      {q.isPending ? <ListSkeleton /> : null}
 
       {q.error ? (
         <Card>

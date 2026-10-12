@@ -15,7 +15,7 @@ import {
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { PourGridSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { fetchWallScores } from '@/lib/api/client';
@@ -244,7 +244,7 @@ export default function WallScreen() {
         ) : null}
       </Card>
 
-      {wall.isLoading ? <ScreenLoadingBlock /> : null}
+      {wall.isPending ? <PourGridSkeleton /> : null}
       {wall.error ? (
         <Card>
           <Body>{t('wallLoadError')}</Body>
@@ -259,7 +259,7 @@ export default function WallScreen() {
         </Card>
       ) : null}
 
-      {!wall.isLoading && !wall.error && gridRows.length > 0 ? (
+      {!wall.isPending && gridRows.length > 0 ? (
         <View style={styles.grid}>
           {gridRows.map((row, rowIndex) => (
             <View key={`wall-row-${rowIndex}`} style={styles.gridRow}>

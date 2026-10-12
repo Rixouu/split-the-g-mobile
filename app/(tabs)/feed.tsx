@@ -10,7 +10,7 @@ import { DiscoverSegmentHeader, DiscoverSectionTitle } from '@/components/split-
 import { PromotionSpotCard } from '@/components/split-the-g/promotion-spot-card';
 import { WallFeedBody } from '@/components/split-the-g/wall-feed-body';
 import { Card } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { PourGridSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { UnderlineTabRow } from '@/components/split-the-g/underline-tab-row';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
@@ -117,8 +117,8 @@ export default function FeedScreen() {
             </DiscoverSegmentHeader>
           }
           ListEmptyComponent={
-            scores.isLoading ? (
-              <ScreenLoadingBlock dense />
+            scores.isPending ? (
+              <PourGridSkeleton />
             ) : scores.error ? (
               <Card>
                 <Body>{t('feedLoadError')}</Body>

@@ -5,11 +5,14 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import type { NotebookPlace } from '@/lib/pub/notebook';
+import { SkeletonBlock } from '@/components/split-the-g/loading-skeleton';
 
 type Props = {
   place: NotebookPlace;
   pubKey?: string;
   routeResolving?: boolean;
+  notesLoading?: boolean;
+  notesUnavailable?: boolean;
   removing?: boolean;
   onOpenPub: () => void;
   onEdit: () => void;
@@ -27,21 +30,25 @@ function Action({
   icon,
   label,
   onPress,
+  disabled = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
   onPress: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityState={{ disabled }}
+      disabled={disabled}
       hitSlop={6}
       onPress={() => {
         void Haptics.selectionAsync();
         onPress();
       }}
-      style={({ pressed }) => [styles.action, pressed && styles.pressed]}>
+      style={({ pressed }) => [styles.action, disabled && styles.disabled, pressed && styles.pressed]}>
       <Ionicons name={icon} size={17} color={colors.text.accentBright} />
       <Text style={styles.actionLabel}>{label}</Text>
     </Pressable>
@@ -52,6 +59,8 @@ export function NotebookPlaceCard({
   place,
   pubKey,
   routeResolving,
+  notesLoading = false,
+  notesUnavailable = false,
   removing,
   onOpenPub,
   onEdit,
@@ -67,7 +76,9 @@ export function NotebookPlaceCard({
         </View>
         <View style={styles.titleWrap}>
           <View style={styles.badgeRow}>
-            <View style={[styles.statusBadge, visited && styles.visitedBadge]}>
+            {notesLoading ? <SkeletonBlock width={105} height={22} /> : notesUnavailable ? (
+              <Text style={styles.personalText}>Notes unavailable</Text>
+            ) : <View style={[styles.statusBadge, visited && styles.visitedBadge]}>
               <Ionicons
                 name={visited ? 'checkmark-circle' : 'bookmark'}
                 size={12}
@@ -76,7 +87,7 @@ export function NotebookPlaceCard({
               <Text style={[styles.statusText, visited && styles.visitedText]}>
                 {visited ? 'Visited' : 'Want to visit'}
               </Text>
-            </View>
+            </View>}
             {!routeResolving && !pubKey ? (
               <View style={styles.personalBadge}>
                 <Ionicons name="lock-closed" size={10} color={colors.text.muted} />
@@ -105,12 +116,17 @@ export function NotebookPlaceCard({
         </View>
       ) : null}
 
-      <View style={styles.noteRow}>
+      {notesLoading ? (
+        <View accessibilityRole="progressbar" accessibilityLabel="Loading private note" style={{ gap: spacing.sm }}>
+          <SkeletonBlock height={12} />
+          <SkeletonBlock width="75%" height={12} />
+        </View>
+      ) : <View style={styles.noteRow}>
         <Ionicons name="document-text-outline" size={16} color={colors.text.accentBright} />
         <Text style={place.note?.notes ? styles.note : styles.noteEmpty} numberOfLines={3}>
-          {place.note?.notes || 'Add a private note about the atmosphere, food, access, or what to remember.'}
+          {notesUnavailable ? 'Your private note could not be loaded. Try refreshing your Notebook.' : place.note?.notes || 'Add a private note about the atmosphere, food, access, or what to remember.'}
         </Text>
-      </View>
+      </View>}
 
       {pubKey ? (
         <View style={styles.openHint}>
@@ -144,7 +160,7 @@ export function NotebookPlaceCard({
 
       <View style={styles.divider} />
       <View style={styles.actions}>
-        <Action icon="create-outline" label={place.note ? 'Edit note' : 'Add note'} onPress={onEdit} />
+        <Action icon="create-outline" label={notesLoading ? 'Loading note…' : notesUnavailable ? 'Note unavailable' : place.note ? 'Edit note' : 'Add note'} disabled={notesLoading || notesUnavailable || removing} onPress={onEdit} />
         <View style={styles.actionDivider} />
         <Action icon="navigate-outline" label="Directions" onPress={onDirections} />
         <View style={styles.actionSpacer} />

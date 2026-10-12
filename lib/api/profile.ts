@@ -85,8 +85,8 @@ export async function fetchMyScores(userEmail: string): Promise<MyScoreRow[]> {
     .order('created_at', { ascending: false })
     .limit(80);
 
-  if (!scoresQerr && scoreRows?.length) {
-    return scoreRows as MyScoreRow[];
+  if (!scoresQerr) {
+    return (scoreRows ?? []) as MyScoreRow[];
   }
 
   const { data: fallbackRows, error: fbErr } = await supabase
@@ -139,13 +139,14 @@ export async function fetchFavoriteRows(userId: string): Promise<FavoriteRow[]> 
   return (data ?? []) as FavoriteRow[];
 }
 
-export async function insertFavoriteBar(userId: string, barName: string, barAddress: string | null): Promise<void> {
-  const { error } = await supabase.from('user_favorite_bars').insert({
+export async function insertFavoriteBar(userId: string, barName: string, barAddress: string | null): Promise<FavoriteRow> {
+  const { data, error } = await supabase.from('user_favorite_bars').insert({
     user_id: userId,
     bar_name: barName.trim(),
     bar_address: barAddress?.trim() || null,
-  });
+  }).select('id, bar_name, bar_address, created_at').single();
   if (error) throw error;
+  return data as FavoriteRow;
 }
 
 export async function deleteFavoriteBar(id: string): Promise<void> {

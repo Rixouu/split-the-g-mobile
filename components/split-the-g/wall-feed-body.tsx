@@ -15,7 +15,7 @@ import {
 } from '@/components/split-the-g/discover-feed-chrome';
 import { PourGridCard } from '@/components/split-the-g/pour-grid-card';
 import { Card } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { PourGridSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { brandColors } from '@/constants/theme';
@@ -85,9 +85,9 @@ export function WallFeedBody() {
       }>
       <DiscoverSegmentHeader eyebrow={t('wallEyebrow')} title={t('wallTitle')} subtitle={t('wallSubtitle')} />
 
-      {scores.isLoading ? (
-        <ScreenLoadingBlock />
-      ) : scores.error ? (
+      {scores.isPending ? (
+        <PourGridSkeleton />
+      ) : scores.error && !scores.data ? (
         <Card>
           <Body>{t('wallLoadError')}</Body>
           <Muted>{scores.error.message}</Muted>

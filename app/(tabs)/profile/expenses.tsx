@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useMyScores } from '@/components/profile/hooks/use-my-scores';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import type { MyScoreRow } from '@/lib/api/profile';
@@ -68,7 +68,7 @@ export default function ProfileExpensesScreen() {
         </View>
       ) : null}
 
-      {user && scores.isLoading ? <ScreenLoadingBlock /> : null}
+      {user && scores.isPending ? <ListSkeleton /> : null}
 
       {user && scores.error ? (
         <View style={styles.card}>
@@ -76,13 +76,13 @@ export default function ProfileExpensesScreen() {
         </View>
       ) : null}
 
-      {user && !scores.isLoading && !scores.error && rows.length === 0 ? (
+      {user && !scores.isPending && !scores.error && rows.length === 0 ? (
         <View style={styles.card}>
           <Muted style={styles.intro}>{t('profileScoresEmptyBlurb')}</Muted>
         </View>
       ) : null}
 
-      {user && !scores.isLoading && !scores.error && rows.length > 0 ? (
+      {user && !scores.isPending && rows.length > 0 ? (
         <>
           <Muted style={styles.intro}>{t('profileExpensesIntroBlurb')}</Muted>
 

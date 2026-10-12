@@ -7,8 +7,17 @@ import { type PubNote, type NotebookTag, type VisitStatus, validateNote } from '
 const STORAGE_KEY = 'split-the-g-guest-notebook-v1';
 interface GuestNotebook { favorites: FavoriteRow[]; notes: PubNote[] }
 let pendingWrite: Promise<unknown> = Promise.resolve();
+let pendingRead: Promise<GuestNotebook> | null = null;
 
-export async function readGuestNotebook(): Promise<GuestNotebook> {
+// Favorites and notes share one storage read, without retaining stale data after a write.
+export function readGuestNotebook(): Promise<GuestNotebook> {
+  if (!pendingRead) {
+    pendingRead = loadGuestNotebook().finally(() => { pendingRead = null; });
+  }
+  return pendingRead;
+}
+
+async function loadGuestNotebook(): Promise<GuestNotebook> {
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
   if (!raw) return { favorites: [], notes: [] };
   const value = JSON.parse(raw) as GuestNotebook;
@@ -32,11 +41,14 @@ function editGuestNotebook<T>(edit: (data: GuestNotebook) => T): Promise<T> {
   return next;
 }
 
-export function addGuestPlace(name: string, address: string | null): Promise<void> {
+export function addGuestPlace(name: string, address: string | null): Promise<FavoriteRow> {
   return editGuestNotebook((data) => {
     if (!name.trim() || name.trim().length > 160 || (address?.trim().length ?? 0) > 500) throw new Error('Enter a place name and a shorter address.');
-    if (data.favorites.some((row) => row.bar_name.trim().toLowerCase() === name.trim().toLowerCase() && (row.bar_address ?? '').trim() === (address ?? '').trim())) return;
-    data.favorites.unshift({ id: Crypto.randomUUID(), bar_name: name.trim(), bar_address: address?.trim() || null, created_at: new Date().toISOString() });
+    const existing = data.favorites.find((row) => row.bar_name.trim().toLowerCase() === name.trim().toLowerCase() && (row.bar_address ?? '').trim() === (address ?? '').trim());
+    if (existing) return existing;
+    const place = { id: Crypto.randomUUID(), bar_name: name.trim(), bar_address: address?.trim() || null, created_at: new Date().toISOString() };
+    data.favorites.unshift(place);
+    return place;
   });
 }
 

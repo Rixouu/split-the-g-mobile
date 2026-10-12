@@ -19,6 +19,15 @@ it('supports the entire notebook without an account or network', async () => {
   expect(await readGuestNotebook()).toEqual({ favorites: [], notes: [] });
 });
 
+it('reads guest favorites and notes together once, and sees subsequent writes', async () => {
+  const [favoritesRead, notesRead] = await Promise.all([readGuestNotebook(), readGuestNotebook()]);
+  expect(AsyncStorage.getItem).toHaveBeenCalledTimes(1);
+  expect(favoritesRead).toBe(notesRead);
+  const saved = await addGuestPlace('New place', null);
+  expect(saved.bar_name).toBe('New place');
+  expect((await readGuestNotebook()).favorites).toEqual([saved]);
+});
+
 it('serializes writes and prevents duplicate places', async () => {
   await Promise.all([addGuestPlace('First', null), addGuestPlace('Second', null), addGuestPlace('first', null)]);
   expect((await readGuestNotebook()).favorites).toHaveLength(2);

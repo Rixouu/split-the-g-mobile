@@ -24,7 +24,7 @@ import { useNotebookData } from '@/components/pub/use-notebook-data';
 import { AppButton } from '@/components/split-the-g/button';
 import { DiscoverSectionTitle, DiscoverSegmentHeader } from '@/components/split-the-g/discover-feed-chrome';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ListSkeleton, NotebookSkeleton, SkeletonBlock } from '@/components/split-the-g/loading-skeleton';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
@@ -42,6 +42,7 @@ import {
   type VisitStatus,
 } from '@/lib/pub/notebook';
 import { resolveFavoritePubRouteKeys } from '@/lib/pub/resolve-favorite-pub-route-keys';
+import { updateNotebookCache } from '@/lib/pub/notebook-cache';
 
 const STATUS_OPTIONS = [
   { value: 'want_to_visit' as const, label: 'Want to visit' },
@@ -133,11 +134,12 @@ function AddPlaceEditor({ userId, onClose }: { userId?: string; onClose: () => v
   const add = useMutation({
     networkMode: 'always',
     mutationFn: () => userId ? insertFavoriteBar(userId, name, address || null) : addGuestPlace(name, address || null),
-    onSuccess: async () => {
+    onSuccess: async (favorite) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await qc.invalidateQueries({ queryKey: ['favorites', userId ?? 'guest'] });
-      void qc.invalidateQueries({ queryKey: ['profileHub'] });
+      await updateNotebookCache(qc, userId, { favorite });
       onClose();
+      void qc.invalidateQueries({ queryKey: ['favorites', userId ?? 'guest'] });
+      void qc.invalidateQueries({ queryKey: ['profileHub'] });
     },
   });
 
@@ -232,10 +234,11 @@ function NoteEditor({ place, userId, onClose }: { place: NotebookPlace; userId?:
     mutationFn: () => userId
       ? savePubNote(userId, place.id, { status, notes, tags })
       : saveGuestNote(place.id, { status, notes, tags }),
-    onSuccess: async () => {
+    onSuccess: async (note) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      await qc.invalidateQueries({ queryKey: ['pub-notes', userId ?? 'guest'] });
+      await updateNotebookCache(qc, userId, { note });
       onClose();
+      void qc.invalidateQueries({ queryKey: ['pub-notes', userId ?? 'guest'] });
     },
   });
 
@@ -343,15 +346,17 @@ function SummaryStat({
   icon,
   value,
   label,
+  loading = false,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
-  value: number;
+  value: number | null;
   label: string;
+  loading?: boolean;
 }) {
   return (
     <View style={styles.statCard}>
       <Ionicons name={icon} size={17} color={colors.text.accentBright} />
-      <Text style={styles.statValue}>{value}</Text>
+      {loading ? <SkeletonBlock width={30} height={30} /> : <Text style={styles.statValue}>{value ?? '—'}</Text>}
       <Text style={styles.statLabel}>{label}</Text>
     </View>
   );
@@ -380,7 +385,7 @@ export function PubNotebookScreen() {
 }
 
 function NotebookScreen() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const qc = useQueryClient();
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -388,7 +393,7 @@ function NotebookScreen() {
   const [tag, setTag] = useState<NotebookTag | null>(null);
   const [editing, setEditing] = useState<NotebookPlace | null>(null);
   const [adding, setAdding] = useState(false);
-  const { favorites, notes } = useNotebookData(user?.id);
+  const { favorites, notes } = useNotebookData(user?.id, !authLoading);
   const routeKeys = useQuery({
     queryKey: ['favorite-pub-route-keys', user?.id, favorites.data?.map((row) => row.id).join('|') ?? ''],
     queryFn: () => resolveFavoritePubRouteKeys(favorites.data!),
@@ -400,12 +405,15 @@ function NotebookScreen() {
   const visitedCount = useMemo(() => places.filter((place) => place.note?.status === 'visited').length, [places]);
   const plannedCount = places.length - visitedCount;
   const hasFilters = Boolean(search.trim()) || status !== 'all' || tag != null;
-  const loadError = favorites.isError || notes.isError;
-  const loading = favorites.isLoading || notes.isLoading;
+  const loadError = favorites.isError && favorites.data === undefined;
+  const loading = authLoading || (favorites.isPending && favorites.data === undefined);
+  const notesLoading = notes.isPending && notes.data === undefined;
+  const notesUnavailable = notes.data === undefined && notes.isError;
+  const notesReady = !notesLoading && !notesUnavailable;
   const refresh = () => {
     void favorites.refetch();
     void notes.refetch();
-    void routeKeys.refetch();
+    if (favorites.data?.length) void routeKeys.refetch();
   };
   const clearFilters = () => {
     setSearch('');
@@ -415,10 +423,11 @@ function NotebookScreen() {
   const remove = useMutation({
     networkMode: 'always',
     mutationFn: (id: string) => user ? deleteFavoriteBar(id) : removeGuestPlace(id),
-    onSuccess: () => {
+    onSuccess: async (_result, removedId) => {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      void qc.invalidateQueries({ queryKey: ['favorites'] });
-      void qc.invalidateQueries({ queryKey: ['pub-notes'] });
+      await updateNotebookCache(qc, user?.id, { removedId });
+      void qc.invalidateQueries({ queryKey: ['favorites', user?.id ?? 'guest'] });
+      void qc.invalidateQueries({ queryKey: ['pub-notes', user?.id ?? 'guest'] });
       void qc.invalidateQueries({ queryKey: ['pub-detail'] });
       void qc.invalidateQueries({ queryKey: ['profileHub'] });
     },
@@ -485,7 +494,7 @@ function NotebookScreen() {
         </View>
 
         {loading ? (
-          <ScreenLoadingBlock label="Opening your Notebook…" />
+          <NotebookSkeleton />
         ) : loadError ? (
           <Card style={styles.errorCard}>
             <View style={styles.errorIcon}>
@@ -501,10 +510,17 @@ function NotebookScreen() {
           </Card>
         ) : (
           <>
+            {favorites.isError || notes.isError ? (
+              <Card>
+                <Body accessibilityRole="alert">Some Notebook information could not be refreshed.</Body>
+                <Muted>Your saved places are still available. Try again to load the latest notes.</Muted>
+                <AppButton label="Try again" variant="secondary" onPress={refresh} />
+              </Card>
+            ) : null}
             <View style={styles.statsRow}>
               <SummaryStat icon="bookmark" value={places.length} label="Saved" />
-              <SummaryStat icon="map-outline" value={plannedCount} label="Planned" />
-              <SummaryStat icon="checkmark-circle-outline" value={visitedCount} label="Visited" />
+              <SummaryStat icon="map-outline" value={notesUnavailable ? null : plannedCount} label="Planned" loading={notesLoading} />
+              <SummaryStat icon="checkmark-circle-outline" value={notesUnavailable ? null : visitedCount} label="Visited" loading={notesLoading} />
             </View>
 
             {places.length === 0 ? (
@@ -532,12 +548,13 @@ function NotebookScreen() {
                   </View>
                   <View style={styles.filterDivider} />
                   <View style={styles.statusTabs}>
-                    <Chip label="All" compact selected={status === 'all'} onPress={() => setStatus('all')} />
+                    <Chip label="All" compact disabled={!notesReady} selected={status === 'all'} onPress={() => setStatus('all')} />
                     {STATUS_OPTIONS.map((option) => (
                       <Chip
                         key={option.value}
                         compact
                         label={option.label}
+                        disabled={!notesReady}
                         selected={status === option.value}
                         onPress={() => setStatus(option.value)}
                       />
@@ -547,12 +564,13 @@ function NotebookScreen() {
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={styles.tagList}>
-                    <Chip label="Any tag" compact selected={!tag} onPress={() => setTag(null)} />
+                    <Chip label="Any tag" compact disabled={!notesReady} selected={!tag} onPress={() => setTag(null)} />
                     {NOTEBOOK_TAGS.map((notebookTag) => (
                       <Chip
                         key={notebookTag}
                         compact
                         label={notebookTag}
+                        disabled={!notesReady}
                         selected={tag === notebookTag}
                         onPress={() => setTag(notebookTag)}
                       />
@@ -571,7 +589,9 @@ function NotebookScreen() {
                   ) : null}
                 </View>
 
-                {visible.length === 0 ? (
+                {visible.length === 0 && notesLoading ? (
+                  <ListSkeleton count={1} label="Loading private notes for your search…" />
+                ) : visible.length === 0 ? (
                   <Card style={styles.noResultsCard}>
                     <View style={styles.noResultsIcon}>
                       <Ionicons name="search-outline" size={26} color={colors.text.accentBright} />
@@ -590,6 +610,8 @@ function NotebookScreen() {
                           place={place}
                           pubKey={pubKey}
                           routeResolving={routeKeys.isFetching}
+                          notesLoading={notesLoading}
+                          notesUnavailable={notesUnavailable}
                           removing={remove.isPending}
                           onOpenPub={() => {
                             if (pubKey) router.push(`/pub/${encodeURIComponent(pubKey)}` as never);

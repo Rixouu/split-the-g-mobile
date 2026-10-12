@@ -19,6 +19,7 @@ import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubListRow } from '@/components/pub/pub-list-row';
 import { Card } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
 import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
@@ -308,7 +309,7 @@ export default function PubsScreen() {
         </View>
 
         {pubs.isPending && directoryCount === 0 ? (
-          <ScreenLoadingBlock label={t('pubsLoadingDirectory')} dense style={styles.loadingBlock} />
+          <ListSkeleton label={t('pubsLoadingDirectory')} />
         ) : null}
 
         {pubs.error ? (

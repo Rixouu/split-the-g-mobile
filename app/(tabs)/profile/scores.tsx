@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
-import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
+import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
@@ -46,7 +46,7 @@ export default function ProfileScoresScreen({ showStackHeader = true }: { showSt
         </Card>
       ) : null}
 
-      {scores.isLoading ? <ScreenLoadingBlock /> : null}
+      {user && scores.isPending ? <ListSkeleton /> : null}
 
       {scores.error ? (
         <Card>
@@ -54,13 +54,13 @@ export default function ProfileScoresScreen({ showStackHeader = true }: { showSt
         </Card>
       ) : null}
 
-      {user && !scores.isLoading && !scores.error && !hasScores ? (
+      {user && !scores.isPending && !scores.error && !hasScores ? (
         <Card>
           <Muted style={styles.emptyBlurb}>{t('profileScoresEmptyBlurb')}</Muted>
         </Card>
       ) : null}
 
-      {user && !scores.isLoading && !scores.error && hasScores ? (
+      {user && !scores.isPending && hasScores ? (
         <>
           <Card style={styles.summaryCard}>
             <Muted style={styles.summaryHeading}>{t('profileProgressTitle')}</Muted>

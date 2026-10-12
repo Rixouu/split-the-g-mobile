@@ -58,6 +58,8 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
       setBanner(data.attachPart ? `${base} — ${data.attachPart}` : base);
       trackEvent('pour_claim_succeeded', { scoreId: score.id });
       void qc.invalidateQueries({ queryKey: ['pourDetail', pourRef] });
+      void qc.invalidateQueries({ queryKey: ['myScores', user?.id] });
+      void qc.invalidateQueries({ queryKey: ['profileHub', user?.id] });
     },
     onError: () => {
       trackEvent('pour_claim_failed', { scoreId: score.id });
@@ -70,6 +72,8 @@ export function PourClaimCard({ pourRef, score, competitionId }: PourClaimCardPr
     onSuccess: () => {
       setBanner(translate(locale, 'pourMsgUnclaimOk'));
       void qc.invalidateQueries({ queryKey: ['pourDetail', pourRef] });
+      void qc.invalidateQueries({ queryKey: ['myScores', user?.id] });
+      void qc.invalidateQueries({ queryKey: ['profileHub', user?.id] });
     },
     onError: () => {
       setBanner(translate(locale, 'pourMsgUnclaimFail'));
