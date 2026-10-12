@@ -2,7 +2,7 @@
   "expo": {
     "name": "Split The G: Pour Analyzer",
     "slug": "split-the-g",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "splittheg",
@@ -12,7 +12,7 @@
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "bundleIdentifier": "com.rixouu.splittheg",
-      "buildNumber": "6",
+      "buildNumber": "7",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
