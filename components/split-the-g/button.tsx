@@ -10,6 +10,7 @@ interface AppButtonProps extends PressableProps {
   fullWidth?: boolean;
   /** Denser tap target and label — list cards / secondary rows. */
   compact?: boolean;
+  singleLine?: boolean;
 }
 
 export function AppButton({
@@ -18,6 +19,7 @@ export function AppButton({
   shape = 'pill',
   fullWidth,
   compact,
+  singleLine,
   style,
   disabled,
   ...props
@@ -33,6 +35,9 @@ export function AppButton({
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: Boolean(disabled) }}
       {...props}
       disabled={disabled}
       style={(state) => [
@@ -48,7 +53,7 @@ export function AppButton({
         state.pressed && !disabled && styles.pressed,
         typeof style === 'function' ? style(state) : style,
       ]}>
-      <Text style={[styles.label, compact ? styles.labelCompact : null, labelStyle]}>{label}</Text>
+      <Text numberOfLines={singleLine ? 1 : undefined} adjustsFontSizeToFit={singleLine} minimumFontScale={0.8} style={[styles.label, compact ? styles.labelCompact : null, labelStyle]}>{label}</Text>
     </Pressable>
   );
 }

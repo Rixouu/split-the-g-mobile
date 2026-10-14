@@ -11,7 +11,7 @@ import { PourSharePanel } from '@/components/pour-detail/pour-share-panel';
 import { PourSafetyPanel } from '@/components/pour-detail/pour-safety-panel';
 import { PourVenueEditor } from '@/components/pour-detail/pour-venue-editor';
 import { usePourDetail } from '@/components/pour-detail/hooks/use-pour-detail';
-import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
+import { BrandStackHeader } from '@/components/split-the-g/navigation-back-button';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { Body, Muted } from '@/components/split-the-g/typography';
@@ -111,8 +111,7 @@ export default function PourDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          headerBackVisible: false,
-          headerLeft: () => <NavigationBackButton accessibilityLabel={t('actionBack')} onPress={goBack} />,
+          header: (props) => <BrandStackHeader {...props} onBack={goBack} />,
         }}
       />
       <Screen

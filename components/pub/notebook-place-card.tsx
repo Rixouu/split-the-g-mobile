@@ -3,14 +3,12 @@ import * as Haptics from 'expo-haptics';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing } from '@/constants/design-tokens';
-import { brandColors } from '@/constants/theme';
 import type { NotebookPlace } from '@/lib/pub/notebook';
 import { SkeletonBlock } from '@/components/split-the-g/loading-skeleton';
 
 type Props = {
   place: NotebookPlace;
   pubKey?: string;
-  routeResolving?: boolean;
   notesLoading?: boolean;
   notesUnavailable?: boolean;
   removing?: boolean;
@@ -50,7 +48,7 @@ function Action({
       }}
       style={({ pressed }) => [styles.action, disabled && styles.disabled, pressed && styles.pressed]}>
       <Ionicons name={icon} size={17} color={colors.text.accentBright} />
-      <Text style={styles.actionLabel}>{label}</Text>
+      <Text numberOfLines={1} style={styles.actionLabel}>{label}</Text>
     </Pressable>
   );
 }
@@ -58,7 +56,6 @@ function Action({
 export function NotebookPlaceCard({
   place,
   pubKey,
-  routeResolving,
   notesLoading = false,
   notesUnavailable = false,
   removing,
@@ -75,46 +72,19 @@ export function NotebookPlaceCard({
           <Text style={styles.initials}>{initials(place.bar_name)}</Text>
         </View>
         <View style={styles.titleWrap}>
-          <View style={styles.badgeRow}>
-            {notesLoading ? <SkeletonBlock width={105} height={22} /> : notesUnavailable ? (
-              <Text style={styles.personalText}>Notes unavailable</Text>
-            ) : <View style={[styles.statusBadge, visited && styles.visitedBadge]}>
-              <Ionicons
-                name={visited ? 'checkmark-circle' : 'bookmark'}
-                size={12}
-                color={visited ? brandColors.cream : colors.text.accentBright}
-              />
-              <Text style={[styles.statusText, visited && styles.visitedText]}>
-                {visited ? 'Visited' : 'Want to visit'}
-              </Text>
-            </View>}
-            {!routeResolving && !pubKey ? (
-              <View style={styles.personalBadge}>
-                <Ionicons name="lock-closed" size={10} color={colors.text.muted} />
-                <Text style={styles.personalText}>Personal place</Text>
-              </View>
-            ) : null}
-          </View>
           <Text style={styles.title}>{place.bar_name}</Text>
           {place.bar_address ? (
-            <View style={styles.addressRow}>
-              <Ionicons name="location-outline" size={14} color={colors.text.mutedStrong} />
-              <Text style={styles.address} numberOfLines={2}>{place.bar_address}</Text>
-            </View>
+            <Text style={styles.address} numberOfLines={2}>{place.bar_address}</Text>
           ) : null}
+          {notesLoading ? <SkeletonBlock width={75} height={12} /> : notesUnavailable ? (
+            <Text style={styles.address}>Notes unavailable</Text>
+          ) : <View style={styles.statusRow}>
+            <Ionicons name={visited ? 'checkmark' : 'bookmark-outline'} size={12} color={colors.text.accentBright} />
+            <Text style={styles.statusText}>{visited ? 'Visited' : 'To visit'}</Text>
+          </View>}
         </View>
         {pubKey ? <Ionicons name="chevron-forward" size={21} color={colors.chevron.muted} /> : null}
       </View>
-
-      {place.note?.tags.length ? (
-        <View style={styles.tags}>
-          {place.note.tags.map((tag) => (
-            <View key={tag} style={styles.tag}>
-              <Text style={styles.tagText}>{tag}</Text>
-            </View>
-          ))}
-        </View>
-      ) : null}
 
       {notesLoading ? (
         <View accessibilityRole="progressbar" accessibilityLabel="Loading private note" style={{ gap: spacing.sm }}>
@@ -122,21 +92,12 @@ export function NotebookPlaceCard({
           <SkeletonBlock width="75%" height={12} />
         </View>
       ) : <View style={styles.noteRow}>
-        <Ionicons name="document-text-outline" size={16} color={colors.text.accentBright} />
-        <Text style={place.note?.notes ? styles.note : styles.noteEmpty} numberOfLines={3}>
-          {notesUnavailable ? 'Your private note could not be loaded. Try refreshing your Notebook.' : place.note?.notes || 'Add a private note about the atmosphere, food, access, or what to remember.'}
+        <Text style={place.note?.notes ? styles.note : styles.noteEmpty} numberOfLines={2}>
+          {notesUnavailable ? 'Your note could not be loaded. Pull down to retry.' : place.note?.notes || 'Add a private note for your next visit.'}
         </Text>
       </View>}
-
-      {pubKey ? (
-        <View style={styles.openHint}>
-          <Text style={styles.openHintText}>Open pub details</Text>
-          <Ionicons name="arrow-forward" size={15} color={colors.text.accentBright} />
-        </View>
-      ) : routeResolving ? (
-        <View style={styles.openHint}>
-          <Text style={styles.resolvingText}>Checking venue details…</Text>
-        </View>
+      {place.note?.tags.length ? (
+        <Text style={styles.tags} numberOfLines={2}>{place.note.tags.join(' · ')}</Text>
       ) : null}
     </>
   );
@@ -161,7 +122,6 @@ export function NotebookPlaceCard({
       <View style={styles.divider} />
       <View style={styles.actions}>
         <Action icon="create-outline" label={notesLoading ? 'Loading note…' : notesUnavailable ? 'Note unavailable' : place.note ? 'Edit note' : 'Add note'} disabled={notesLoading || notesUnavailable || removing} onPress={onEdit} />
-        <View style={styles.actionDivider} />
         <Action icon="navigate-outline" label="Directions" onPress={onDirections} />
         <View style={styles.actionSpacer} />
         <Pressable
@@ -182,34 +142,34 @@ const styles = StyleSheet.create({
   card: {
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: colors.stroke.hub,
+    borderColor: colors.stroke.frame,
     borderRadius: radii.card,
     backgroundColor: colors.surface.card,
   },
   body: {
-    gap: 15,
-    padding: spacing.cardPadding,
+    gap: 14,
+    padding: spacing.lg,
   },
   topRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 13,
+    alignItems: 'flex-start',
+    gap: 11,
   },
   initialWell: {
-    width: 54,
-    height: 54,
+    width: 48,
+    height: 48,
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.stroke.outlineStrong,
-    borderRadius: 15,
-    backgroundColor: colors.surface.hubIconWell,
+    borderColor: colors.stroke.subtle,
+    borderRadius: 12,
+    backgroundColor: colors.surface.favOnTint,
   },
   initials: {
     color: colors.text.accentBright,
-    fontSize: 17,
-    fontWeight: '900',
+    fontSize: 15,
+    fontWeight: '700',
     letterSpacing: 0.35,
   },
   titleWrap: {
@@ -217,121 +177,46 @@ const styles = StyleSheet.create({
     minWidth: 0,
     gap: 6,
   },
-  badgeRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  statusBadge: {
+  statusRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: colors.stroke.ctaSecondary,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface.favOnTint,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  visitedBadge: {
-    borderColor: 'rgba(11, 91, 55, 0.85)',
-    backgroundColor: 'rgba(11, 91, 55, 0.7)',
   },
   statusText: {
     color: colors.text.accentBright,
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 0.45,
-    textTransform: 'uppercase',
-  },
-  visitedText: { color: brandColors.cream },
-  personalBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 4,
-  },
-  personalText: {
-    color: colors.text.muted,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.25,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
   title: {
     color: colors.text.primary,
-    fontSize: 18,
+    fontSize: 17,
     lineHeight: 22,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.2,
   },
-  addressRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 5,
-  },
   address: {
-    flex: 1,
-    color: colors.text.mutedStrong,
+    color: colors.text.secondary,
     fontSize: 13,
     lineHeight: 18,
   },
   tags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 7,
-  },
-  tag: {
-    borderWidth: 1,
-    borderColor: colors.stroke.subtle,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface.inkTranslucent,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
-  },
-  tagText: {
-    color: colors.text.muted,
+    color: colors.text.secondary,
     fontSize: 11,
-    fontWeight: '700',
+    lineHeight: 16,
   },
   noteRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 9,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.stroke.subtle,
-    paddingTop: 13,
+    paddingTop: 2,
   },
   note: {
-    flex: 1,
     color: colors.text.primary,
     fontSize: 14,
     lineHeight: 20,
   },
   noteEmpty: {
-    flex: 1,
-    color: colors.text.muted,
+    color: colors.text.secondary,
     fontSize: 13,
     lineHeight: 19,
-    fontStyle: 'italic',
-  },
-  openHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    alignSelf: 'flex-start',
-  },
-  openHintText: {
-    color: colors.text.accentBright,
-    fontSize: 12,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  resolvingText: {
-    color: colors.text.mutedMedium,
-    fontSize: 12,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
@@ -344,22 +229,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   action: {
+    minWidth: 0,
     minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     gap: 7,
     paddingHorizontal: 9,
   },
   actionLabel: {
-    color: colors.text.primary,
+    flexShrink: 1,
+    color: colors.text.accentBright,
     fontSize: 12,
-    fontWeight: '800',
-  },
-  actionDivider: {
-    width: StyleSheet.hairlineWidth,
-    height: 21,
-    backgroundColor: colors.stroke.subtle,
+    fontWeight: '600',
   },
   actionSpacer: { flex: 1 },
   removeButton: {

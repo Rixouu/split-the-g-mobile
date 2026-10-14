@@ -24,7 +24,7 @@ import { useNotebookData } from '@/components/pub/use-notebook-data';
 import { AppButton } from '@/components/split-the-g/button';
 import { DiscoverSectionTitle, DiscoverSegmentHeader } from '@/components/split-the-g/discover-feed-chrome';
 import { Card, Screen } from '@/components/split-the-g/screen';
-import { ListSkeleton, NotebookSkeleton, SkeletonBlock } from '@/components/split-the-g/loading-skeleton';
+import { ListSkeleton, NotebookSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
@@ -55,16 +55,22 @@ function Chip({
   onPress,
   disabled = false,
   compact = false,
+  tab = false,
+  count,
 }: {
   label: string;
   selected: boolean;
   onPress: () => void;
   disabled?: boolean;
   compact?: boolean;
+  tab?: boolean;
+  count?: number;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityValue={count !== undefined ? { text: `${count} ${count === 1 ? 'place' : 'places'}` } : undefined}
       accessibilityState={{ selected, disabled }}
       disabled={disabled}
       onPress={() => {
@@ -75,9 +81,12 @@ function Chip({
         styles.chip,
         compact && styles.chipCompact,
         selected && styles.chipSelected,
+        tab && styles.statusTab,
+        tab && selected && styles.statusTabSelected,
         pressed && !disabled && styles.pressed,
       ]}>
-      <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+      <Text numberOfLines={1} style={[styles.chipText, tab && styles.statusTabText, selected && styles.chipTextSelected]}>{label}</Text>
+      {count !== undefined ? <Text style={styles.chipCount}>{count}</Text> : null}
     </Pressable>
   );
 }
@@ -342,26 +351,6 @@ function NoteEditor({ place, userId, onClose }: { place: NotebookPlace; userId?:
   );
 }
 
-function SummaryStat({
-  icon,
-  value,
-  label,
-  loading = false,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  value: number | null;
-  label: string;
-  loading?: boolean;
-}) {
-  return (
-    <View style={styles.statCard}>
-      <Ionicons name={icon} size={17} color={colors.text.accentBright} />
-      {loading ? <SkeletonBlock width={30} height={30} /> : <Text style={styles.statValue}>{value ?? '—'}</Text>}
-      <Text style={styles.statLabel}>{label}</Text>
-    </View>
-  );
-}
-
 function EmptyNotebook({ onAdd, onDiscover }: { onAdd: () => void; onDiscover: () => void }) {
   return (
     <Card style={styles.emptyCard}>
@@ -391,6 +380,7 @@ function NotebookScreen() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<VisitStatus | 'all'>('all');
   const [tag, setTag] = useState<NotebookTag | null>(null);
+  const [showTags, setShowTags] = useState(false);
   const [editing, setEditing] = useState<NotebookPlace | null>(null);
   const [adding, setAdding] = useState(false);
   const { favorites, notes } = useNotebookData(user?.id, !authLoading);
@@ -452,6 +442,8 @@ function NotebookScreen() {
   return (
     <>
       <Screen
+        accessibilityElementsHidden={Boolean(editing || adding)}
+        importantForAccessibility={editing || adding ? 'no-hide-descendants' : 'auto'}
         contentContainerStyle={styles.screenContent}
         refreshControl={(
           <RefreshControl
@@ -461,9 +453,10 @@ function NotebookScreen() {
           />
         )}>
         <DiscoverSegmentHeader
-          eyebrow="YOUR PUB NOTEBOOK"
-          title="Places worth remembering"
-          subtitle="Plan future visits and keep the private details that make a venue yours."
+          eyebrow="YOUR COLLECTION"
+          title="Notebook"
+          subtitle="Saved places and personal notes."
+          style={styles.notebookHeader}
           titleTrailing={(
             <Pressable
               accessibilityRole="button"
@@ -474,24 +467,25 @@ function NotebookScreen() {
                 setAdding(true);
               }}
               style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}>
-              <Ionicons name="add" size={25} color={colors.text.onPrimary} />
+              <Ionicons name="add" size={18} color={colors.text.accentBright} />
+              <Text style={styles.addLabel}>Add place</Text>
             </Pressable>
-          )}
-        />
-
-        <View style={styles.privacyBanner}>
-          <View style={styles.privacyIcon}>
-            <Ionicons name={user ? 'cloud-done-outline' : 'phone-portrait-outline'} size={18} color={colors.text.accentBright} />
-          </View>
-          <View style={styles.privacyCopy}>
-            <Text style={styles.privacyTitle}>{user ? 'Private & synced' : 'Private on this device'}</Text>
-            <Muted style={styles.privacyBody}>
-              {user
+          )}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="About your private Notebook"
+            onPress={() => Alert.alert(
+              user ? 'Private & synced' : 'Private on this device',
+              user
                 ? 'Your notes stay private to your account and follow you between devices.'
-                : 'No login needed. Guest notes stay on this phone and are removed if the app is uninstalled.'}
-            </Muted>
-          </View>
-        </View>
+                : 'No login needed. Guest notes stay on this phone and are removed if the app is uninstalled. Signing in opens a separate account Notebook.',
+            )}
+            style={styles.privacyBanner}>
+            <Ionicons name="lock-closed-outline" size={12} color={colors.text.secondary} />
+            <Text style={styles.privacyTitle}>{user ? 'Private to your account' : 'Private on this device'}</Text>
+            <Ionicons name="information-circle-outline" size={14} color={colors.text.secondary} />
+          </Pressable>
+        </DiscoverSegmentHeader>
 
         {loading ? (
           <NotebookSkeleton />
@@ -517,54 +511,61 @@ function NotebookScreen() {
                 <AppButton label="Try again" variant="secondary" onPress={refresh} />
               </Card>
             ) : null}
-            <View style={styles.statsRow}>
-              <SummaryStat icon="bookmark" value={places.length} label="Saved" />
-              <SummaryStat icon="map-outline" value={notesUnavailable ? null : plannedCount} label="Planned" loading={notesLoading} />
-              <SummaryStat icon="checkmark-circle-outline" value={notesUnavailable ? null : visitedCount} label="Visited" loading={notesLoading} />
-            </View>
 
             {places.length === 0 ? (
               <EmptyNotebook onAdd={() => setAdding(true)} onDiscover={() => router.push('/pubs')} />
             ) : (
               <>
                 <View style={styles.filterCard}>
-                  <View style={styles.searchShell}>
-                    <Ionicons name="search" size={19} color={colors.text.mutedStrong} />
-                    <TextInput
-                      accessibilityLabel="Search saved places and notes"
-                      value={search}
-                      onChangeText={setSearch}
-                      placeholder="Search places, notes, or tags"
-                      placeholderTextColor={brandColors.tanMuted}
-                      style={styles.searchInput}
-                      autoCorrect={false}
-                      returnKeyType="search"
-                    />
-                    {search ? (
-                      <Pressable accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={8} onPress={() => setSearch('')}>
-                        <Ionicons name="close-circle" size={19} color={colors.text.mutedStrong} />
+                  <View style={styles.searchRow}>
+                    <View style={styles.searchShell}>
+                      <Ionicons name="search" size={19} color={colors.text.mutedStrong} />
+                      <TextInput
+                        accessibilityLabel="Search saved places and notes"
+                        value={search}
+                        onChangeText={setSearch}
+                        placeholder="Search places, notes, or tags"
+                        placeholderTextColor={colors.text.secondary}
+                        style={styles.searchInput}
+                        autoCorrect={false}
+                        returnKeyType="search"
+                      />
+                      {search ? (
+                        <Pressable accessibilityRole="button" accessibilityLabel="Clear search" hitSlop={8} onPress={() => setSearch('')}>
+                          <Ionicons name="close-circle" size={19} color={colors.text.mutedStrong} />
+                        </Pressable>
+                      ) : null}
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Filter by tag"
+                        accessibilityState={{ expanded: showTags }}
+                        onPress={() => setShowTags((value) => !value)}
+                        style={styles.filterButton}>
+                        <Ionicons name="options-outline" size={20} color={showTags || tag ? colors.text.accentBright : colors.text.secondary} />
+                        {tag ? <View style={styles.filterDot} /> : null}
                       </Pressable>
-                    ) : null}
+                    </View>
                   </View>
-                  <View style={styles.filterDivider} />
                   <View style={styles.statusTabs}>
-                    <Chip label="All" compact disabled={!notesReady} selected={status === 'all'} onPress={() => setStatus('all')} />
+                    <Chip label="All" tab count={places.length} disabled={!notesReady} selected={status === 'all'} onPress={() => setStatus('all')} />
                     {STATUS_OPTIONS.map((option) => (
                       <Chip
                         key={option.value}
-                        compact
-                        label={option.label}
+                        label={option.value === 'want_to_visit' ? 'To visit' : option.label}
+                        tab
+                        count={notesReady ? option.value === 'visited' ? visitedCount : plannedCount : undefined}
                         disabled={!notesReady}
                         selected={status === option.value}
                         onPress={() => setStatus(option.value)}
                       />
                     ))}
                   </View>
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.tagList}>
-                    <Chip label="Any tag" compact disabled={!notesReady} selected={!tag} onPress={() => setTag(null)} />
+                  {showTags ? (
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={styles.tagList}>
+                      <Chip label="Any tag" compact disabled={!notesReady} selected={!tag} onPress={() => setTag(null)} />
                     {NOTEBOOK_TAGS.map((notebookTag) => (
                       <Chip
                         key={notebookTag}
@@ -575,7 +576,13 @@ function NotebookScreen() {
                         onPress={() => setTag(notebookTag)}
                       />
                     ))}
-                  </ScrollView>
+                    </ScrollView>
+                  ) : tag ? (
+                    <Pressable accessibilityRole="button" accessibilityLabel="Clear tag filter" onPress={() => setTag(null)} style={styles.activeTag}>
+                      <Text style={styles.chipTextSelected}>{tag}</Text>
+                      <Ionicons name="close" size={15} color={colors.text.accentBright} />
+                    </Pressable>
+                  ) : null}
                 </View>
 
                 <View style={styles.listHeading}>
@@ -609,7 +616,6 @@ function NotebookScreen() {
                           key={place.id}
                           place={place}
                           pubKey={pubKey}
-                          routeResolving={routeKeys.isFetching}
                           notesLoading={notesLoading}
                           notesUnavailable={notesUnavailable}
                           removing={remove.isPending}
@@ -626,13 +632,6 @@ function NotebookScreen() {
                 )}
               </>
             )}
-
-            {places.length ? (
-              <View style={styles.footerNote}>
-                <Ionicons name="shield-checkmark-outline" size={17} color={colors.text.muted} />
-                <Muted style={styles.footerText}>Your tags and notes are personal observations, never public ratings or rankings.</Muted>
-              </View>
-            ) : null}
           </>
         )}
       </Screen>
@@ -653,53 +652,13 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   pressed: { opacity: 0.72 },
   disabled: { opacity: 0.4 },
-  screenContent: { paddingTop: spacing.sm },
+  screenContent: { paddingTop: spacing.sm, gap: spacing.xl },
+  notebookHeader: { marginBottom: 0 },
   goldEyebrow: { color: colors.text.accentBright, opacity: 0.9 },
-  addButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.pill,
-    backgroundColor: colors.cta.primaryBg,
-  },
-  privacyBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginTop: -4,
-    borderWidth: 1,
-    borderColor: colors.stroke.subtle,
-    borderRadius: radii.card,
-    backgroundColor: colors.surface.panelTranslucentSoft,
-    padding: 13,
-  },
-  privacyIcon: {
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 11,
-    backgroundColor: colors.surface.hubIconWell,
-  },
-  privacyCopy: { flex: 1, minWidth: 0, gap: 2 },
-  privacyTitle: { color: colors.text.primary, fontSize: 13, fontWeight: '800' },
-  privacyBody: { fontSize: 12, lineHeight: 17 },
-  statsRow: { flexDirection: 'row', gap: 9 },
-  statCard: {
-    flex: 1,
-    minWidth: 0,
-    alignItems: 'center',
-    gap: 4,
-    borderWidth: 1,
-    borderColor: colors.stroke.hub,
-    borderRadius: radii.card,
-    backgroundColor: colors.surface.hubRow,
-    paddingHorizontal: 8,
-    paddingVertical: 13,
-  },
-  statValue: { color: colors.text.primary, fontSize: 21, fontWeight: '900', lineHeight: 24 },
-  statLabel: { color: colors.text.muted, fontSize: 10, fontWeight: '800', letterSpacing: 0.65, textTransform: 'uppercase' },
+  addButton: { minHeight: 44, flexDirection: 'row', gap: 5, paddingHorizontal: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.stroke.default, borderRadius: radii.buttonRounded },
+  addLabel: { color: colors.text.accentBright, fontSize: 12, fontWeight: '700' },
+  privacyBanner: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 30 },
+  privacyTitle: { color: colors.text.secondary, fontSize: 11, lineHeight: 16 },
   emptyCard: { alignItems: 'center', paddingVertical: 26 },
   emptyIcon: {
     width: 72,
@@ -724,31 +683,19 @@ const styles = StyleSheet.create({
   },
   errorTitle: { fontWeight: '800', textAlign: 'center' },
   errorText: { color: brandColors.red, fontSize: 14 },
-  filterCard: {
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.stroke.hub,
-    borderRadius: radii.card,
-    backgroundColor: colors.surface.card,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  searchShell: {
-    minHeight: 46,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginHorizontal: 12,
-    borderWidth: 1,
-    borderColor: colors.stroke.frame,
-    borderRadius: 12,
-    backgroundColor: colors.surface.inkTranslucent,
-    paddingHorizontal: 13,
-  },
-  searchInput: { flex: 1, color: colors.text.primary, fontSize: 15, paddingVertical: 10 },
-  filterDivider: { height: StyleSheet.hairlineWidth, backgroundColor: colors.stroke.subtle },
-  statusTabs: { flexDirection: 'row', gap: 7, paddingHorizontal: 12 },
-  tagList: { gap: 7, paddingHorizontal: 12 },
+  filterCard: { gap: 12 },
+  searchRow: { flexDirection: 'row', alignItems: 'center' },
+  searchShell: { flex: 1, minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderColor: colors.stroke.frame, borderRadius: radii.md, backgroundColor: colors.surface.card, paddingLeft: 13, paddingRight: 4 },
+  searchInput: { flex: 1, minWidth: 0, color: colors.text.primary, fontSize: 14, paddingVertical: 11 },
+  filterButton: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  filterDot: { width: 5, height: 5, borderRadius: 3, backgroundColor: colors.text.accentBright, position: 'absolute', top: 9, right: 9 },
+  statusTabs: { flexDirection: 'row', gap: 18, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.stroke.subtle },
+  tagList: { gap: 7 },
+  activeTag: { alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 8, padding: 8 },
+  statusTab: { flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, borderWidth: 0, borderBottomWidth: 2, borderBottomColor: 'transparent', borderRadius: 0, backgroundColor: 'transparent', paddingHorizontal: 0 },
+  statusTabSelected: { borderBottomColor: colors.text.accent },
+  statusTabText: { textTransform: 'uppercase', letterSpacing: 0.65, color: colors.text.secondary },
+  chipCount: { color: colors.text.secondary, fontSize: 11, fontWeight: '500' },
   chip: {
     minHeight: 42,
     justifyContent: 'center',
@@ -759,13 +706,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
   },
-  chipCompact: { minHeight: 36, paddingHorizontal: 11, paddingVertical: 7 },
-  chipSelected: { borderColor: colors.stroke.outlineStrong, backgroundColor: colors.surface.favOnTint },
+  chipCompact: { minHeight: 40, paddingHorizontal: 8, paddingVertical: 7 },
+  chipSelected: { borderColor: colors.stroke.ctaSecondary, backgroundColor: colors.surface.favOnTint },
   chipText: { color: colors.text.muted, fontSize: 12, fontWeight: '700' },
-  chipTextSelected: { color: colors.text.accentBright, fontWeight: '900' },
+  chipTextSelected: { color: colors.text.accentBright, fontWeight: '700' },
   chips: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   listHeading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  listTitle: { marginBottom: 0 },
+  listTitle: { marginBottom: 0, fontSize: 11, letterSpacing: 1.1, color: colors.text.secondary, fontWeight: '600' },
   clearLabel: { color: colors.text.accentBright, fontSize: 12, fontWeight: '800' },
   cards: { gap: 14 },
   noResultsCard: { alignItems: 'center' },
@@ -778,13 +725,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface.hubIconWell,
   },
   noResultsTitle: { color: colors.text.primary, fontSize: 17, fontWeight: '800', textAlign: 'center' },
-  footerNote: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 4,
-  },
-  footerText: { flex: 1, fontSize: 12, lineHeight: 18 },
   modal: { flex: 1, backgroundColor: brandColors.black },
   editor: { paddingHorizontal: spacing.screenGutter, paddingTop: 6, gap: 18, paddingBottom: 40 },
   sheetHeader: { gap: 12, paddingBottom: 3 },
@@ -815,10 +755,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.stroke.frame,
-    borderRadius: radii.pill,
-    backgroundColor: colors.surface.hubIconWell,
   },
   formCard: {
     gap: 12,

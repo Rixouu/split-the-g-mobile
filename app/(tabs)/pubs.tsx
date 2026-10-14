@@ -22,7 +22,7 @@ import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
 import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { SCREEN_EDGE_GUTTER } from '@/constants/layout';
-import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
+import { DARK_MAP_PROPS } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubs } from '@/lib/api/client';
 import type { PubSummary } from '@/lib/api/types';
@@ -237,8 +237,7 @@ export default function PubsScreen() {
               <MapView
                 ref={mapRef}
                 style={styles.map}
-                mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-                customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
+                {...DARK_MAP_PROPS}
                 pitchEnabled={false}
                 rotateEnabled={false}
                 toolbarEnabled={false}

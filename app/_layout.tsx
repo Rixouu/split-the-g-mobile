@@ -6,6 +6,7 @@ import 'react-native-reanimated';
 
 import { brandColors } from '@/constants/theme';
 import { AppProviders } from '@/lib/providers';
+import { BrandStackHeader } from '@/components/split-the-g/navigation-back-button';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -42,11 +43,7 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             contentStyle: { backgroundColor: brandColors.black },
-            headerStyle: { backgroundColor: brandColors.black },
-            headerTintColor: brandColors.cream,
-            headerTitleAlign: 'center',
-            headerBackButtonDisplayMode: 'minimal',
-            headerTitleStyle: { color: brandColors.goldBright, fontWeight: '700' },
+            header: (props) => <BrandStackHeader {...props} />,
           }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="wall" options={{ title: 'The wall' }} />

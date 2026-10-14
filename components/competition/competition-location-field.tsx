@@ -16,6 +16,7 @@ import {
 } from '@/components/competition/competition-form-layout';
 import { Body, Muted } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
+import { DARK_MAP_PROPS } from '@/constants/google-dark-map-style';
 import type { PlaceAutocompleteItem } from '@/lib/places/google-places';
 import { fetchPlaceAutocomplete, fetchPlaceDetails } from '@/lib/places/google-places';
 
@@ -105,6 +106,7 @@ export function CompetitionLocationField({
 
   const mapEl = hasMap ? (
     <MapView
+      {...DARK_MAP_PROPS}
       style={presentation === 'grouped' ? styles.mapGrouped : styles.map}
       pointerEvents="none"
       region={{

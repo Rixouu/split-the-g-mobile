@@ -98,4 +98,14 @@ describe('submitPourImage', () => {
       detail: expect.stringContaining('HTTP 502'),
     });
   });
+
+  it('keeps a server timeout recoverable instead of reporting an unreadable response', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ status: 504 }) as typeof fetch;
+
+    await expect(submitPourImage({ imageUri: 'file:///photo.jpg' })).resolves.toMatchObject({
+      success: false,
+      error: 'ANALYSIS_TIMEOUT',
+      status: 504,
+    });
+  });
 });

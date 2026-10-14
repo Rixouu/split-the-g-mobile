@@ -43,6 +43,8 @@ export const radii = {
 export const colors = {
   text: {
     primary: brandColors.cream,
+    /** Secondary venue copy, using the same cream as the directory. */
+    secondary: 'rgba(253, 251, 243, 0.62)',
     /** Body secondary — matches typography `muted` baseline */
     muted: 'rgba(212, 183, 143, 0.72)',
     mutedStrong: 'rgba(212, 183, 143, 0.62)',

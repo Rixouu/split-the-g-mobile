@@ -1,23 +1,13 @@
 import { Stack } from 'expo-router';
 
 import { brandColors } from '@/constants/theme';
-
-const profileStackHeader = {
-  headerTitleAlign: 'center' as const,
-  headerTintColor: brandColors.cream,
-  headerBackButtonDisplayMode: 'minimal' as const,
-  headerTitleStyle: {
-    color: brandColors.goldBright,
-    fontWeight: '700' as const,
-  },
-};
+import { BrandStackHeader } from '@/components/split-the-g/navigation-back-button';
 
 export default function ProfileStackLayout() {
   return (
     <Stack
       screenOptions={{
-        ...profileStackHeader,
-        headerStyle: { backgroundColor: brandColors.black },
+        header: (props) => <BrandStackHeader {...props} fallback="/(tabs)/profile" />,
         contentStyle: { backgroundColor: brandColors.black },
       }}>
       <Stack.Screen name="index" options={{ headerShown: false, title: 'Profile' }} />

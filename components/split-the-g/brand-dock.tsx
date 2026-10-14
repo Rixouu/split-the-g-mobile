@@ -48,6 +48,7 @@ function DockTabIcon({
   return (
     <Pressable
       accessibilityRole="tab"
+      accessibilityLabel={label}
       accessibilityState={{ selected: active }}
       onPress={onPress}
       style={({ pressed }) => [styles.row1Item, pressed && styles.pressed]}>

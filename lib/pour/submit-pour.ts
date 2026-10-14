@@ -109,6 +109,9 @@ export async function submitPourImage({
     if (response.status === 413) {
       return { success: false, error: 'IMAGE_TOO_LARGE', status: 413 };
     }
+    if (response.status === 504) {
+      return { success: false, error: 'ANALYSIS_TIMEOUT', status: 504 };
+    }
     const payload: unknown = await response.json().catch(() => null);
     if (!payload || typeof payload !== 'object' || typeof (payload as { success?: unknown }).success !== 'boolean') {
       return {

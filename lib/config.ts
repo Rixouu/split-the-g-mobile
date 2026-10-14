@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { normalizeApiBaseUrl } from '@/lib/api/base-url';
 
 interface AppExtraConfig {
   siteUrl?: string;
@@ -26,7 +27,7 @@ export const appConfig = {
   siteUrl: normalizeUrl(
     process.env.EXPO_PUBLIC_SITE_URL ?? extra.siteUrl ?? 'https://www.split-the-g.app',
   ),
-  apiBaseUrl: normalizeUrl(
+  apiBaseUrl: normalizeApiBaseUrl(
     process.env.EXPO_PUBLIC_API_BASE_URL ??
       extra.apiBaseUrl ??
       extra.siteUrl ??

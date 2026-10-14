@@ -169,30 +169,31 @@ export default function HomeScreen() {
     setMessage(null);
     setShowNoGModal(false);
 
-    const permission =
-      source === 'camera'
-        ? await ImagePicker.requestCameraPermissionsAsync()
-        : await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      setMessage('Camera or media permission is required to score a pour.');
+    let result: ImagePicker.ImagePickerResult;
+    try {
+      if (source === 'camera') {
+        const permission = await ImagePicker.requestCameraPermissionsAsync();
+        if (!permission.granted) {
+          setMessage('Camera permission is required to take a photo.');
+          return;
+        }
+      }
+      // The system photo picker grants access to the selected image only. It does
+      // not need full-library permission, including when that permission is denied.
+      const options: ImagePicker.ImagePickerOptions = {
+        mediaTypes: ['images'],
+        allowsEditing: false,
+        base64: false,
+        exif: true,
+        quality: 0.86,
+      };
+      result = source === 'camera'
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
+    } catch {
+      setMessage(t('homeErrInvalidImage'));
       return;
     }
-
-    const result =
-      source === 'camera'
-        ? await ImagePicker.launchCameraAsync({
-            allowsEditing: false,
-            base64: false,
-            exif: true,
-            quality: 0.86,
-          })
-        : await ImagePicker.launchImageLibraryAsync({
-            allowsEditing: false,
-            base64: false,
-            exif: true,
-            quality: 0.86,
-          });
 
     if (result.canceled) return;
     const uri = result.assets[0]?.uri ?? null;
@@ -352,6 +353,7 @@ export default function HomeScreen() {
               />
               <AppButton
                 label={t('homeChangePhoto')}
+                singleLine
                 variant="secondary"
                 compact
                 style={styles.retryBtn}
@@ -531,13 +533,13 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
   },
   retryRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 10,
     alignSelf: 'stretch',
     alignItems: 'stretch',
   },
   retryBtn: {
-    flex: 1,
+    minHeight: 44,
   },
   errorText: {
     textAlign: 'center',

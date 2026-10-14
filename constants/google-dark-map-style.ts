@@ -1,9 +1,10 @@
-import type { MapStyleElement } from 'react-native-maps';
+import { Platform } from 'react-native';
+import type { MapStyleElement, MapViewProps } from 'react-native-maps';
 
 /**
  * Custom Google Maps styling for Android (`MapView.customMapStyle`).
- * Tuned toward Split-the-G browns — iOS defaults to Apple Maps, which ignores this;
- * combine with `mapType="mutedStandard"` there for a softer backdrop.
+ * Tuned toward Split-the-G browns. The iOS Apple Maps provider uses its native
+ * dark appearance instead of Google's JSON styling.
  */
 export const GOOGLE_MAP_DARK_STYLE: MapStyleElement[] = [
   { elementType: 'geometry', stylers: [{ color: '#15120e' }] },
@@ -33,3 +34,10 @@ export const GOOGLE_MAP_DARK_STYLE: MapStyleElement[] = [
     stylers: [{ color: '#0c1018' }],
   },
 ];
+
+/** Keep every embedded map dark, even when the phone uses light appearance. */
+export const DARK_MAP_PROPS = {
+  userInterfaceStyle: 'dark',
+  mapType: Platform.OS === 'ios' ? 'mutedStandard' : 'standard',
+  customMapStyle: Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined,
+} satisfies Pick<MapViewProps, 'userInterfaceStyle' | 'mapType' | 'customMapStyle'>;

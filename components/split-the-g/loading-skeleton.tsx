@@ -85,18 +85,21 @@ export function ListSkeleton({ count = 3, label }: { count?: number; label?: str
 export function NotebookSkeleton() {
   return (
     <SkeletonGroup label="Opening your Notebook…">
-      <StatPlaceholders />
-      <View style={styles.card}>
-        <SkeletonBlock height={42} />
-        <SkeletonBlock height={30} width="80%" />
+      <View style={styles.stack}>
+        <SkeletonBlock height={48} />
+        <View style={styles.row}>
+          <SkeletonBlock width="28%" height={18} />
+          <SkeletonBlock width="28%" height={18} />
+          <SkeletonBlock width="28%" height={18} />
+        </View>
       </View>
       {[0, 1, 2].map((i) => (
         <View key={i} style={styles.card}>
           <View style={styles.row}>
-            <SkeletonBlock width={54} height={54} style={styles.icon} />
+            <SkeletonBlock width={48} height={48} style={styles.icon} />
             <View style={[styles.stack, styles.cell]}>
               <SkeletonBlock width="50%" height={22} />
-              <SkeletonBlock width="85%" height={20} />
+              <SkeletonBlock width="60%" height={16} />
               <SkeletonBlock height={12} />
             </View>
           </View>
@@ -105,6 +108,27 @@ export function NotebookSkeleton() {
           <SkeletonBlock width="60%" height={28} />
         </View>
       ))}
+    </SkeletonGroup>
+  );
+}
+
+export function PubDetailSkeleton() {
+  return (
+    <SkeletonGroup>
+      <View style={styles.stack}>
+        <SkeletonBlock width="35%" height={10} />
+        <SkeletonBlock width="75%" height={32} />
+        <SkeletonBlock width="90%" height={14} />
+        <SkeletonBlock width="65%" height={14} />
+        <SkeletonBlock height={48} />
+      </View>
+      <SkeletonBlock height={190} style={styles.icon} />
+      <StatPlaceholders />
+      <View style={styles.card}>
+        <SkeletonBlock width="45%" height={18} />
+        <SkeletonBlock height={14} />
+        <SkeletonBlock width="70%" height={14} />
+      </View>
     </SkeletonGroup>
   );
 }

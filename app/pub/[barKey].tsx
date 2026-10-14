@@ -3,18 +3,18 @@ import * as Haptics from 'expo-haptics';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 
 import { PubGoldMapPin } from '@/components/pub/pub-gold-map-pin';
 import { PubWallPanel } from '@/components/pub/pub-wall-panel';
 import { AppButton } from '@/components/split-the-g/button';
-import { NavigationBackButton } from '@/components/split-the-g/navigation-back-button';
-import { ListSkeleton } from '@/components/split-the-g/loading-skeleton';
+import { BrandStackHeader } from '@/components/split-the-g/navigation-back-button';
+import { PubDetailSkeleton } from '@/components/split-the-g/loading-skeleton';
 import { Card, Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow, Muted, Title } from '@/components/split-the-g/typography';
 import { colors, radii, spacing, typeScale } from '@/constants/design-tokens';
-import { GOOGLE_MAP_DARK_STYLE } from '@/constants/google-dark-map-style';
+import { DARK_MAP_PROPS } from '@/constants/google-dark-map-style';
 import { brandColors } from '@/constants/theme';
 import { fetchPubDetailPage } from '@/lib/api/client';
 import { deleteFavoriteBar, insertFavoriteBar } from '@/lib/api/profile';
@@ -288,22 +288,21 @@ export default function PubDetailScreen() {
     <>
       <Stack.Screen
         options={{
-          headerBackVisible: false,
-          headerLeft: () => <NavigationBackButton accessibilityLabel={t('actionBack')} onPress={goBackToPubs} />,
+          header: (props) => <BrandStackHeader {...props} onBack={goBackToPubs} />,
         }}
       />
       <Screen
         edges={UNDER_STACK_HEADER_SAFE_AREA_EDGES}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.pubScrollContent}>
-      <View style={styles.header}>
+      {!q.isPending ? <View style={styles.header}>
         <View style={styles.heroTopRow}>
           <View style={styles.heroTitleColumn}>
             <Eyebrow>{t('pubEyebrow')}</Eyebrow>
             {bar ? (
               <Title style={typeScale.titleCompact}>{bar.display_name || t('pubTitleFallback')}</Title>
             ) : (
-              <Title style={typeScale.titleCompact}>{q.isLoading ? '…' : t('pubTitleFallback')}</Title>
+              <Title style={typeScale.titleCompact}>{t('pubTitleFallback')}</Title>
             )}
           </View>
           {bar && page ? (
@@ -350,7 +349,7 @@ export default function PubDetailScreen() {
         ) : null}
         {bar ? <AppButton label={favoriteId ? 'Open Notebook' : 'Save to Notebook'} variant="secondary" disabled={favMutation.isPending || (!user && !guestPlaces.isSuccess)} onPress={() => favoriteId ? router.push('/journal') : favMutation.mutate()} /> : null}
         {favMutation.isError ? <Body accessibilityRole="alert">Could not update your Notebook. Please try again.</Body> : null}
-      </View>
+      </View> : null}
 
       {favoriteToast ? (
         <Pressable
@@ -363,7 +362,7 @@ export default function PubDetailScreen() {
         </Pressable>
       ) : null}
 
-      {q.isPending ? <ListSkeleton /> : null}
+      {q.isPending ? <PubDetailSkeleton /> : null}
 
       {q.error ? (
         <Card>
@@ -393,8 +392,7 @@ export default function PubDetailScreen() {
                 key={mapKey}
                 style={styles.map}
                 region={mapRegion}
-                mapType={Platform.OS === 'ios' ? 'mutedStandard' : 'standard'}
-                customMapStyle={Platform.OS === 'android' ? GOOGLE_MAP_DARK_STYLE : undefined}
+                {...DARK_MAP_PROPS}
                 showsPointsOfInterest={false}
                 scrollEnabled={false}
                 rotateEnabled={false}
