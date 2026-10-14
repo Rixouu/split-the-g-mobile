@@ -18,4 +18,9 @@
 - The supplied Guinness photo was submitted through the native system picker to the production API. It returned a score of 4.49/5 and saved annotated image URLs, which returned HTTP 200. An earlier request timed out; a subsequent complete native request succeeded. This check does not establish that every request will succeed.
 - The signed iOS Release build completed with version 1.2.0, build 8 and an embedded JavaScript bundle. The local IPA is in `dist/ios/split-the-g-1.2-build8.ipa` (ignored by Git).
 
-Build 8 includes these fixes. The App Store Connect build previously uploaded was build 7; uploading or selecting build 8 there is a separate release step.
+## Delivery
+
+- Build 8 was installed on the connected iPhone and launched successfully. A later device launch was denied because the phone was locked; the remaining physical-device navigation check requires it to stay unlocked.
+- The App Store archive uploaded successfully on October 14, 2026 at 13:52 Bangkok time. Xcode reported `Upload succeeded` and `EXPORT SUCCEEDED`.
+- Xcode reported missing debug symbols for the prebuilt React, ReactNativeDependencies and Hermes frameworks. These warnings did not prevent upload; crash reports from those frameworks may lack symbol names.
+- App Store Connect last showed version 1.2 waiting for review with build 7 selected. Selecting build 8 requires removing the version from review. The browser session subsequently expired, so processing status and version selection still need verification after sign-in.
