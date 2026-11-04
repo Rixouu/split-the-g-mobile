@@ -6,7 +6,6 @@ import {
   AppState,
   Image as RNImage,
   LayoutAnimation,
-  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -20,7 +19,7 @@ import { AppButton } from '@/components/split-the-g/button';
 import { Card, Screen } from '@/components/split-the-g/screen';
 import { TextLink } from '@/components/split-the-g/text-link';
 import { ScreenLoadingBlock } from '@/components/split-the-g/screen-loading';
-import { Body, Eyebrow, Muted, Tagline, Title } from '@/components/split-the-g/typography';
+import { Body, Eyebrow, Muted, Tagline } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
 import { trackEvent } from '@/lib/analytics/client';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -32,7 +31,7 @@ import {
   isLikelyNetworkError,
 } from '@/lib/pour/offline-queue';
 import { submitPourImage } from '@/lib/pour/submit-pour';
-import { mobilePathFromWebPath } from '@/lib/routing/paths';
+import { safeNotificationNavigatePath } from '@/lib/routing/paths';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -45,6 +44,7 @@ function messageForPourError(
   err?: string,
   detail?: string,
 ): string {
+  if (err === 'NO_G') return `${t('homeNoGTitle')}. ${t('homeNoGBody')}`;
   if (err === 'PROCESS_FAILED') return t('homeErrFailedProcess');
   if (err === 'ANALYSIS_TIMEOUT') return t('homeErrAnalysisTimeout');
   if (err === 'ROBOFLOW_FAILED') return t('homeErrRoboflow');
@@ -73,8 +73,9 @@ export default function HomeScreen() {
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [howItWorksOpen, setHowItWorksOpen] = useState(false);
-  const [showNoGModal, setShowNoGModal] = useState(false);
   const [livePourOpen, setLivePourOpen] = useState(false);
+  const pendingCameraPhoto = useRef<string | null>(null);
+  const submissionInFlight = useRef(false);
   const lastPickSourceRef = useRef<'camera' | 'library'>('camera');
   const queueFlushActiveRef = useRef(false);
 
@@ -110,8 +111,10 @@ export default function HomeScreen() {
 
   const submitPourFromUri = useCallback(
     async (imageUri: string, source: 'camera' | 'library') => {
+      if (submissionInFlight.current) return;
+      submissionInFlight.current = true;
+      const startedAt = Date.now();
       setMessage(null);
-      setShowNoGModal(false);
       setIsSubmitting(true);
 
       try {
@@ -123,24 +126,32 @@ export default function HomeScreen() {
         });
 
         if (!result.success) {
-          if (result.error === 'NO_G') {
-            setShowNoGModal(true);
-            return;
-          }
           setMessage(messageForPourError(t, result.error, result.detail));
           trackEvent('mobile_pour_failed', {
             code: result.error ?? 'unknown',
             status: result.status ?? null,
             source,
+            durationMs: Date.now() - startedAt,
           });
           return;
         }
 
-        trackEvent('mobile_pour_submitted', { scoreId: result.scoreId ?? null, source });
+        const redirect = result.redirectTo ? safeNotificationNavigatePath(result.redirectTo) : null;
+        const resultPath = redirect && /^\/pour\/[\w-]+$/.test(redirect)
+          ? redirect
+          : result.scoreId ? `/pour/${encodeURIComponent(result.scoreId)}` : null;
+        if (!resultPath) {
+          setMessage(t('homeErrGenericPour'));
+          return;
+        }
+
+        router.push(resultPath as never);
         setSelectedImageUri(null);
-        if (result.redirectTo) router.push(mobilePathFromWebPath(result.redirectTo) as never);
-        else if (result.scoreId) router.push(`/pour/${result.scoreId}` as never);
-        else setMessage(t('homeErrGenericPour'));
+        trackEvent('mobile_pour_submitted', {
+          scoreId: result.scoreId ?? null,
+          source,
+          durationMs: Date.now() - startedAt,
+        });
       } catch (error) {
         if (isLikelyNetworkError(error)) {
           try {
@@ -159,6 +170,7 @@ export default function HomeScreen() {
         }
         setMessage(error instanceof Error ? error.message : t('homeErrGenericPour'));
       } finally {
+        submissionInFlight.current = false;
         setIsSubmitting(false);
       }
     },
@@ -166,8 +178,8 @@ export default function HomeScreen() {
   );
 
   async function pickImage(source: 'camera' | 'library') {
+    if (submissionInFlight.current || pendingCameraPhoto.current) return;
     setMessage(null);
-    setShowNoGModal(false);
 
     let result: ImagePicker.ImagePickerResult;
     try {
@@ -213,50 +225,31 @@ export default function HomeScreen() {
   function clearPourSelection() {
     setSelectedImageUri(null);
     setMessage(null);
-    setShowNoGModal(false);
+  }
+
+  function analyzeCapturedPhoto() {
+    const uri = pendingCameraPhoto.current;
+    if (!uri) return;
+    pendingCameraPhoto.current = null;
+    lastPickSourceRef.current = 'camera';
+    setSelectedImageUri(uri);
+    void submitPourFromUri(uri, 'camera');
   }
 
   return (
     <Screen>
-      <Modal visible={isSubmitting} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.fullscreenOverlay} accessibilityViewIsModal>
-          <ScreenLoadingBlock
-            label={t('homeAnalyzingPour')}
-            subtitle={t('homeOneMoment')}
-            primaryVariant="title"
-            dense
-            style={styles.overlayLoadingBlock}
-          />
-        </View>
-      </Modal>
-
       <LivePourCameraModal
         visible={livePourOpen}
         onClose={() => setLivePourOpen(false)}
+        onDismiss={analyzeCapturedPhoto}
         onPourFrameCaptured={(uri) => {
+          pendingCameraPhoto.current = uri;
           setLivePourOpen(false);
-          lastPickSourceRef.current = 'camera';
-          setSelectedImageUri(uri);
-          void submitPourFromUri(uri, 'camera');
+          // iOS must finish dismissing the native camera before navigation.
+          if (Platform.OS !== 'ios') analyzeCapturedPhoto();
         }}
         t={t}
       />
-
-      <Modal visible={showNoGModal} transparent animationType="fade" statusBarTranslucent>
-        <View style={styles.fullscreenOverlay} accessibilityViewIsModal>
-          <View style={styles.noGCard}>
-            <Title style={styles.noGTitle}>{t('homeNoGTitle')}</Title>
-            <Muted style={styles.noGBody}>{t('homeNoGBody')}</Muted>
-            <AppButton
-              label={t('pourTryAgain')}
-              onPress={() => {
-                setShowNoGModal(false);
-                clearPourSelection();
-              }}
-            />
-          </View>
-        </View>
-      </Modal>
 
       <View style={styles.logoRow}>
         <Image source={logoAsset} style={styles.logo} contentFit="contain" accessibilityLabel="Split The G" />
@@ -327,7 +320,14 @@ export default function HomeScreen() {
             </Muted>
           </View>
         )}
-        {!selectedImageUri ? (
+        {message ? <Muted accessibilityRole="alert" style={styles.errorText}>{message}</Muted> : null}
+        {isSubmitting ? (
+          <ScreenLoadingBlock
+            label={t('homeAnalyzingPour')}
+            subtitle={t('homeOneMoment')}
+            dense
+          />
+        ) : !selectedImageUri ? (
           <View style={styles.actionsFresh}>
             <AppButton
               label={t('homeStartAnalysis')}
@@ -340,11 +340,11 @@ export default function HomeScreen() {
             />
             <TextLink label={t('homeUploadPhoto')} onPress={() => void pickImage('library')} />
           </View>
-        ) : !isSubmitting ? (
+        ) : (
           <View style={styles.actionsAfterPick}>
             <View style={styles.retryRow}>
               <AppButton
-                label={t('pourTryAgain')}
+                label={t('homeRetryAnalysis')}
                 variant="secondary"
                 compact
                 style={styles.retryBtn}
@@ -361,8 +361,7 @@ export default function HomeScreen() {
               />
             </View>
           </View>
-        ) : null}
-        {message ? <Muted style={styles.errorText}>{message}</Muted> : null}
+        )}
       </Card>
 
       {!user ? (
@@ -379,35 +378,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  fullscreenOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.94)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 16,
-    paddingHorizontal: 24,
-  },
-  overlayLoadingBlock: {
-    paddingVertical: 0,
-  },
-  noGCard: {
-    maxWidth: 400,
-    width: '100%',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(179, 139, 45, 0.25)',
-    backgroundColor: 'rgba(11, 11, 11, 0.92)',
-    padding: 24,
-    gap: 16,
-  },
-  noGTitle: {
-    textAlign: 'center',
-  },
-  noGBody: {
-    textAlign: 'center',
-    fontSize: 14,
-    lineHeight: 20,
-  },
   logoRow: {
     alignItems: 'center',
     paddingTop: 8,

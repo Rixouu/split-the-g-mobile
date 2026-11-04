@@ -7,14 +7,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Linking, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { AppButton } from '@/components/split-the-g/button';
-import { Body, Muted } from '@/components/split-the-g/typography';
+import { Muted } from '@/components/split-the-g/typography';
 import { colors, layout, radii } from '@/constants/design-tokens';
 import { brandColors } from '@/constants/theme';
 import { buildPourTelegramBlurb, buildPourTweetText, getPourShareHookLine } from '@/lib/i18n/translations';
 import { useLocale } from '@/lib/i18n/locale-context';
 
 const logoAsset = require('../../assets/images/logo-splittheg.png');
-const BMC_URL = 'https://buymeacoffee.com/rixou';
 
 interface PourSharePanelProps {
   shareMessage: string;
@@ -104,10 +103,6 @@ export function PourSharePanel({
     const url = `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(googlePlaceId)}`;
     void openUrl(url);
   }, [googlePlaceId, openUrl]);
-
-  const onBmc = useCallback(() => {
-    void openUrl(BMC_URL);
-  }, [openUrl]);
 
   return (
     <View style={styles.panel}>
@@ -258,14 +253,6 @@ export function PourSharePanel({
 
       <Muted style={styles.instaHint}>{t('pourShareSocialBlurb')}</Muted>
 
-      <View style={styles.footer}>
-        <Body style={styles.enjoying}>{t('pourEnjoyingApp')}</Body>
-        <Pressable onPress={() => void onBmc()} accessibilityRole="link">
-          <Text style={styles.bmcLink}>
-            {t('pourBuyCreatorBeer')} <MaterialCommunityIcons name="beer-outline" size={16} color={brandColors.gold} />
-          </Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -544,24 +531,5 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     color: 'rgba(212, 183, 143, 0.48)',
     marginTop: 2,
-  },
-  footer: {
-    alignItems: 'center',
-    gap: 6,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: brandColors.borderSubtle,
-    paddingTop: 14,
-    marginTop: 4,
-  },
-  enjoying: {
-    fontSize: 13,
-    color: 'rgba(212, 183, 143, 0.55)',
-    textAlign: 'center',
-  },
-  bmcLink: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: brandColors.gold,
-    textAlign: 'center',
   },
 });

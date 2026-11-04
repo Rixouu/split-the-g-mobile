@@ -13,6 +13,7 @@ import type { TranslationKey } from '@/lib/i18n/translations';
 interface LivePourCameraModalProps {
   visible: boolean;
   onClose: () => void;
+  onDismiss: () => void;
   /** High-resolution frame sent to the same server-side scoring workflow as the web app. */
   onPourFrameCaptured: (localImageUri: string) => void;
   t: (key: TranslationKey) => string;
@@ -21,6 +22,7 @@ interface LivePourCameraModalProps {
 export function LivePourCameraModal({
   visible,
   onClose,
+  onDismiss,
   onPourFrameCaptured,
   t,
 }: LivePourCameraModalProps) {
@@ -61,7 +63,7 @@ export function LivePourCameraModal({
     setIsCapturing(true);
     try {
       const shot = await camera.takePictureAsync({
-        quality: 0.92,
+        quality: 0.85,
         base64: false,
         exif: true,
         shutterSound: false,
@@ -81,14 +83,17 @@ export function LivePourCameraModal({
     }
   }, [cameraReady, onPourFrameCaptured]);
 
-  if (!visible) return null;
+  function closeCamera() {
+    cancelledRef.current = true;
+    onClose();
+  }
 
   return (
-    <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={onClose}>
+    <Modal visible={visible} animationType="slide" statusBarTranslucent onRequestClose={closeCamera} onDismiss={onDismiss}>
       <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
         <View style={styles.topBar}>
           <Pressable
-            onPress={onClose}
+            onPress={closeCamera}
             hitSlop={8}
             style={styles.topBarAction}
             accessibilityRole="button"
@@ -112,7 +117,7 @@ export function LivePourCameraModal({
               label={t('homeRequestCameraPermission')}
               onPress={() => void requestPermission()}
             />
-            <AppButton label={t('homeCloseLiveCamera')} variant="secondary" onPress={onClose} />
+            <AppButton label={t('homeCloseLiveCamera')} variant="secondary" onPress={closeCamera} />
           </View>
         ) : (
           <>
@@ -122,6 +127,7 @@ export function LivePourCameraModal({
                 style={StyleSheet.absoluteFill}
                 facing="back"
                 mode="picture"
+                active={visible}
                 {...(Platform.OS === 'android' ? { ratio: '4:3' as const } : {})}
                 enableTorch={torchOn}
                 onCameraReady={() => {

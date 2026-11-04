@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
-import * as Linking from 'expo-linking';
 import { Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -14,7 +13,6 @@ import {
   View,
 } from 'react-native';
 
-import { AppButton } from '@/components/split-the-g/button';
 import { Screen, UNDER_STACK_HEADER_SAFE_AREA_EDGES } from '@/components/split-the-g/screen';
 import { Body, Eyebrow } from '@/components/split-the-g/typography';
 import { brandColors } from '@/constants/theme';
@@ -24,8 +22,6 @@ import { translate, type SupportedLocale, type TranslationKey } from '@/lib/i18n
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
-
-const BMC_URL = 'https://buymeacoffee.com/rixou';
 
 type FaqSection = 'basics' | 'scoring' | 'more';
 
@@ -49,8 +45,7 @@ interface FaqBlock {
     | 'faqQGlassTypes'
     | 'faqQPhotoTips'
     | 'faqQShareScore'
-    | 'faqQHigherScore'
-    | 'faqQSupport';
+    | 'faqQHigherScore';
 }
 
 /** Grouped for scanability; ids preserved for stable open state. */
@@ -64,7 +59,6 @@ const FAQ_BLOCKS: FaqBlock[] = [
   { id: '7', section: 'scoring', questionKey: 'faqQPhotoTips' },
   { id: '9', section: 'scoring', questionKey: 'faqQHigherScore' },
   { id: '8', section: 'more', questionKey: 'faqQShareScore' },
-  { id: '10', section: 'more', questionKey: 'faqQSupport' },
 ];
 
 function FaqWhatAppAnswer({ locale }: { locale: SupportedLocale }) {
@@ -93,15 +87,6 @@ function FaqWhatAppAnswer({ locale }: { locale: SupportedLocale }) {
 function FaqAnswerBody({ block, locale }: { block: FaqBlock; locale: SupportedLocale }) {
   if (block.questionKey === 'faqQWhatAppDoes') {
     return <FaqWhatAppAnswer locale={locale} />;
-  }
-
-  if (block.questionKey === 'faqQSupport') {
-    return (
-      <View style={styles.answerBlock}>
-        <Body style={styles.answer}>{translate(locale, 'faqASupport')}</Body>
-        <AppButton label={translate(locale, 'pourBuyCreatorBeer')} onPress={() => void Linking.openURL(BMC_URL)} />
-      </View>
-    );
   }
 
   const answerKey = {
@@ -359,10 +344,6 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     color: brandColors.cream,
     fontSize: 15,
-  },
-  answerBlock: {
-    marginTop: 10,
-    gap: 14,
   },
   inlineLink: {
     color: brandColors.goldBright,

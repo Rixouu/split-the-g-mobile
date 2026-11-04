@@ -54,6 +54,7 @@ export type TranslationKey =
   | 'homeOneMoment'
   | 'homeNoGTitle'
   | 'homeNoGBody'
+  | 'homeRetryAnalysis'
   | 'homeChangePhoto'
   | 'homeCompetitionBanner'
   | 'homeSignInEyebrow'
@@ -284,7 +285,6 @@ export type TranslationKey =
   | 'pourShareSocialBlurb'
   | 'pourTryAgain'
   | 'pourViewTopSplits'
-  | 'pourEnjoyingApp'
   | 'pourShareMailSubject'
   | 'pourShareRedditTitle'
   | 'pourShareTelegramRest'
@@ -303,7 +303,6 @@ export type TranslationKey =
   | 'pourCopyLink'
   | 'pourLinkCopied'
   | 'pourLeaderboard'
-  | 'pourBuyCreatorBeer'
   | 'pourOpenInMaps'
   | 'pourViewPub'
   | 'pourShareHookHigh'
@@ -375,8 +374,6 @@ export type TranslationKey =
   | 'faqAShareScore'
   | 'faqQHigherScore'
   | 'faqAHigherScore'
-  | 'faqQSupport'
-  | 'faqASupport'
   | 'lbTabGlobal'
   | 'lbTabLocal'
   | 'lbTabFriends'
@@ -869,6 +866,7 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     homeNoGTitle: 'No G detected',
     homeNoGBody:
       'Please make sure the G pattern is clearly visible in your image and try again.',
+    homeRetryAnalysis: 'Retry analysis',
     homeChangePhoto: 'Choose another photo',
     homeCompetitionBanner: 'This pour will open with your competition link after scoring.',
     homeSignInEyebrow: 'Save your scores',
@@ -1106,7 +1104,6 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
       'Instagram has no web share. Use Copy text or Copy link, then paste in the app.',
     pourTryAgain: 'Analyze another',
     pourViewTopSplits: 'Open journal',
-    pourEnjoyingApp: 'Enjoying Split the G?',
     pourShareMailSubject: 'Split The G visual analysis ({score}/5)',
     pourShareRedditTitle: 'Split The G visual pour analysis: {score}/5',
     pourShareTelegramRest: 'Visual alignment measured at {score}/5. Open the annotated analysis.',
@@ -1125,7 +1122,6 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     pourCopyLink: 'Copy link',
     pourLinkCopied: 'Link copied',
     pourLeaderboard: 'Leaderboard',
-    pourBuyCreatorBeer: 'Buy the creator a beer',
     pourOpenInMaps: 'Open in Google Maps',
     pourViewPub: 'View pub',
     pourShareHookHigh: 'Visual alignment analysis complete.',
@@ -1211,9 +1207,6 @@ const messages: Record<SupportedLocale, Partial<Record<TranslationKey, string>>>
     faqQHigherScore: 'How can I get a clearer result?',
     faqAHigherScore:
       'For a clearer measurement, photograph the full glass straight-on with the G mark and liquid line visible, avoid glare, and hold the camera steady. The app never asks you to consume alcohol.',
-    faqQSupport: 'How can I support the creator?',
-    faqASupport:
-      "Split the G is a solo project and free to use. If it's been fun for you and you'd like to say thanks, you can buy the creator a beer. It helps cover hosting, APIs, and time spent improving the app.",
     lbTabGlobal: 'Global',
     lbTabLocal: 'Local',
     lbTabFriends: 'Friends',
